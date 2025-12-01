@@ -1,185 +1,153 @@
 import Link from "next/link";
 import { Button } from "@/components/ui";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { 
+  Play, 
+  ChevronLeft, 
+  ChevronRight,
+  Star,
+  ArrowRight
+} from "lucide-react";
+import { menuItems } from "@/lib/data";
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-        <nav className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-xl font-bold text-green-600"
-          >
-            <span aria-hidden="true">🍹</span>
-            <span>JuiceQu</span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href="/menu"
-              className="text-sm font-medium text-gray-600 hover:text-green-600"
-            >
-              Menu
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm font-medium text-gray-600 hover:text-green-600"
-            >
-              Login
-            </Link>
-            <Link href="/menu">
-              <Button size="sm">Order Now</Button>
-            </Link>
-          </div>
-        </nav>
-      </header>
+    <div className="flex min-h-screen flex-col bg-white">
+      <Header />
 
       {/* Main Content */}
       <main id="main-content" className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100 py-20 sm:py-32">
+        <section className="relative overflow-hidden pt-10 pb-20 lg:pt-20">
           <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-2xl text-center">
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-                Fresh & Healthy{" "}
-                <span className="text-green-600">Juice</span> for You
-              </h1>
-              <p className="mt-6 text-lg leading-8 text-gray-600">
-                Order your favorite juice with AI-powered recommendations.
-                Try our voice ordering feature for a seamless experience!
-              </p>
-              <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                <Link href="/menu">
-                  <Button size="xl">
-                    <span aria-hidden="true">🛒</span>
-                    Browse Menu
-                  </Button>
-                </Link>
-                <Link href="/chat">
-                  <Button size="xl" variant="outline">
-                    <span aria-hidden="true">🤖</span>
-                    Chat with AI
-                  </Button>
-                </Link>
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              {/* Left Content */}
+              <div className="relative z-10 max-w-2xl">
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-2 text-sm font-medium text-orange-800">
+                  <span>Faster Food Delivery Service</span>
+                  <span role="img" aria-label="pizza">🍕</span>
+                </div>
+                
+                <h1 className="text-5xl font-bold leading-tight tracking-tight text-gray-900 sm:text-7xl">
+                  Smoothies to <br />
+                  make your day <br />
+                  smooth
+                </h1>
+                
+                <p className="mt-6 text-lg text-gray-600 max-w-md">
+                  Discover local, on-demand delivery or Pickup from nearby restaurants.
+                </p>
+                
+                <div className="mt-10 flex flex-wrap items-center gap-4">
+                  <Link href="/menu">
+                    <Button size="xl" className="bg-red-700 hover:bg-red-800 text-white shadow-lg shadow-red-700/20 h-14 px-8 rounded-full">
+                      Order Now
+                    </Button>
+                  </Link>
+                  <button className="group flex items-center gap-3 rounded-full bg-white px-6 py-4 text-sm font-medium text-gray-900 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-700 transition-colors group-hover:bg-red-700 group-hover:text-white">
+                      <Play className="h-4 w-4 fill-current" />
+                    </div>
+                    How It Works
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Content (Image & Floating Elements) */}
+              <div className="relative lg:h-[600px]">
+                {/* Main Bottle Image Placeholder */}
+                <div className="relative z-10 mx-auto h-[400px] w-[200px] lg:h-[500px] lg:w-[250px]">
+                  <div className="absolute inset-0 rounded-[3rem] bg-linear-to-b from-red-400 to-red-600 opacity-90 shadow-2xl shadow-red-900/20"></div>
+                  {/* Glass reflection effect */}
+                  <div className="absolute left-4 top-4 bottom-4 w-4 rounded-full bg-white/20 blur-sm"></div>
+                </div>
+
+                {/* Floating Ingredients (Simulated with colored circles/shapes for now) */}
+                <div className="absolute top-1/4 left-10 h-12 w-12 rounded-full bg-red-600 blur-sm animate-pulse"></div>
+                <div className="absolute bottom-1/3 right-20 h-8 w-8 rounded-full bg-green-500 blur-sm"></div>
+                <div className="absolute top-10 right-10 h-16 w-16 rounded-full bg-red-500/20 blur-xl"></div>
+
+                {/* Floating Details Card */}
+                <div className="absolute right-0 top-1/3 z-20 w-64 rounded-3xl bg-white p-6 shadow-xl shadow-gray-200/50 animate-in fade-in slide-in-from-right-10 duration-700">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-medium text-gray-500">Details</h3>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-gray-900">$8.50</span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">Berry Blast</p>
+                  </div>
+                  
+                  <div className="mb-6 flex gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star key={i} className="h-4 w-4 fill-orange-400 text-orange-400" />
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:border-gray-900 hover:text-gray-900 transition-colors">
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:border-gray-900 hover:text-gray-900 transition-colors">
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Decorative Curve Line */}
+                <svg className="absolute -right-20 top-10 -z-10 h-full w-full text-red-800/5" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <path d="M50 0 C 80 20, 100 50, 80 100" stroke="currentColor" strokeWidth="2" fill="none" />
+                </svg>
               </div>
             </div>
           </div>
 
-          {/* Decorative elements */}
-          <div
-            className="absolute -top-40 right-0 -z-10 h-80 w-80 rounded-full bg-green-200/50 blur-3xl"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute -bottom-40 left-0 -z-10 h-80 w-80 rounded-full bg-emerald-200/50 blur-3xl"
-            aria-hidden="true"
-          />
+          {/* Decorative Background Elements */}
+          <div className="absolute top-0 right-0 -z-10 h-[600px] w-[600px] rounded-full bg-green-50/50 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 -z-10 h-[400px] w-[400px] rounded-full bg-red-50/50 blur-3xl"></div>
         </section>
 
-        {/* Features Section */}
-        <section className="py-20" aria-labelledby="features-heading">
+        {/* Lineup Section */}
+        <section className="py-20">
           <div className="container mx-auto px-4">
-            <h2
-              id="features-heading"
-              className="text-center text-3xl font-bold text-gray-900 sm:text-4xl"
-            >
-              Why Choose JuiceQu?
-            </h2>
-            <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="rounded-xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div
-                    className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-2xl"
-                    aria-hidden="true"
-                  >
-                    {feature.icon}
+            <div className="mb-10 flex items-end justify-between">
+              <h2 className="text-3xl font-bold text-gray-900">
+                Our Smoothies Lineup <span role="img" aria-label="fire">🔥</span>
+              </h2>
+              <div className="flex gap-2">
+                <button className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-white hover:bg-gray-800">
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {menuItems.slice(0, 4).map((product) => (
+                <Link href={`/products/${product.id}`} key={product.id} className="group relative rounded-3xl bg-gray-50 p-6 transition-all hover:bg-white hover:shadow-xl hover:shadow-gray-200/50">
+                  <div className="mb-6 flex h-48 items-center justify-center">
+                    <div className={`h-40 w-20 rounded-full ${product.color} opacity-80 shadow-lg transition-transform group-hover:scale-110`}></div>
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold text-gray-900">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-2 text-gray-600">{feature.description}</p>
-                </div>
+                  <h3 className="text-xl font-bold text-gray-900">{product.name}</h3>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Starting</p>
+                      <p className="text-lg font-bold text-gray-900">${product.price}</p>
+                    </div>
+                    <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm transition-colors hover:bg-green-600 hover:text-white">
+                      <ArrowRight className="h-5 w-5" />
+                    </button>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
         </section>
-
-        {/* CTA Section */}
-        <section className="bg-green-600 py-16">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl">
-              Ready to try?
-            </h2>
-            <p className="mt-4 text-lg text-green-100">
-              Start ordering with our AI assistant or browse the menu directly.
-            </p>
-            <div className="mt-8">
-              <Link href="/register">
-                <Button
-                  size="xl"
-                  variant="secondary"
-                  className="bg-white text-green-600 hover:bg-green-50"
-                >
-                  Create Account
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-500">
-          <p>© 2024 JuiceQu. All rights reserved.</p>
-          <p className="mt-2">
-            Made with <span aria-label="love">❤️</span> for Hackathon
-          </p>
-        </div>
-      </footer>
+      
+      <Footer />
     </div>
   );
 }
-
-const features = [
-  {
-    icon: "🤖",
-    title: "AI Recommendations",
-    description:
-      "Get personalized juice recommendations based on your preferences and health goals.",
-  },
-  {
-    icon: "🎤",
-    title: "Voice Ordering",
-    description:
-      "Order hands-free using our voice recognition feature. Just speak and we'll prepare your juice!",
-  },
-  {
-    icon: "🥗",
-    title: "Healthy Options",
-    description:
-      "All our juices are made from fresh, locally-sourced ingredients with nutritional information.",
-  },
-  {
-    icon: "⚡",
-    title: "Fast Service",
-    description:
-      "Track your order in real-time and get notified when it's ready for pickup.",
-  },
-  {
-    icon: "💳",
-    title: "Easy Payment",
-    description:
-      "Multiple payment options including QRIS, cash, and bank transfer.",
-  },
-  {
-    icon: "♿",
-    title: "Accessible",
-    description:
-      "Our website is designed to be accessible to everyone, following WCAG 2.1 AA guidelines.",
-  },
-];

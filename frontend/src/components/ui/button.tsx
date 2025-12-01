@@ -7,18 +7,18 @@ import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
   // Base styles
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600",
+          "bg-green-600 text-white shadow-lg shadow-green-600/20 hover:bg-green-700 hover:shadow-green-600/30 focus-visible:ring-green-600",
         destructive:
-          "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600",
+          "bg-red-600 text-white shadow-lg shadow-red-600/20 hover:bg-red-700 focus-visible:ring-red-600",
         outline:
-          "border border-green-600 text-green-600 hover:bg-green-50 focus-visible:ring-green-600",
+          "border-2 border-green-600 text-green-600 hover:bg-green-50 focus-visible:ring-green-600",
         secondary:
-          "bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-400",
+          "bg-orange-100 text-orange-900 hover:bg-orange-200 focus-visible:ring-orange-400",
         ghost:
           "text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-400",
         link:
