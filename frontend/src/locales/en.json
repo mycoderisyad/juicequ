@@ -1,0 +1,359 @@
+{
+  "common": {
+    "appName": "JuiceQu",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "viewAll": "View All",
+    "learnMore": "Learn More",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "yes": "Yes",
+    "no": "No",
+    "or": "or",
+    "starting": "Starting",
+    "cal": "cal",
+    "verified": "Verified",
+    "madeWithLove": "Made with",
+    "inIndonesia": "in Indonesia",
+    "allRightsReserved": "All rights reserved",
+    "secureCheckout": "Secure Checkout powered by JuiceQu",
+    "secureEncrypted": "Secure & Encrypted",
+    "sslSecurity": "256-bit SSL Security"
+  },
+  "nav": {
+    "home": "Home",
+    "menu": "Menu",
+    "aiChat": "AI Chat",
+    "about": "About",
+    "cart": "Cart",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "profile": "Profile",
+    "loginRegister": "Login / Register"
+  },
+  "home": {
+    "hero": {
+      "badge": "Fast & Fresh Juice Service",
+      "title1": "Smoothies to",
+      "title2": "make your day",
+      "title3": "smooth",
+      "subtitle": "Discover local fresh juice, order online and pick up at the nearest outlet.",
+      "orderNow": "Order Now",
+      "howItWorks": "How It Works"
+    },
+    "promo": {
+      "firstOrder": "First Order Discount!",
+      "getDiscount": "Get 20% OFF on your first order",
+      "buy2get1": "Buy 2 Get 1 Free!",
+      "allSmoothies": "On all smoothies this weekend",
+      "freeDelivery": "Free Delivery!",
+      "minOrder": "For orders above Rp 100,000",
+      "orderNow": "Order Now"
+    },
+    "featuredProducts": {
+      "title": "Our Smoothies Lineup",
+      "subtitle": "Fresh juices made with love",
+      "viewAll": "View All Products"
+    },
+    "whyChooseUs": {
+      "title": "Why Choose Us?",
+      "subtitle": "JuiceQu is committed to providing the best products with the highest quality standards",
+      "features": {
+        "fresh": {
+          "title": "100% Fresh & Natural",
+          "description": "No preservatives, colorings, or artificial sweeteners. Only fresh fruits and vegetables."
+        },
+        "preOrder": {
+          "title": "Pre-Order & Pickup",
+          "description": "Order from home, pick up at outlet. Save time without queuing!"
+        },
+        "healthy": {
+          "title": "Healthy Choice",
+          "description": "Enriched with vitamins and nutrients to support your healthy lifestyle."
+        },
+        "freshDaily": {
+          "title": "Made Fresh Daily",
+          "description": "Every juice is made fresh when you order, never pre-stocked."
+        },
+        "quality": {
+          "title": "Quality Guaranteed",
+          "description": "Best quality guarantee. Not satisfied? 100% money back."
+        },
+        "eco": {
+          "title": "Eco-Friendly",
+          "description": "Environmentally friendly and recyclable packaging."
+        }
+      }
+    },
+    "reviews": {
+      "badge": "Customer Love",
+      "title": "What Our Customers Say",
+      "subtitle": "Thousands of customers have experienced the freshness of JuiceQu. Here's what they say about our products.",
+      "averageRating": "Average Rating",
+      "happyCustomers": "Happy Customers",
+      "wouldRecommend": "Would Recommend"
+    },
+    "stats": {
+      "happyCustomers": "Happy Customers",
+      "juicesDelivered": "Juices Delivered",
+      "menuVarieties": "Menu Varieties",
+      "averageRating": "Average Rating"
+    },
+    "cta": {
+      "title": "Ready for a Healthier You?",
+      "subtitle": "Start your healthy lifestyle journey with JuiceQu. Get 20% off on your first order!",
+      "orderNow": "Order Now",
+      "chatWithAI": "Chat with AI"
+    },
+    "locations": {
+      "title": "Location & Contact",
+      "subtitle": "Find us or contact for more information",
+      "visitUs": "Visit Us",
+      "contactUs": "Contact Us",
+      "openHours": "Open Hours",
+      "weekdays": "Monday - Friday",
+      "weekend": "Saturday - Sunday",
+      "closed": "Closed"
+    },
+    "newsletter": {
+      "title": "Get Latest Updates",
+      "subtitle": "Subscribe to our newsletter for promos and new menu",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe",
+      "privacy": "We respect your privacy"
+    }
+  },
+  "menu": {
+    "title": "Our Menu",
+    "subtitle": "Freshly made for you",
+    "searchPlaceholder": "Search for smoothies, juices...",
+    "noResults": {
+      "title": "No items found",
+      "description": "Try adjusting your search or filter to find what you're looking for.",
+      "clearFilters": "Clear filters"
+    },
+    "categories": {
+      "all": "All",
+      "juices": "Juices",
+      "smoothies": "Smoothies",
+      "detox": "Detox",
+      "energy": "Energy"
+    },
+    "addToFavorites": "Add to favorites"
+  },
+  "product": {
+    "addToCart": "Add to Cart",
+    "quantity": "Quantity",
+    "price": "Price",
+    "description": "Description",
+    "ingredients": "Ingredients",
+    "nutrition": "Nutrition Info",
+    "reviews": "Reviews",
+    "relatedProducts": "Related Products",
+    "outOfStock": "Out of Stock",
+    "inStock": "In Stock"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "yourCart": "Your Cart",
+    "empty": {
+      "title": "Your cart is empty",
+      "description": "Looks like you haven't added anything yet.",
+      "cta": "Start Shopping",
+      "startShopping": "Start Shopping"
+    },
+    "summary": {
+      "title": "Order Summary",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "tax": "Tax (10%)",
+      "deliveryFee": "Delivery Fee",
+      "free": "Free",
+      "total": "Total",
+      "checkout": "Checkout"
+    },
+    "item": {
+      "remove": "Remove",
+      "quantity": "Quantity"
+    },
+    "promoCode": {
+      "placeholder": "Promo code",
+      "apply": "Apply"
+    },
+    "checkout": "Checkout",
+    "secureCheckout": "Secure Checkout powered by JuiceQu"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "steps": {
+      "cart": "Cart",
+      "details": "Details",
+      "payment": "Payment",
+      "confirmation": "Confirmation"
+    },
+    "customerInfo": {
+      "title": "Customer Information",
+      "name": "Full Name",
+      "email": "Email",
+      "phone": "Phone Number"
+    },
+    "pickupInfo": {
+      "title": "Pickup Information",
+      "date": "Pickup Date",
+      "time": "Pickup Time",
+      "notes": "Additional Notes"
+    },
+    "payment": {
+      "title": "Payment Method",
+      "cash": "Cash",
+      "transfer": "Bank Transfer",
+      "ewallet": "E-Wallet"
+    },
+    "placeOrder": "Place Order",
+    "processing": "Processing..."
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Welcome back!",
+      "email": "Email",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up now",
+      "orContinueWith": "Or continue with"
+    },
+    "register": {
+      "title": "Create New Account",
+      "subtitle": "Join JuiceQu",
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone Number",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "agreeTerms": "I agree to the",
+      "termsLink": "Terms & Conditions",
+      "submit": "Sign Up",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "orSignUpWith": "Or sign up with"
+    },
+    "errors": {
+      "invalidEmail": "Invalid email format",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "invalidCredentials": "Invalid email or password",
+      "emailExists": "Email already registered"
+    }
+  },
+  "orders": {
+    "title": "My Orders",
+    "empty": {
+      "title": "No Orders Yet",
+      "description": "You don't have any order history",
+      "cta": "Start Ordering"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "processing": "Processing",
+      "ready": "Ready for Pickup",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "details": {
+      "orderId": "Order ID",
+      "orderDate": "Order Date",
+      "pickupTime": "Pickup Time",
+      "totalAmount": "Total Amount",
+      "items": "Order Items"
+    }
+  },
+  "chat": {
+    "title": "AI Chat Assistant",
+    "subtitle": "Ask anything about our menu",
+    "placeholder": "Type your message...",
+    "send": "Send",
+    "suggestions": {
+      "title": "Suggested Questions",
+      "items": [
+        "Juice recommendation for diet",
+        "Which juice is high in vitamin C?",
+        "Customer favorite menu",
+        "Juice for energy boost"
+      ]
+    },
+    "welcome": "Hello! I'm JuiceQu AI assistant. How can I help you today?"
+  },
+  "footer": {
+    "description": "Fresh and healthy juice with 100% natural ingredients. Your daily dose of vitamins.",
+    "menuTitle": "Menu",
+    "companyTitle": "Company",
+    "supportTitle": "Support",
+    "legalTitle": "Legal",
+    "menu": {
+      "allProducts": "All Products",
+      "smoothies": "Smoothies",
+      "freshJuices": "Fresh Juices",
+      "acaiBowls": "Acai Bowls",
+      "healthySnacks": "Healthy Snacks"
+    },
+    "company": {
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "franchise": "Franchise",
+      "blog": "Blog",
+      "pressKit": "Press Kit"
+    },
+    "support": {
+      "helpCenter": "Help Center",
+      "contactUs": "Contact Us",
+      "faq": "FAQ",
+      "deliveryInfo": "Delivery Info",
+      "trackOrder": "Track Order"
+    },
+    "legal": {
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy",
+      "refundPolicy": "Refund Policy"
+    },
+    "paymentMethods": "Accepted Payment Methods",
+    "secureEncrypted": "Secure & Encrypted",
+    "sslSecurity": "256-bit SSL Security",
+    "copyright": "© 2025 JuiceQu. All rights reserved.",
+    "madeWith": "Made with",
+    "inIndonesia": "in Indonesia"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Page Not Found",
+      "description": "Sorry, the page you're looking for is not available",
+      "cta": "Back to Home"
+    },
+    "serverError": {
+      "title": "Something Went Wrong",
+      "description": "Sorry, an error occurred on our server",
+      "cta": "Try Again"
+    },
+    "networkError": {
+      "title": "Connection Problem",
+      "description": "Please check your internet connection",
+      "cta": "Reload"
+    }
+  }
+}

@@ -2,22 +2,27 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { 
   ShoppingBag, 
-  Search, 
   User, 
   Menu as MenuIcon, 
   Info, 
   Sparkles,
-  LogOut
+  LogOut,
+  Home,
+  X
 } from "lucide-react";
 import { useAuthStore, useCartStore } from "@/lib/store";
+import { useTranslation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 
 export function Header() {
   const { user, logout, fetchUser } = useAuthStore();
   const items = useCartStore((state) => state.items);
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -30,82 +35,157 @@ export function Header() {
 
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
+  const navLinks = [
+    { href: "/", labelKey: "nav.home" as const, icon: Home },
+    { href: "/menu", labelKey: "nav.menu" as const, icon: MenuIcon },
+    { href: "/chat", labelKey: "nav.aiChat" as const, icon: Sparkles, iconColor: "text-orange-500" },
+    { href: "/about", labelKey: "nav.about" as const, icon: Info },
+  ];
+
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
-      <nav className="container mx-auto flex h-20 items-center justify-between px-4">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+      <nav className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-2xl font-bold text-gray-900"
+          className="flex items-center gap-1 text-xl font-bold text-gray-900 lg:text-2xl"
         >
-          <span>JuiceQu</span>
-          <span className="text-xs align-top text-gray-500">TM</span>
+          <span className="text-green-600">Juice</span>
+          <span>Qu</span>
+          <span className="text-[10px] align-top text-gray-400 font-normal">™</span>
         </Link>
 
-        {/* Main Nav */}
-        <div className="hidden items-center gap-8 md:flex">
-          <Link
-            href="/menu"
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-green-600 transition-colors"
-          >
-            <MenuIcon className="h-4 w-4" />
-            MENU
-          </Link>
-          <Link
-            href="/chat"
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-green-600 transition-colors"
-          >
-            <Sparkles className="h-4 w-4 text-orange-500" />
-            AI CHAT
-          </Link>
-          <Link
-            href="/about"
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-green-600 transition-colors"
-          >
-            <Info className="h-4 w-4" />
-            ABOUT
-          </Link>
+        {/* Desktop Nav */}
+        <div className="hidden items-center gap-1 md:flex">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-green-600 transition-all"
+            >
+              <link.icon className={`h-4 w-4 ${link.iconColor || ""}`} />
+              {t(link.labelKey)}
+            </Link>
+          ))}
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4">
-          <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 transition-colors">
-            <Search className="h-5 w-5" />
-          </button>
+        <div className="flex items-center gap-2 lg:gap-3">
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+
+          {/* Cart Button */}
           <Link href="/cart">
-            <Button className="bg-red-700 hover:bg-red-800 text-white shadow-lg shadow-red-700/20 rounded-full">
-              <ShoppingBag className="mr-2 h-4 w-4" />
-              Cart ({mounted ? itemCount : 0})
+            <Button className="relative bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-2 h-10 text-sm font-medium transition-all">
+              <ShoppingBag className="h-4 w-4 lg:mr-2" />
+              <span className="hidden lg:inline">{t("nav.cart")}</span>
+              {mounted && itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
             </Button>
           </Link>
           
+          {/* User Menu */}
           {mounted && user ? (
-            <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 sm:flex">
               <Link href="/profile">
-                <button className="flex items-center gap-2 rounded-full bg-gray-100 py-1.5 pl-2 pr-4 text-sm font-medium text-gray-900 hover:bg-gray-200 transition-colors">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-600 text-white">
-                    <User className="h-4 w-4" />
+                <button className="flex items-center gap-2 rounded-full bg-gray-100 py-1.5 pl-1.5 pr-3 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-all">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-600 text-white text-xs font-bold">
+                    {user.full_name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="max-w-[100px] truncate">{user.full_name.split(' ')[0]}</span>
+                  <span className="max-w-[80px] truncate hidden lg:block">{user.full_name.split(' ')[0]}</span>
                 </button>
               </Link>
               <button 
                 onClick={logout}
-                className="rounded-full p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-                title="Logout"
+                className="rounded-full p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all"
+                title={t("nav.logout")}
               >
                 <LogOut className="h-5 w-5" />
               </button>
             </div>
           ) : (
-            <Link href="/login">
-              <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 transition-colors">
-                <User className="h-5 w-5" />
-              </button>
+            <Link href="/login" className="hidden sm:block">
+              <Button variant="outline" className="rounded-full px-4 py-2 h-10 text-sm font-medium border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                <User className="h-4 w-4 lg:mr-2" />
+                <span className="hidden lg:inline">{t("nav.login")}</span>
+              </Button>
             </Link>
           )}
+
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 transition-all md:hidden"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="absolute left-0 right-0 top-16 border-b border-gray-100 bg-white shadow-lg md:hidden">
+          <div className="container mx-auto px-4 py-4">
+            {/* Nav Links */}
+            <div className="space-y-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-green-600 transition-all"
+                >
+                  <link.icon className={`h-5 w-5 ${link.iconColor || ""}`} />
+                  {t(link.labelKey)}
+                </Link>
+              ))}
+            </div>
+
+            {/* Mobile User Section */}
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              {mounted && user ? (
+                <div className="space-y-2">
+                  <Link 
+                    href="/profile" 
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 transition-all"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-white text-sm font-bold">
+                      {user.full_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{user.full_name}</p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                    </div>
+                  </Link>
+                  <button 
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-red-600 hover:bg-red-50 transition-all"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    {t("nav.logout")}
+                  </button>
+                </div>
+              ) : (
+                <Link 
+                  href="/login" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-base font-medium text-white hover:bg-green-700 transition-all"
+                >
+                  <User className="h-5 w-5" />
+                  {t("nav.loginRegister")}
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
