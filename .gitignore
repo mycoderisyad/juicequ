@@ -1,0 +1,105 @@
+# ============================================
+# JuiceQu - Git Ignore
+# ============================================
+# PENTING: Jangan hapus file ini!
+# Mencegah penalti hackathon (-10 poin untuk repo bloat)
+# ============================================
+
+# Dependencies (WAJIB - mencegah -10 poin penalti)
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.eggs/
+*.egg-info/
+*.egg
+
+# Environment variables (WAJIB - mencegah -20 poin penalti)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Misc
+*.bak
+*.tmp
+*.temp
+*.cache
+
+# Database (local)
+*.db
+*.sqlite
+*.sqlite3
+
+# ChromaDB data
+chroma_data/
+
+# Uploaded files
+uploads/
+static/uploads/
+
+# Secrets & credentials (WAJIB)
+*.pem
+*.key
+service-account*.json
+credentials.json
+google-credentials.json
+
+# Docker
+docker-compose.override.yml
+
+
+# Ignore
+CONTEXT.md
+EXECUTION_PLAN.md
+HACKATHON_RULES.md
+INSTRUCTIONS.md
+RULES.md
+docs/screenshots/README.md
