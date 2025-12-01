@@ -44,12 +44,20 @@ export const useAuthStore = create<AuthState>()(
       login: (user, accessToken, refreshToken) => {
         localStorage.setItem("access_token", accessToken);
         localStorage.setItem("refresh_token", refreshToken);
+        // Also set cookie for middleware
+        if (typeof document !== "undefined") {
+          document.cookie = `token=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}`;
+        }
         set({ user, isAuthenticated: true, isLoading: false });
       },
       
       logout: () => {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+        // Clear cookie
+        if (typeof document !== "undefined") {
+          document.cookie = "token=; path=/; max-age=0";
+        }
         set({ user: null, isAuthenticated: false });
       },
       

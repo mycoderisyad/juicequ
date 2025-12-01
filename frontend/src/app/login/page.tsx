@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, ArrowRight, Github, Loader2 } from "lucide-react";
+import { Mail, Lock, ArrowRight, Github, Loader2, Home } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
+import { useTranslation } from "@/lib/i18n";
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,23 +30,29 @@ export default function LoginPage() {
       const response = await api.post("/auth/login", { email, password });
       const { access_token } = response.data;
       
-      // Fetch user details after login
-      // Temporarily setting user manually or fetching from /me if available immediately
-      // For now, we'll just set the token and redirect, assuming fetchUser will run or we can call it
-      
-      // Let's fetch user profile immediately to populate store
+      // Fetch user profile immediately to populate store
       const userResponse = await api.get("/auth/me", {
         headers: { Authorization: `Bearer ${access_token}` }
       });
       
+      // Login with correct parameter order: (token, user)
       login(access_token, userResponse.data);
-      router.push("/");
+      
+      // Redirect based on role
+      const userRole = userResponse.data.role;
+      if (userRole === "admin") {
+        router.push("/admin");
+      } else if (userRole === "kasir") {
+        router.push("/cashier");
+      } else {
+        router.push("/menu");
+      }
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const errorResponse = (err as { response: { data: { detail: string } } }).response;
-        setError(errorResponse?.data?.detail || "Invalid email or password");
+        setError(errorResponse?.data?.detail || t("auth.errors.invalidCredentials"));
       } else {
-        setError("An unexpected error occurred");
+        setError(t("common.error"));
       }
     } finally {
       setIsLoading(false);
@@ -54,20 +60,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      <Header />
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-green-50 via-white to-orange-50">
+      {/* Back to Home */}
+      <div className="absolute top-6 left-6">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-green-600 transition-colors bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm"
+        >
+          <Home className="h-4 w-4" />
+          {t("common.back")}
+        </Link>
+      </div>
       
       <main className="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md space-y-8">
           {/* Header Section */}
           <div className="text-center">
             <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-              Welcome back
+              {t("auth.login.subtitle")}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Or{" "}
+              {t("common.or")}{" "}
               <Link href="/register" className="font-medium text-green-600 hover:text-green-500">
-                create a new account
+                {t("auth.login.signUp")}
               </Link>
             </p>
           </div>
@@ -83,7 +98,7 @@ export default function LoginPage() {
               <div className="space-y-4">
                 <div>
                   <label htmlFor="email" className="sr-only">
-                    Email address
+                    {t("auth.login.email")}
                   </label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -95,14 +110,14 @@ export default function LoginPage() {
                       type="email"
                       autoComplete="email"
                       required
-                      placeholder="Email address"
+                      placeholder={t("auth.login.email")}
                       className="pl-11"
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="password" className="sr-only">
-                    Password
+                    {t("auth.login.password")}
                   </label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -114,7 +129,7 @@ export default function LoginPage() {
                       type="password"
                       autoComplete="current-password"
                       required
-                      placeholder="Password"
+                      placeholder={t("auth.login.password")}
                       className="pl-11"
                     />
                   </div>
@@ -130,13 +145,13 @@ export default function LoginPage() {
                     className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                    Remember me
+                    {t("auth.login.rememberMe")}
                   </label>
                 </div>
 
                 <div className="text-sm">
                   <a href="#" className="font-medium text-green-600 hover:text-green-500">
-                    Forgot your password?
+                    {t("auth.login.forgotPassword")}
                   </a>
                 </div>
               </div>
@@ -145,13 +160,13 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="group relative flex w-full justify-center rounded-full bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 shadow-lg shadow-green-600/30"
+                  className="group relative flex w-full justify-center rounded-full bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
                 >
                   {isLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      Sign in
+                      {t("auth.login.submit")}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </>
                   )}
@@ -165,7 +180,7 @@ export default function LoginPage() {
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                  <span className="bg-white px-2 text-gray-500">{t("auth.login.orContinueWith")}</span>
                 </div>
               </div>
 
@@ -194,8 +209,6 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

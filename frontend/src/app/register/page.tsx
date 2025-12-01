@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, User, ArrowRight, Github, Loader2 } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Github, Loader2, Home } from "lucide-react";
 import { api } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,7 +27,7 @@ export default function RegisterPage() {
     const confirmPassword = formData.get("confirm-password") as string;
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("auth.errors.passwordMismatch"));
       setIsLoading(false);
       return;
     }
@@ -44,9 +44,9 @@ export default function RegisterPage() {
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const errorResponse = (err as { response: { data: { detail: string } } }).response;
-        setError(errorResponse?.data?.detail || "Registration failed");
+        setError(errorResponse?.data?.detail || t("common.error"));
       } else {
-        setError("An unexpected error occurred");
+        setError(t("common.error"));
       }
     } finally {
       setIsLoading(false);
@@ -54,20 +54,29 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      <Header />
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-green-50 via-white to-orange-50">
+      {/* Back to Home */}
+      <div className="absolute top-6 left-6">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-green-600 transition-colors bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm"
+        >
+          <Home className="h-4 w-4" />
+          {t("common.back")}
+        </Link>
+      </div>
       
       <main className="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md space-y-8">
           {/* Header Section */}
           <div className="text-center">
             <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-              Create an account
+              {t("auth.register.title")}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Already have an account?{" "}
+              {t("auth.register.hasAccount")}{" "}
               <Link href="/login" className="font-medium text-green-600 hover:text-green-500">
-                Sign in here
+                {t("auth.register.signIn")}
               </Link>
             </p>
           </div>
@@ -83,7 +92,7 @@ export default function RegisterPage() {
               <div className="space-y-4">
                 <div>
                   <label htmlFor="name" className="sr-only">
-                    Full Name
+                    {t("auth.register.fullName")}
                   </label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -95,14 +104,14 @@ export default function RegisterPage() {
                       type="text"
                       autoComplete="name"
                       required
-                      placeholder="Full Name"
+                      placeholder={t("auth.register.fullName")}
                       className="pl-11"
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="email" className="sr-only">
-                    Email address
+                    {t("auth.register.email")}
                   </label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -114,14 +123,14 @@ export default function RegisterPage() {
                       type="email"
                       autoComplete="email"
                       required
-                      placeholder="Email address"
+                      placeholder={t("auth.register.email")}
                       className="pl-11"
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="password" className="sr-only">
-                    Password
+                    {t("auth.register.password")}
                   </label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -133,14 +142,14 @@ export default function RegisterPage() {
                       type="password"
                       autoComplete="new-password"
                       required
-                      placeholder="Password"
+                      placeholder={t("auth.register.password")}
                       className="pl-11"
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="confirm-password" className="sr-only">
-                    Confirm Password
+                    {t("auth.register.confirmPassword")}
                   </label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -152,7 +161,7 @@ export default function RegisterPage() {
                       type="password"
                       autoComplete="new-password"
                       required
-                      placeholder="Confirm Password"
+                      placeholder={t("auth.register.confirmPassword")}
                       className="pl-11"
                     />
                   </div>
@@ -168,13 +177,9 @@ export default function RegisterPage() {
                   required
                 />
                 <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-                  I agree to the{" "}
+                  {t("auth.register.agreeTerms")}{" "}
                   <a href="#" className="font-medium text-green-600 hover:text-green-500">
-                    Terms
-                  </a>{" "}
-                  and{" "}
-                  <a href="#" className="font-medium text-green-600 hover:text-green-500">
-                    Privacy Policy
+                    {t("auth.register.termsLink")}
                   </a>
                 </label>
               </div>
@@ -183,13 +188,13 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="group relative flex w-full justify-center rounded-full bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 shadow-lg shadow-green-600/30"
+                  className="group relative flex w-full justify-center rounded-full bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
                 >
                   {isLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      Create Account
+                      {t("auth.register.submit")}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </>
                   )}
@@ -203,7 +208,7 @@ export default function RegisterPage() {
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-gray-500">Or sign up with</span>
+                  <span className="bg-white px-2 text-gray-500">{t("auth.register.orSignUpWith")}</span>
                 </div>
               </div>
 
@@ -232,8 +237,6 @@ export default function RegisterPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

@@ -93,10 +93,18 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       login: (token, user) => {
         localStorage.setItem('token', token);
+        // Set cookie for middleware to read
+        if (typeof document !== 'undefined') {
+          document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}`;
+        }
         set({ token, user, isAuthenticated: true });
       },
       logout: () => {
         localStorage.removeItem('token');
+        // Clear cookie
+        if (typeof document !== 'undefined') {
+          document.cookie = 'token=; path=/; max-age=0';
+        }
         set({ token: null, user: null, isAuthenticated: false });
       },
       fetchUser: async () => {

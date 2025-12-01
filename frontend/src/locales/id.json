@@ -1,0 +1,359 @@
+{
+  "common": {
+    "appName": "JuiceQu",
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan",
+    "success": "Berhasil",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "delete": "Hapus",
+    "edit": "Ubah",
+    "add": "Tambah",
+    "search": "Cari",
+    "filter": "Filter",
+    "all": "Semua",
+    "viewAll": "Lihat Semua",
+    "learnMore": "Pelajari Lebih",
+    "close": "Tutup",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "previous": "Sebelumnya",
+    "yes": "Ya",
+    "no": "Tidak",
+    "or": "atau",
+    "starting": "Mulai dari",
+    "cal": "kal",
+    "verified": "Terverifikasi",
+    "madeWithLove": "Dibuat dengan",
+    "inIndonesia": "di Indonesia",
+    "allRightsReserved": "Hak cipta dilindungi",
+    "secureCheckout": "Checkout Aman oleh JuiceQu",
+    "secureEncrypted": "Aman & Terenkripsi",
+    "sslSecurity": "Keamanan SSL 256-bit"
+  },
+  "nav": {
+    "home": "Beranda",
+    "menu": "Menu",
+    "aiChat": "AI Chat",
+    "about": "Tentang",
+    "cart": "Keranjang",
+    "login": "Masuk",
+    "register": "Daftar",
+    "logout": "Keluar",
+    "profile": "Profil",
+    "loginRegister": "Masuk / Daftar"
+  },
+  "home": {
+    "hero": {
+      "badge": "Layanan Jus Cepat & Segar",
+      "title1": "Smoothies untuk",
+      "title2": "membuat harimu",
+      "title3": "lebih segar",
+      "subtitle": "Temukan jus lokal segar, pesan online dan ambil di outlet terdekat.",
+      "orderNow": "Pesan Sekarang",
+      "howItWorks": "Cara Kerja"
+    },
+    "promo": {
+      "firstOrder": "Diskon Pesanan Pertama!",
+      "getDiscount": "Dapatkan diskon 20% untuk pesanan pertama",
+      "buy2get1": "Beli 2 Gratis 1!",
+      "allSmoothies": "Untuk semua smoothie akhir pekan ini",
+      "freeDelivery": "Gratis Ongkir!",
+      "minOrder": "Untuk pesanan di atas Rp 100.000",
+      "orderNow": "Pesan Sekarang"
+    },
+    "featuredProducts": {
+      "title": "Menu Smoothie Kami",
+      "subtitle": "Jus segar dibuat dengan cinta",
+      "viewAll": "Lihat Semua Produk"
+    },
+    "whyChooseUs": {
+      "title": "Kenapa Harus Pilih Kami?",
+      "subtitle": "JuiceQu berkomitmen memberikan produk terbaik dengan standar kualitas tertinggi",
+      "features": {
+        "fresh": {
+          "title": "100% Segar & Alami",
+          "description": "Tanpa pengawet, pewarna, atau pemanis buatan. Hanya buah dan sayuran segar."
+        },
+        "preOrder": {
+          "title": "Pre-Order & Ambil",
+          "description": "Order dari rumah, ambil di outlet. Hemat waktu tanpa antri!"
+        },
+        "healthy": {
+          "title": "Pilihan Sehat",
+          "description": "Diperkaya vitamin dan nutrisi untuk mendukung gaya hidup sehat Anda."
+        },
+        "freshDaily": {
+          "title": "Dibuat Segar Setiap Hari",
+          "description": "Setiap juice dibuat fresh saat Anda order, tidak pernah di-stock."
+        },
+        "quality": {
+          "title": "Jaminan Kualitas",
+          "description": "Jaminan kualitas terbaik. Tidak puas? Uang kembali 100%."
+        },
+        "eco": {
+          "title": "Ramah Lingkungan",
+          "description": "Kemasan ramah lingkungan dan dapat didaur ulang."
+        }
+      }
+    },
+    "reviews": {
+      "badge": "Pelanggan Menyukai",
+      "title": "Apa Kata Pelanggan Kami",
+      "subtitle": "Ribuan pelanggan sudah merasakan kesegaran JuiceQu. Ini kata mereka tentang produk kami.",
+      "averageRating": "Rating Rata-rata",
+      "happyCustomers": "Pelanggan Puas",
+      "wouldRecommend": "Merekomendasikan"
+    },
+    "stats": {
+      "happyCustomers": "Pelanggan Puas",
+      "juicesDelivered": "Jus Terkirim",
+      "menuVarieties": "Variasi Menu",
+      "averageRating": "Rating Rata-rata"
+    },
+    "cta": {
+      "title": "Siap untuk Hidup Lebih Sehat?",
+      "subtitle": "Mulai perjalanan hidup sehat Anda dengan JuiceQu. Dapatkan diskon 20% untuk pesanan pertama Anda!",
+      "orderNow": "Pesan Sekarang",
+      "chatWithAI": "Chat dengan AI"
+    },
+    "locations": {
+      "title": "Lokasi & Kontak",
+      "subtitle": "Temukan kami atau hubungi untuk informasi lebih lanjut",
+      "visitUs": "Kunjungi Kami",
+      "contactUs": "Hubungi Kami",
+      "openHours": "Jam Operasional",
+      "weekdays": "Senin - Jumat",
+      "weekend": "Sabtu - Minggu",
+      "closed": "Tutup"
+    },
+    "newsletter": {
+      "title": "Dapatkan Info Terbaru",
+      "subtitle": "Berlangganan newsletter kami untuk promo dan menu baru",
+      "placeholder": "Masukkan email Anda",
+      "subscribe": "Berlangganan",
+      "privacy": "Kami menghargai privasi Anda"
+    }
+  },
+  "menu": {
+    "title": "Menu Kami",
+    "subtitle": "Dibuat segar untuk Anda",
+    "searchPlaceholder": "Cari smoothie, jus...",
+    "noResults": {
+      "title": "Tidak ditemukan",
+      "description": "Coba sesuaikan pencarian atau filter Anda untuk menemukan yang Anda cari.",
+      "clearFilters": "Hapus filter"
+    },
+    "categories": {
+      "all": "Semua",
+      "juices": "Jus",
+      "smoothies": "Smoothie",
+      "detox": "Detox",
+      "energy": "Energi"
+    },
+    "addToFavorites": "Tambah ke favorit"
+  },
+  "product": {
+    "addToCart": "Tambah ke Keranjang",
+    "quantity": "Jumlah",
+    "price": "Harga",
+    "description": "Deskripsi",
+    "ingredients": "Bahan-bahan",
+    "nutrition": "Informasi Gizi",
+    "reviews": "Ulasan",
+    "relatedProducts": "Produk Terkait",
+    "outOfStock": "Stok Habis",
+    "inStock": "Tersedia"
+  },
+  "cart": {
+    "title": "Keranjang Belanja",
+    "yourCart": "Keranjang Anda",
+    "empty": {
+      "title": "Keranjang Kosong",
+      "description": "Sepertinya Anda belum menambahkan apapun.",
+      "cta": "Mulai Belanja",
+      "startShopping": "Mulai Belanja"
+    },
+    "summary": {
+      "title": "Ringkasan Pesanan",
+      "subtotal": "Subtotal",
+      "discount": "Diskon",
+      "tax": "Pajak (10%)",
+      "deliveryFee": "Biaya Pengiriman",
+      "free": "Gratis",
+      "total": "Total",
+      "checkout": "Checkout"
+    },
+    "item": {
+      "remove": "Hapus",
+      "quantity": "Jumlah"
+    },
+    "promoCode": {
+      "placeholder": "Kode promo",
+      "apply": "Terapkan"
+    },
+    "checkout": "Checkout",
+    "secureCheckout": "Checkout Aman oleh JuiceQu"
+  },
+  "checkout": {
+    "title": "Pembayaran",
+    "steps": {
+      "cart": "Keranjang",
+      "details": "Detail",
+      "payment": "Pembayaran",
+      "confirmation": "Konfirmasi"
+    },
+    "customerInfo": {
+      "title": "Informasi Pelanggan",
+      "name": "Nama Lengkap",
+      "email": "Email",
+      "phone": "Nomor Telepon"
+    },
+    "pickupInfo": {
+      "title": "Informasi Pengambilan",
+      "date": "Tanggal Pengambilan",
+      "time": "Waktu Pengambilan",
+      "notes": "Catatan Tambahan"
+    },
+    "payment": {
+      "title": "Metode Pembayaran",
+      "cash": "Tunai",
+      "transfer": "Transfer Bank",
+      "ewallet": "E-Wallet"
+    },
+    "placeOrder": "Buat Pesanan",
+    "processing": "Memproses..."
+  },
+  "auth": {
+    "login": {
+      "title": "Masuk ke Akun",
+      "subtitle": "Selamat datang kembali!",
+      "email": "Email",
+      "password": "Kata Sandi",
+      "rememberMe": "Ingat saya",
+      "forgotPassword": "Lupa kata sandi?",
+      "submit": "Masuk",
+      "noAccount": "Belum punya akun?",
+      "signUp": "Daftar sekarang",
+      "orContinueWith": "Atau masuk dengan"
+    },
+    "register": {
+      "title": "Buat Akun Baru",
+      "subtitle": "Bergabung dengan JuiceQu",
+      "fullName": "Nama Lengkap",
+      "email": "Email",
+      "phone": "Nomor Telepon",
+      "password": "Kata Sandi",
+      "confirmPassword": "Konfirmasi Kata Sandi",
+      "agreeTerms": "Saya setuju dengan",
+      "termsLink": "Syarat & Ketentuan",
+      "submit": "Daftar",
+      "hasAccount": "Sudah punya akun?",
+      "signIn": "Masuk",
+      "orSignUpWith": "Atau daftar dengan"
+    },
+    "errors": {
+      "invalidEmail": "Format email tidak valid",
+      "passwordTooShort": "Kata sandi minimal 8 karakter",
+      "passwordMismatch": "Kata sandi tidak cocok",
+      "invalidCredentials": "Email atau kata sandi salah",
+      "emailExists": "Email sudah terdaftar"
+    }
+  },
+  "orders": {
+    "title": "Pesanan Saya",
+    "empty": {
+      "title": "Belum Ada Pesanan",
+      "description": "Anda belum memiliki riwayat pesanan",
+      "cta": "Mulai Pesan"
+    },
+    "status": {
+      "pending": "Menunggu",
+      "confirmed": "Dikonfirmasi",
+      "processing": "Diproses",
+      "ready": "Siap Diambil",
+      "completed": "Selesai",
+      "cancelled": "Dibatalkan"
+    },
+    "details": {
+      "orderId": "ID Pesanan",
+      "orderDate": "Tanggal Pesanan",
+      "pickupTime": "Waktu Pengambilan",
+      "totalAmount": "Total Pembayaran",
+      "items": "Item Pesanan"
+    }
+  },
+  "chat": {
+    "title": "AI Chat Assistant",
+    "subtitle": "Tanya apa saja tentang menu kami",
+    "placeholder": "Ketik pesan Anda...",
+    "send": "Kirim",
+    "suggestions": {
+      "title": "Saran Pertanyaan",
+      "items": [
+        "Rekomendasi jus untuk diet",
+        "Jus apa yang tinggi vitamin C?",
+        "Menu favorit pelanggan",
+        "Jus untuk meningkatkan energi"
+      ]
+    },
+    "welcome": "Halo! Saya asisten AI JuiceQu. Ada yang bisa saya bantu hari ini?"
+  },
+  "footer": {
+    "description": "Jus segar dan sehat dengan 100% bahan alami. Dosis vitamin harian Anda.",
+    "menuTitle": "Menu",
+    "companyTitle": "Perusahaan",
+    "supportTitle": "Dukungan",
+    "legalTitle": "Legal",
+    "menu": {
+      "allProducts": "Semua Produk",
+      "smoothies": "Smoothies",
+      "freshJuices": "Jus Segar",
+      "acaiBowls": "Acai Bowls",
+      "healthySnacks": "Cemilan Sehat"
+    },
+    "company": {
+      "aboutUs": "Tentang Kami",
+      "careers": "Karir",
+      "franchise": "Waralaba",
+      "blog": "Blog",
+      "pressKit": "Press Kit"
+    },
+    "support": {
+      "helpCenter": "Pusat Bantuan",
+      "contactUs": "Hubungi Kami",
+      "faq": "FAQ",
+      "deliveryInfo": "Info Pengiriman",
+      "trackOrder": "Lacak Pesanan"
+    },
+    "legal": {
+      "privacyPolicy": "Kebijakan Privasi",
+      "termsOfService": "Syarat Layanan",
+      "cookiePolicy": "Kebijakan Cookie",
+      "refundPolicy": "Kebijakan Refund"
+    },
+    "paymentMethods": "Metode Pembayaran yang Diterima",
+    "secureEncrypted": "Aman & Terenkripsi",
+    "sslSecurity": "Keamanan SSL 256-bit",
+    "copyright": "© 2025 JuiceQu. Hak cipta dilindungi.",
+    "madeWith": "Dibuat dengan",
+    "inIndonesia": "di Indonesia"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Halaman Tidak Ditemukan",
+      "description": "Maaf, halaman yang Anda cari tidak tersedia",
+      "cta": "Kembali ke Beranda"
+    },
+    "serverError": {
+      "title": "Terjadi Kesalahan",
+      "description": "Maaf, terjadi kesalahan pada server kami",
+      "cta": "Coba Lagi"
+    },
+    "networkError": {
+      "title": "Koneksi Bermasalah",
+      "description": "Periksa koneksi internet Anda",
+      "cta": "Muat Ulang"
+    }
+  }
+}

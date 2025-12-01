@@ -1,19 +1,32 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ProductCarousel } from "@/components/home/ProductCarousel";
+import { PromoBanner } from "@/components/home/PromoBanner";
+import { CustomerReviews } from "@/components/home/CustomerReviews";
+import { WhyChooseUs } from "@/components/home/WhyChooseUs";
+import { CTABanner } from "@/components/home/CTABanner";
+import { StatsSection } from "@/components/home/StatsSection";
+import { useTranslation } from "@/lib/i18n";
 import { 
   Play, 
   ChevronLeft, 
   ChevronRight,
   Star,
-  ArrowRight
 } from "lucide-react";
 import { menuItems } from "@/lib/data";
 
 export default function HomePage() {
+  const { t } = useTranslation();
+  
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      {/* Promo Banner */}
+      <PromoBanner />
+      
       <Header />
 
       {/* Main Content */}
@@ -25,31 +38,31 @@ export default function HomePage() {
               {/* Left Content */}
               <div className="relative z-10 max-w-2xl">
                 <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-2 text-sm font-medium text-orange-800">
-                  <span>Faster Food Delivery Service</span>
-                  <span role="img" aria-label="pizza">🍕</span>
+                  <span>{t("home.hero.badge")}</span>
+                  <span role="img" aria-label="juice">🍹</span>
                 </div>
                 
                 <h1 className="text-5xl font-bold leading-tight tracking-tight text-gray-900 sm:text-7xl">
-                  Smoothies to <br />
-                  make your day <br />
-                  smooth
+                  {t("home.hero.title1")} <br />
+                  {t("home.hero.title2")} <br />
+                  {t("home.hero.title3")}
                 </h1>
                 
                 <p className="mt-6 text-lg text-gray-600 max-w-md">
-                  Discover local, on-demand delivery or Pickup from nearby restaurants.
+                  {t("home.hero.subtitle")}
                 </p>
                 
                 <div className="mt-10 flex flex-wrap items-center gap-4">
                   <Link href="/menu">
                     <Button size="xl" className="bg-red-700 hover:bg-red-800 text-white shadow-lg shadow-red-700/20 h-14 px-8 rounded-full">
-                      Order Now
+                      {t("home.hero.orderNow")}
                     </Button>
                   </Link>
                   <button className="group flex items-center gap-3 rounded-full bg-white px-6 py-4 text-sm font-medium text-gray-900 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-700 transition-colors group-hover:bg-red-700 group-hover:text-white">
                       <Play className="h-4 w-4 fill-current" />
                     </div>
-                    How It Works
+                    {t("home.hero.howItWorks")}
                   </button>
                 </div>
               </div>
@@ -110,41 +123,21 @@ export default function HomePage() {
         {/* Lineup Section */}
         <section className="py-20">
           <div className="container mx-auto px-4">
-            <div className="mb-10 flex items-end justify-between">
-              <h2 className="text-3xl font-bold text-gray-900">
-                Our Smoothies Lineup <span role="img" aria-label="fire">🔥</span>
-              </h2>
-              <div className="flex gap-2">
-                <button className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-900 text-white hover:bg-gray-800">
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {menuItems.slice(0, 4).map((product) => (
-                <Link href={`/products/${product.id}`} key={product.id} className="group relative rounded-3xl bg-gray-50 p-6 transition-all hover:bg-white hover:shadow-xl hover:shadow-gray-200/50">
-                  <div className="mb-6 flex h-48 items-center justify-center">
-                    <div className={`h-40 w-20 rounded-full ${product.color} opacity-80 shadow-lg transition-transform group-hover:scale-110`}></div>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">{product.name}</h3>
-                  <div className="mt-2 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500">Starting</p>
-                      <p className="text-lg font-bold text-gray-900">${product.price}</p>
-                    </div>
-                    <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm transition-colors hover:bg-green-600 hover:text-white">
-                      <ArrowRight className="h-5 w-5" />
-                    </button>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <ProductCarousel products={menuItems} speed={25} />
           </div>
         </section>
+
+        {/* Why Choose Us */}
+        <WhyChooseUs />
+
+        {/* Stats Section */}
+        <StatsSection />
+
+        {/* Customer Reviews */}
+        <CustomerReviews />
+
+        {/* CTA Banner */}
+        <CTABanner />
       </main>
       
       <Footer />
