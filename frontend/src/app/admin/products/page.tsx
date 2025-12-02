@@ -28,7 +28,7 @@ interface Product {
   image?: string;
   image_color?: string;
   is_available: boolean;
-  stock: number;
+  stock?: number;
   ingredients?: string[];
   nutrition?: Record<string, number>;
   rating?: number;
@@ -77,7 +77,7 @@ function ProductModal({
         price: product.price || product.base_price || 0,
         category: product.category || product.category_id || "",
         is_available: product.is_available,
-        stock: product.stock,
+        stock: product.stock ?? 100,
         ingredients: product.ingredients || [],
         image: product.image || product.image_color || "",
       });
@@ -546,8 +546,8 @@ export default function AdminProductsPage() {
                     ${(product.price || product.base_price || 0).toFixed(2)}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`font-medium ${product.stock < 10 ? 'text-red-600' : 'text-gray-900'}`}>
-                      {product.stock}
+                    <span className={`font-medium ${(product.stock ?? 0) < 10 ? 'text-red-600' : 'text-gray-900'}`}>
+                      {product.stock ?? 0}
                     </span>
                   </td>
                   <td className="px-6 py-4">
