@@ -66,12 +66,6 @@ export function CustomerReviews() {
   const goNext = () => setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
   const goPrev = () => setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
 
-  // Auto slide
-  useEffect(() => {
-    const interval = setInterval(goNext, 6000);
-    return () => clearInterval(interval);
-  }, []);
-
   const visibleReviews = reviews.slice(
     currentIndex * reviewsPerPage,
     (currentIndex + 1) * reviewsPerPage

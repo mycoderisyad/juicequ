@@ -5,11 +5,11 @@ import { Button } from "@/components/ui";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCarousel } from "@/components/home/ProductCarousel";
+import { CategoryBrowse } from "@/components/home/CategoryBrowse";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import { CustomerReviews } from "@/components/home/CustomerReviews";
 import { WhyChooseUs } from "@/components/home/WhyChooseUs";
 import { CTABanner } from "@/components/home/CTABanner";
-import { StatsSection } from "@/components/home/StatsSection";
 import { useTranslation } from "@/lib/i18n";
 import { 
   Play, 
@@ -120,18 +120,21 @@ export default function HomePage() {
           <div className="absolute bottom-0 left-0 -z-10 h-[400px] w-[400px] rounded-full bg-red-50/50 blur-3xl"></div>
         </section>
 
+        {/* Browse Categories Section */}
+        <CategoryBrowse />
+
         {/* Lineup Section */}
         <section className="py-20">
           <div className="container mx-auto px-4">
-            <ProductCarousel products={menuItems} speed={25} />
+            <ProductCarousel 
+              products={menuItems} 
+              speed={25}
+            />
           </div>
         </section>
 
         {/* Why Choose Us */}
         <WhyChooseUs />
-
-        {/* Stats Section */}
-        <StatsSection />
 
         {/* Customer Reviews */}
         <CustomerReviews />

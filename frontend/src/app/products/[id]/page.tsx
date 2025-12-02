@@ -1,26 +1,134 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, ArrowLeft, ShoppingBag } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Minus, Plus, ArrowLeft, ShoppingBag, RefreshCw } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { menuItems } from "@/lib/data";
+import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
 import Link from "next/link";
+
+interface DisplayProduct {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  calories: number;
+  category: string;
+  color: string;
+  ingredients?: string[];
+  nutrition?: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+}
+
+// Transform API product to display format
+function transformProduct(product: ApiProduct): DisplayProduct {
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    price: typeof product.price === "number" ? product.price.toFixed(2) : String(product.price),
+    calories: product.calories || 0,
+    category: product.category,
+    color: product.image_color || "bg-green-500",
+    ingredients: product.ingredients,
+    nutrition: product.nutrition,
+  };
+}
 
 export default function ProductPage() {
   const params = useParams();
   const { addItem } = useCartStore();
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<DisplayProduct | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  // Find product
   const idParam = params?.id;
   const idString = Array.isArray(idParam) ? idParam[0] : idParam;
   const id = idString ? parseInt(idString) : null;
-  const product = menuItems.find(item => item.id === id);
 
+  const fetchProduct = useCallback(async () => {
+    if (!id) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await productsApi.getById(id);
+      setProduct(transformProduct(response));
+    } catch (err) {
+      console.error("Failed to fetch product:", err);
+      
+      // Fallback to local data
+      const localProduct = menuItems.find(item => item.id === id);
+      if (localProduct) {
+        setProduct({
+          id: localProduct.id,
+          name: localProduct.name,
+          description: localProduct.description,
+          price: String(localProduct.price),
+          calories: parseInt(localProduct.calories) || 0,
+          category: localProduct.category,
+          color: localProduct.color,
+        });
+        setError("Failed to load from server. Showing cached data.");
+      } else {
+        setError("Product not found");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: parseFloat(product.price),
+      color: product.color,
+      quantity: quantity
+    });
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white">
+        <Header />
+        <main className="flex-1 py-10">
+          <div className="container mx-auto px-4">
+            <Skeleton className="mb-8 h-6 w-32" />
+            <div className="grid gap-10 lg:grid-cols-2 lg:gap-20">
+              <Skeleton className="aspect-square w-full rounded-[3rem]" />
+              <div className="flex flex-col justify-center space-y-6">
+                <Skeleton className="h-10 w-3/4" />
+                <Skeleton className="h-8 w-1/2" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Not found state
   if (!product) {
     return (
       <div className="flex min-h-screen flex-col bg-white">
@@ -36,22 +144,26 @@ export default function ProductPage() {
     );
   }
 
-  const handleAddToCart = () => {
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: parseFloat(product.price),
-      color: product.color,
-      quantity: quantity
-    });
-  };
-
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
       
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-6 flex items-center justify-between rounded-xl bg-yellow-50 p-4 text-yellow-800">
+              <span>{error}</span>
+              <button
+                onClick={fetchProduct}
+                className="flex items-center gap-2 text-sm font-medium hover:underline"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </button>
+            </div>
+          )}
+          
           <Link href="/menu" className="mb-8 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Menu
@@ -95,7 +207,7 @@ export default function ProductPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
                 <div className="flex items-center rounded-full border border-gray-200 bg-gray-50 p-1">
                   <button 
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -114,7 +226,7 @@ export default function ProductPage() {
 
                 <Button 
                   onClick={handleAddToCart}
-                  className="h-12 flex-1 rounded-full bg-gray-900 text-lg font-medium text-white hover:bg-gray-800"
+                  className="h-12 flex-1 rounded-full bg-green-600 text-lg font-medium text-white hover:bg-green-700"
                 >
                   <ShoppingBag className="mr-2 h-5 w-5" />
                   Add to Cart - ${(parseFloat(product.price) * quantity).toFixed(2)}

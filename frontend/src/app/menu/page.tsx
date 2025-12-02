@@ -1,21 +1,113 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Minus, ShoppingCart } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Search, Plus, Minus, ShoppingCart, RefreshCw } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
-import { menuItems, categories, type MenuItem, type Category } from "@/lib/data";
+import { menuItems as fallbackMenuItems, categories as fallbackCategories } from "@/lib/data";
+import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
 import Link from "next/link";
+
+interface DisplayProduct {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  calories: number;
+  category: string;
+  color: string;
+}
+
+function getInitialCategory(searchParams: URLSearchParams): string {
+  const categoryParam = searchParams.get("category");
+  if (categoryParam) {
+    return categoryParam;
+  }
+  return "All";
+}
+
+// Transform API product to display format
+function transformProduct(product: ApiProduct): DisplayProduct {
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    price: typeof product.price === "number" ? product.price.toFixed(2) : String(product.price),
+    calories: product.calories || 0,
+    category: product.category,
+    color: product.image_color || "bg-green-500",
+  };
+}
 
 export default function MenuPage() {
   const addItem = useCartStore((state) => state.addItem);
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState<Category>("All");
+  const [activeCategory, setActiveCategory] = useState<string>(() => getInitialCategory(searchParams));
   const [quantities, setQuantities] = useState<Record<number, number>>({});
+  
+  // API state
+  const [products, setProducts] = useState<DisplayProduct[]>([]);
+  const [categories, setCategories] = useState<string[]>([...fallbackCategories]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch products from API
+  const fetchProducts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await productsApi.getAll();
+      
+      if (response.items && response.items.length > 0) {
+        const transformed = response.items.map(transformProduct);
+        setProducts(transformed);
+        
+        // Extract unique categories from products
+        const uniqueCategories = ["All", ...new Set(response.items.map((p: ApiProduct) => p.category))];
+        setCategories(uniqueCategories);
+      } else {
+        // Use fallback data if API returns empty
+        setProducts(fallbackMenuItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          price: String(item.price),
+          calories: parseInt(item.calories) || 0,
+          category: item.category,
+          color: item.color,
+        })));
+        setCategories([...fallbackCategories]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+      // Use fallback data on error
+      setProducts(fallbackMenuItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: String(item.price),
+        calories: parseInt(item.calories) || 0,
+        category: item.category,
+        color: item.color,
+      })));
+      setCategories([...fallbackCategories]);
+      setError("Failed to load products from server. Showing cached data.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const getQuantity = (id: number) => quantities[id] || 1;
 
@@ -32,7 +124,7 @@ export default function MenuPage() {
   };
 
   const filteredItems = useMemo(() => {
-    return menuItems.filter((item) => {
+    return products.filter((item) => {
       // Filter by category
       const matchesCategory = activeCategory === "All" || item.category === activeCategory;
       
@@ -44,9 +136,9 @@ export default function MenuPage() {
       
       return matchesCategory && matchesSearch;
     });
-  }, [searchQuery, activeCategory]);
+  }, [products, searchQuery, activeCategory]);
 
-  const handleAddToCart = (e: React.MouseEvent, item: MenuItem) => {
+  const handleAddToCart = (e: React.MouseEvent, item: DisplayProduct) => {
     e.preventDefault();
     e.stopPropagation();
     const qty = getQuantity(item.id);
@@ -62,12 +154,62 @@ export default function MenuPage() {
     setQuantities(prev => ({ ...prev, [item.id]: 1 }));
   };
 
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white">
+        <Header />
+        <main className="flex-1 py-10">
+          <div className="container mx-auto px-4">
+            <div className="mb-10 text-center">
+              <Skeleton className="mx-auto h-10 w-48" />
+              <Skeleton className="mx-auto mt-2 h-6 w-64" />
+            </div>
+            <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <Skeleton className="h-12 w-full max-w-md" />
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-10 w-24 rounded-full" />
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="rounded-3xl border border-gray-100 p-4">
+                  <Skeleton className="mb-4 aspect-square w-full rounded-2xl" />
+                  <Skeleton className="mb-2 h-6 w-3/4" />
+                  <Skeleton className="mb-4 h-4 w-1/2" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
       
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-6 flex items-center justify-between rounded-xl bg-yellow-50 p-4 text-yellow-800">
+              <span>{error}</span>
+              <button
+                onClick={fetchProducts}
+                className="flex items-center gap-2 text-sm font-medium hover:underline"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </button>
+            </div>
+          )}
+
           {/* Page Header */}
           <div className="mb-10 text-center">
             <h1 className="text-4xl font-bold text-gray-900">{t("menu.title")}</h1>
@@ -124,7 +266,7 @@ export default function MenuPage() {
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredItems.map((item) => (
-                <Link href={`/products/${item.id}`} key={item.id} className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:shadow-xl hover:shadow-gray-200/50">
+                <Link href={`/products/${item.id}`} key={item.id} className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
                   {/* Image Placeholder */}
                   <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl bg-gray-50">
                     <div className={`absolute inset-0 ${item.color} opacity-20 transition-opacity group-hover:opacity-30`}></div>
@@ -163,7 +305,7 @@ export default function MenuPage() {
                     {/* Quantity Controls and Add to Cart */}
                     <div className="mt-auto flex items-center justify-between">
                       {/* Quantity Selector */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={(e) => decrementQuantity(e, item.id)}
                           className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200"
@@ -184,9 +326,10 @@ export default function MenuPage() {
                       {/* Add to Cart Button */}
                       <button
                         onClick={(e) => handleAddToCart(e, item)}
-                        className="flex h-12 w-12 items-center justify-center rounded-full bg-green-600 text-white transition-all hover:bg-green-700 hover:scale-105 active:scale-95"
+                        className="flex h-10 items-center justify-center gap-2 rounded-full bg-green-600 px-4 text-sm text-white font-medium transition-all hover:bg-green-700"
                       >
-                        <ShoppingCart className="h-5 w-5" />
+                        <ShoppingCart className="h-4 w-4" />
+                        <span>${(parseFloat(item.price) * getQuantity(item.id)).toFixed(2)}</span>
                       </button>
                     </div>
                   </div>
