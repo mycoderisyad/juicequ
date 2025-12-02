@@ -141,7 +141,7 @@ function CategoryModal({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Brief description of the category..."
-              className="w-full rounded-xl border border-gray-200 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               rows={2}
             />
           </div>
@@ -176,15 +176,19 @@ function DeleteModal({
   onClose,
   onConfirm,
   categoryName,
+  productCount,
   isLoading,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   categoryName: string;
+  productCount: number;
   isLoading: boolean;
 }) {
   if (!isOpen) return null;
+
+  const hasProducts = productCount > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -193,26 +197,40 @@ function DeleteModal({
           <AlertCircle className="h-6 w-6" />
           <h2 className="text-xl font-bold">Delete Category</h2>
         </div>
-        <p className="mb-6 text-gray-600">
-          Are you sure you want to delete <strong>{categoryName}</strong>? Products in this category will need to be reassigned.
-        </p>
+        {hasProducts ? (
+          <div className="mb-6">
+            <p className="mb-3 text-gray-600">
+              Cannot delete <strong>{categoryName}</strong> because it contains{" "}
+              <strong>{productCount} product{productCount > 1 ? "s" : ""}</strong>.
+            </p>
+            <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+              ⚠️ Please move or delete all products in this category first before deleting it.
+            </p>
+          </div>
+        ) : (
+          <p className="mb-6 text-gray-600">
+            Are you sure you want to delete <strong>{categoryName}</strong>? This action cannot be undone.
+          </p>
+        )}
         <div className="flex justify-end gap-3">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {hasProducts ? "Close" : "Cancel"}
           </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              <>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </>
-            )}
-          </Button>
+          {!hasProducts && (
+            <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </div>
@@ -289,12 +307,17 @@ export default function AdminCategoriesPage() {
     if (!selectedCategory) return;
     try {
       setIsSaving(true);
+      setError(null);
       await categoriesApi.delete(selectedCategory.id);
       setIsDeleteModalOpen(false);
       fetchCategories();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to delete category:", err);
-      setError("Failed to delete category");
+      // Extract error message from API response
+      const axiosError = err as { response?: { data?: { detail?: string } } };
+      const errorMessage = axiosError.response?.data?.detail || "Failed to delete category";
+      setError(errorMessage);
+      setIsDeleteModalOpen(false);
     } finally {
       setIsSaving(false);
     }
@@ -392,6 +415,7 @@ export default function AdminCategoriesPage() {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteCategory}
         categoryName={selectedCategory?.name || ""}
+        productCount={selectedCategory?.product_count || 0}
         isLoading={isSaving}
       />
     </div>

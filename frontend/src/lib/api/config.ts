@@ -23,7 +23,8 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
+      // Check both keys for backward compatibility
+      const token = localStorage.getItem("token") || localStorage.getItem("access_token");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -39,10 +40,15 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Only redirect on 401 if not already on login page
     if (error.response?.status === 401) {
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
         localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("auth-storage");
+        // Clear cookie
+        document.cookie = "token=; path=/; max-age=0";
         window.location.href = "/login";
       }
     }

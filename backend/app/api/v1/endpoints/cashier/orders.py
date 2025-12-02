@@ -12,7 +12,11 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.dependencies import get_current_user
 from app.core.permissions import require_roles
+from app.core.exceptions import NotFoundException, BadRequestException
 from app.models.user import User, UserRole
+from app.models.order import Order, OrderStatus as DbOrderStatus
+from app.services.order_service import OrderService
+from app.schemas.order import OrderStatusUpdate
 
 router = APIRouter()
 
@@ -23,36 +27,43 @@ class UpdateOrderStatusRequest(BaseModel):
     notes: str | None = Field(None, max_length=500, description="Staff notes")
 
 
-class OrderStatus:
-    """Order status constants."""
-    PENDING = "pending"
-    CONFIRMED = "confirmed"
-    PREPARING = "preparing"
-    READY = "ready"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-    
-    VALID_TRANSITIONS = {
-        PENDING: [CONFIRMED, CANCELLED],
-        CONFIRMED: [PREPARING, CANCELLED],
-        PREPARING: [READY, CANCELLED],
-        READY: [COMPLETED],
-        COMPLETED: [],
-        CANCELLED: [],
+# Valid status transitions
+VALID_TRANSITIONS = {
+    "pending": ["paid", "cancelled"],
+    "paid": ["preparing", "cancelled"],
+    "preparing": ["ready", "cancelled"],
+    "ready": ["completed"],
+    "completed": [],
+    "cancelled": [],
+}
+
+
+def order_to_dict(order: Order) -> dict:
+    """Convert Order model to dict format."""
+    return {
+        "id": order.id,
+        "order_number": order.order_number,
+        "user_id": order.user_id,
+        "status": order.status.value,
+        "subtotal": order.subtotal,
+        "tax": order.tax,
+        "total": order.total,
+        "payment_method": order.payment_method.value if order.payment_method else None,
+        "customer_notes": order.customer_notes,
+        "items": [
+            {
+                "id": item.id,
+                "product_id": item.product_id,
+                "product_name": item.product_name,
+                "quantity": item.quantity,
+                "unit_price": item.unit_price,
+                "subtotal": item.subtotal,
+            }
+            for item in order.items
+        ],
+        "created_at": order.created_at.isoformat(),
+        "updated_at": order.updated_at.isoformat(),
     }
-
-
-# Reference to customer orders storage
-def get_all_orders():
-    """Get all orders from all users."""
-    from app.api.v1.endpoints.customer.orders import ORDERS
-    all_orders = []
-    for user_id, orders in ORDERS.items():
-        for order in orders:
-            order_copy = order.copy()
-            order_copy["user_id"] = user_id
-            all_orders.append(order_copy)
-    return all_orders
 
 
 @router.get(
@@ -67,22 +78,24 @@ async def get_orders(
     limit: int = Query(50, ge=1, le=100, description="Max results"),
 ):
     """Get all orders for processing."""
-    all_orders = get_all_orders()
-    
-    # Filter by status
+    # Convert status string to enum if provided
+    status_enum = None
     if status:
-        all_orders = [order for order in all_orders if order["status"] == status]
+        try:
+            status_enum = DbOrderStatus(status)
+        except ValueError:
+            pass
     
-    # Sort by date (newest first)
-    all_orders = sorted(
-        all_orders,
-        key=lambda x: x["created_at"],
-        reverse=True
-    )[:limit]
+    orders, total = OrderService.get_all_orders(
+        db,
+        status=status_enum,
+        page=1,
+        page_size=limit
+    )
     
     return {
-        "orders": all_orders,
-        "total": len(all_orders),
+        "orders": [order_to_dict(order) for order in orders],
+        "total": total,
     }
 
 
@@ -96,21 +109,10 @@ async def get_pending_orders(
     current_user: User = Depends(require_roles(UserRole.KASIR, UserRole.ADMIN)),
 ):
     """Get pending orders that need attention."""
-    all_orders = get_all_orders()
-    
-    pending_orders = [
-        order for order in all_orders 
-        if order["status"] in [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PREPARING]
-    ]
-    
-    # Sort by date (oldest first - FIFO)
-    pending_orders = sorted(
-        pending_orders,
-        key=lambda x: x["created_at"]
-    )
+    pending_orders = OrderService.get_pending_orders(db)
     
     return {
-        "orders": pending_orders,
+        "orders": [order_to_dict(order) for order in pending_orders],
         "total": len(pending_orders),
     }
 
@@ -126,18 +128,12 @@ async def get_order_details(
     current_user: User = Depends(require_roles(UserRole.KASIR, UserRole.ADMIN)),
 ):
     """Get details of a specific order."""
-    all_orders = get_all_orders()
-    
-    order = next(
-        (order for order in all_orders if order["id"] == order_id),
-        None
-    )
+    order = OrderService.get_order_by_id(db, order_id)
     
     if not order:
-        from app.core.exceptions import NotFoundException
         raise NotFoundException("Order", order_id)
     
-    return order
+    return order_to_dict(order)
 
 
 @router.put(
@@ -152,49 +148,41 @@ async def update_order_status(
     current_user: User = Depends(require_roles(UserRole.KASIR, UserRole.ADMIN)),
 ):
     """Update the status of an order."""
-    from app.api.v1.endpoints.customer.orders import ORDERS
+    order = OrderService.get_order_by_id(db, order_id)
     
-    # Find the order
-    target_order = None
-    target_user_id = None
-    
-    for user_id, orders in ORDERS.items():
-        for order in orders:
-            if order["id"] == order_id:
-                target_order = order
-                target_user_id = user_id
-                break
-        if target_order:
-            break
-    
-    if not target_order:
-        from app.core.exceptions import NotFoundException
+    if not order:
         raise NotFoundException("Order", order_id)
     
     # Validate status transition
-    current_status = target_order["status"]
+    current_status = order.status.value
     new_status = request.status
     
-    valid_next_statuses = OrderStatus.VALID_TRANSITIONS.get(current_status, [])
+    valid_next_statuses = VALID_TRANSITIONS.get(current_status, [])
     if new_status not in valid_next_statuses:
-        from app.core.exceptions import BadRequestException
         raise BadRequestException(
             f"Cannot transition from '{current_status}' to '{new_status}'. "
             f"Valid transitions: {valid_next_statuses}"
         )
     
-    # Update status
-    target_order["status"] = new_status
-    target_order["updated_at"] = datetime.now().isoformat()
-    if request.notes:
-        target_order["staff_notes"] = request.notes
-    target_order["processed_by"] = current_user.id
-    
-    return {
-        "message": f"Order status updated to '{new_status}'",
-        "order": target_order,
-        "success": True,
-    }
+    # Update status using service
+    try:
+        new_status_enum = DbOrderStatus(new_status)
+        updated_order = OrderService.update_status(
+            db,
+            order_id,
+            OrderStatusUpdate(
+                status=new_status_enum,
+                internal_notes=request.notes
+            )
+        )
+        
+        return {
+            "message": f"Order status updated to '{new_status}'",
+            "order": order_to_dict(updated_order),
+            "success": True,
+        }
+    except ValueError as e:
+        raise BadRequestException(str(e))
 
 
 @router.post(
@@ -208,26 +196,25 @@ async def complete_order(
     current_user: User = Depends(require_roles(UserRole.KASIR, UserRole.ADMIN)),
 ):
     """Quick action to complete a ready order."""
-    from app.api.v1.endpoints.customer.orders import ORDERS
+    order = OrderService.get_order_by_id(db, order_id)
     
-    # Find the order
-    for user_id, orders in ORDERS.items():
-        for order in orders:
-            if order["id"] == order_id:
-                if order["status"] != OrderStatus.READY:
-                    from app.core.exceptions import BadRequestException
-                    raise BadRequestException("Only 'ready' orders can be completed")
-                
-                order["status"] = OrderStatus.COMPLETED
-                order["updated_at"] = datetime.now().isoformat()
-                order["completed_at"] = datetime.now().isoformat()
-                order["processed_by"] = current_user.id
-                
-                return {
-                    "message": "Order completed successfully",
-                    "order": order,
-                    "success": True,
-                }
+    if not order:
+        raise NotFoundException("Order", order_id)
     
-    from app.core.exceptions import NotFoundException
-    raise NotFoundException("Order", order_id)
+    if order.status != DbOrderStatus.READY:
+        raise BadRequestException("Only 'ready' orders can be completed")
+    
+    updated_order = OrderService.update_status(
+        db,
+        order_id,
+        OrderStatusUpdate(
+            status=DbOrderStatus.COMPLETED,
+            internal_notes=f"Completed by {current_user.nama}"
+        )
+    )
+    
+    return {
+        "message": "Order completed successfully",
+        "order": order_to_dict(updated_order),
+        "success": True,
+    }

@@ -243,7 +243,7 @@ export default function AdminSettingsPage() {
                 type="text"
                 value={storeSettings.store_name}
                 onChange={(e) => setStoreSettings(prev => ({ ...prev, store_name: e.target.value }))}
-                className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                 placeholder="JuiceQu"
               />
             </div>
@@ -255,7 +255,7 @@ export default function AdminSettingsPage() {
                 type="email"
                 value={storeSettings.store_email}
                 onChange={(e) => setStoreSettings(prev => ({ ...prev, store_email: e.target.value }))}
-                className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                 placeholder="contact@juicequ.com"
               />
             </div>
@@ -267,7 +267,7 @@ export default function AdminSettingsPage() {
                 type="tel"
                 value={storeSettings.store_phone}
                 onChange={(e) => setStoreSettings(prev => ({ ...prev, store_phone: e.target.value }))}
-                className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                 placeholder="+1 234 567 890"
               />
             </div>
@@ -278,7 +278,7 @@ export default function AdminSettingsPage() {
               <select
                 value={storeSettings.currency}
                 onChange={(e) => setStoreSettings(prev => ({ ...prev, currency: e.target.value }))}
-                className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               >
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
@@ -293,7 +293,7 @@ export default function AdminSettingsPage() {
               <textarea
                 value={storeSettings.store_address}
                 onChange={(e) => setStoreSettings(prev => ({ ...prev, store_address: e.target.value }))}
-                className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                 placeholder="123 Juice Street, Fresh City"
                 rows={2}
               />
@@ -307,7 +307,7 @@ export default function AdminSettingsPage() {
                 step="0.1"
                 value={storeSettings.tax_rate}
                 onChange={(e) => setStoreSettings(prev => ({ ...prev, tax_rate: parseFloat(e.target.value) || 0 }))}
-                className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                 placeholder="10"
               />
             </div>
@@ -346,7 +346,7 @@ export default function AdminSettingsPage() {
                   type="time"
                   value={operationalSettings.opening_time}
                   onChange={(e) => setOperationalSettings(prev => ({ ...prev, opening_time: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                 />
               </div>
               <div>
@@ -357,7 +357,7 @@ export default function AdminSettingsPage() {
                   type="time"
                   value={operationalSettings.closing_time}
                   onChange={(e) => setOperationalSettings(prev => ({ ...prev, closing_time: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                 />
               </div>
             </div>
@@ -461,7 +461,7 @@ export default function AdminSettingsPage() {
                   step="0.01"
                   value={paymentSettings.minimum_order}
                   onChange={(e) => setPaymentSettings(prev => ({ ...prev, minimum_order: parseFloat(e.target.value) || 0 }))}
-                  className="w-full rounded-xl border border-gray-200 py-2 pl-8 pr-4 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                   placeholder="0.00"
                 />
               </div>

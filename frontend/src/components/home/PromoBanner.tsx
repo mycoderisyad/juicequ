@@ -9,6 +9,7 @@ export function PromoBanner() {
   const { t } = useTranslation();
   const [currentPromo, setCurrentPromo] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   const promos = [
     {
@@ -35,6 +36,10 @@ export function PromoBanner() {
   ];
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPromo((prev) => (prev + 1) % promos.length);
     }, 5000);
@@ -44,6 +49,17 @@ export function PromoBanner() {
   if (!isVisible) return null;
 
   const promo = promos[currentPromo];
+
+  // Prevent hydration mismatch by not rendering translated content until mounted
+  if (!mounted) {
+    return (
+      <div className="bg-gradient-to-r from-green-600 to-green-500 text-white py-3 px-4 relative">
+        <div className="container mx-auto flex items-center justify-center gap-4 text-sm h-5">
+          {/* Placeholder to prevent layout shift */}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${promo.bgColor} text-white py-3 px-4 relative`}>

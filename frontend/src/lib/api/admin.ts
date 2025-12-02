@@ -7,7 +7,7 @@ import type { Product, Category } from "./customer";
 
 // Types
 export interface User {
-  id: number;
+  id: string;
   email: string;
   nama: string;
   role: string;
@@ -103,7 +103,7 @@ export const usersApi = {
   /**
    * Get user by ID.
    */
-  getById: async (userId: number): Promise<User> => {
+  getById: async (userId: string): Promise<User> => {
     const response = await apiClient.get(`/admin/users/${userId}`);
     return response.data;
   },
@@ -117,7 +117,14 @@ export const usersApi = {
     password: string;
     role?: string;
   }): Promise<{ user: User; message: string }> => {
-    const response = await apiClient.post("/admin/users", data);
+    // Backend expects full_name, not nama
+    const payload = {
+      email: data.email,
+      full_name: data.nama,
+      password: data.password,
+      role: data.role,
+    };
+    const response = await apiClient.post("/admin/users", payload);
     return response.data;
   },
 
@@ -125,7 +132,7 @@ export const usersApi = {
    * Update user.
    */
   update: async (
-    userId: number,
+    userId: string,
     data: {
       email?: string;
       nama?: string;
@@ -133,14 +140,21 @@ export const usersApi = {
       is_active?: boolean;
     }
   ): Promise<{ user: User; message: string }> => {
-    const response = await apiClient.put(`/admin/users/${userId}`, data);
+    // Backend expects full_name, not nama
+    const payload: Record<string, unknown> = {};
+    if (data.email) payload.email = data.email;
+    if (data.nama) payload.full_name = data.nama;
+    if (data.role) payload.role = data.role;
+    if (data.is_active !== undefined) payload.is_active = data.is_active;
+    
+    const response = await apiClient.put(`/admin/users/${userId}`, payload);
     return response.data;
   },
 
   /**
    * Delete user.
    */
-  delete: async (userId: number): Promise<{ message: string }> => {
+  delete: async (userId: string): Promise<{ message: string }> => {
     const response = await apiClient.delete(`/admin/users/${userId}`);
     return response.data;
   },

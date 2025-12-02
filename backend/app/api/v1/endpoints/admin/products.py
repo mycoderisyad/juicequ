@@ -5,6 +5,7 @@ Manage products and inventory.
 from datetime import datetime
 from typing import Annotated
 import uuid
+import json
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
@@ -13,12 +14,9 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.permissions import require_roles
 from app.models.user import User, UserRole
+from app.models.product import Product, ProductCategory
 
 router = APIRouter()
-
-
-# Import shared products list
-from app.api.v1.endpoints.customer.products import PRODUCTS, CATEGORIES
 
 
 class CreateProductRequest(BaseModel):
@@ -47,6 +45,38 @@ class UpdateProductRequest(BaseModel):
     nutrition: dict | None = None
 
 
+def product_to_dict(product: Product) -> dict:
+    """Convert Product model to dictionary."""
+    ingredients = []
+    if product.ingredients:
+        try:
+            ingredients = json.loads(product.ingredients)
+        except json.JSONDecodeError:
+            ingredients = []
+    
+    return {
+        "id": product.id,
+        "name": product.name,
+        "description": product.description,
+        "price": product.base_price,
+        "base_price": product.base_price,
+        "category": product.category_id,
+        "category_id": product.category_id,
+        "category_name": product.category.name if product.category else None,
+        "image": product.image_url,
+        "image_color": product.image_url,  # For frontend compatibility
+        "is_available": product.is_available,
+        "stock": product.stock_quantity,
+        "stock_quantity": product.stock_quantity,
+        "ingredients": ingredients,
+        "calories": product.calories,
+        "rating": product.average_rating,
+        "reviews": product.order_count,
+        "created_at": product.created_at.isoformat() if product.created_at else None,
+        "updated_at": product.updated_at.isoformat() if product.updated_at else None,
+    }
+
+
 @router.get(
     "",
     summary="Get all products",
@@ -62,28 +92,27 @@ async def get_products(
     limit: int = Query(50, ge=1, le=100),
 ):
     """Get all products with full admin details."""
-    products = PRODUCTS.copy()
+    query = db.query(Product)
     
     # Apply filters
     if category:
-        products = [p for p in products if p["category"] == category]
+        query = query.filter(Product.category_id == category)
     
     if is_available is not None:
-        products = [p for p in products if p.get("is_available", True) == is_available]
+        query = query.filter(Product.is_available == is_available)
     
     if search:
-        search_lower = search.lower()
-        products = [
-            p for p in products
-            if search_lower in p["name"].lower() 
-            or search_lower in p.get("description", "").lower()
-        ]
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            (Product.name.ilike(search_pattern)) | 
+            (Product.description.ilike(search_pattern))
+        )
     
-    total = len(products)
-    products = products[skip:skip + limit]
+    total = query.count()
+    products = query.offset(skip).limit(limit).all()
     
     return {
-        "products": products,
+        "products": [product_to_dict(p) for p in products],
         "total": total,
         "skip": skip,
         "limit": limit,
@@ -101,16 +130,13 @@ async def get_product(
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
 ):
     """Get product by ID."""
-    product = next(
-        (p for p in PRODUCTS if str(p["id"]) == product_id),
-        None
-    )
+    product = db.query(Product).filter(Product.id == product_id).first()
     
     if not product:
         from app.core.exceptions import NotFoundException
         raise NotFoundException("Product", product_id)
     
-    return product
+    return product_to_dict(product)
 
 
 @router.post(
@@ -126,45 +152,38 @@ async def create_product(
     """Create a new product."""
     from app.core.exceptions import BadRequestException
     
-    # Validate category
-    if request.category not in [c["id"] for c in CATEGORIES]:
+    # Validate category exists
+    category = db.query(ProductCategory).filter(ProductCategory.id == request.category).first()
+    if not category:
         raise BadRequestException(
-            f"Invalid category. Must be one of: {[c['id'] for c in CATEGORIES]}"
+            f"Invalid category ID: {request.category}. Category does not exist."
         )
     
     # Check for duplicate name
-    existing = next(
-        (p for p in PRODUCTS if p["name"].lower() == request.name.lower()),
-        None
-    )
+    existing = db.query(Product).filter(Product.name.ilike(request.name)).first()
     if existing:
         raise BadRequestException("A product with this name already exists")
     
     # Create product
-    new_id = max(p["id"] for p in PRODUCTS) + 1 if PRODUCTS else 1
+    new_product = Product(
+        id=str(uuid.uuid4()),
+        name=request.name,
+        description=request.description,
+        base_price=request.price,
+        category_id=request.category,
+        image_url=request.image or "bg-green-500",
+        is_available=request.is_available,
+        stock_quantity=request.stock,
+        ingredients=json.dumps(request.ingredients) if request.ingredients else None,
+    )
     
-    new_product = {
-        "id": new_id,
-        "name": request.name,
-        "description": request.description,
-        "price": request.price,
-        "category": request.category,
-        "image": request.image or "/images/juice-default.jpg",
-        "is_available": request.is_available,
-        "stock": request.stock,
-        "ingredients": request.ingredients,
-        "nutrition": request.nutrition or {},
-        "rating": 0,
-        "reviews": 0,
-        "created_at": datetime.now().isoformat(),
-        "created_by": current_user.id,
-    }
-    
-    PRODUCTS.append(new_product)
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
     
     return {
         "message": "Product created successfully",
-        "product": new_product,
+        "product": product_to_dict(new_product),
         "success": True,
     }
 
@@ -183,10 +202,7 @@ async def update_product(
     """Update a product."""
     from app.core.exceptions import NotFoundException, BadRequestException
     
-    product = next(
-        (p for p in PRODUCTS if str(p["id"]) == product_id),
-        None
-    )
+    product = db.query(Product).filter(Product.id == product_id).first()
     
     if not product:
         raise NotFoundException("Product", product_id)
@@ -194,50 +210,45 @@ async def update_product(
     # Update fields
     if request.name is not None:
         # Check for duplicate name
-        existing = next(
-            (p for p in PRODUCTS 
-             if p["name"].lower() == request.name.lower() 
-             and str(p["id"]) != product_id),
-            None
-        )
+        existing = db.query(Product).filter(
+            Product.name.ilike(request.name),
+            Product.id != product_id
+        ).first()
         if existing:
             raise BadRequestException("A product with this name already exists")
-        product["name"] = request.name
+        product.name = request.name
     
     if request.description is not None:
-        product["description"] = request.description
+        product.description = request.description
     
     if request.price is not None:
-        product["price"] = request.price
+        product.base_price = request.price
     
     if request.category is not None:
-        if request.category not in [c["id"] for c in CATEGORIES]:
-            raise BadRequestException(
-                f"Invalid category. Must be one of: {[c['id'] for c in CATEGORIES]}"
-            )
-        product["category"] = request.category
+        # Validate category exists
+        category = db.query(ProductCategory).filter(ProductCategory.id == request.category).first()
+        if not category:
+            raise BadRequestException(f"Invalid category ID: {request.category}")
+        product.category_id = request.category
     
     if request.image is not None:
-        product["image"] = request.image
+        product.image_url = request.image
     
     if request.is_available is not None:
-        product["is_available"] = request.is_available
+        product.is_available = request.is_available
     
     if request.stock is not None:
-        product["stock"] = request.stock
+        product.stock_quantity = request.stock
     
     if request.ingredients is not None:
-        product["ingredients"] = request.ingredients
+        product.ingredients = json.dumps(request.ingredients)
     
-    if request.nutrition is not None:
-        product["nutrition"] = request.nutrition
-    
-    product["updated_at"] = datetime.now().isoformat()
-    product["updated_by"] = current_user.id
+    db.commit()
+    db.refresh(product)
     
     return {
         "message": "Product updated successfully",
-        "product": product,
+        "product": product_to_dict(product),
         "success": True,
     }
 
@@ -255,20 +266,19 @@ async def delete_product(
     """Delete a product."""
     from app.core.exceptions import NotFoundException
     
-    product_index = next(
-        (i for i, p in enumerate(PRODUCTS) if str(p["id"]) == product_id),
-        None
-    )
+    product = db.query(Product).filter(Product.id == product_id).first()
     
-    if product_index is None:
+    if not product:
         raise NotFoundException("Product", product_id)
     
-    deleted_product = PRODUCTS.pop(product_index)
+    product_name = product.name
+    db.delete(product)
+    db.commit()
     
     return {
         "message": "Product deleted successfully",
         "product_id": product_id,
-        "product_name": deleted_product["name"],
+        "product_name": product_name,
         "success": True,
     }
 
@@ -287,18 +297,15 @@ async def update_stock(
     """Update product stock level."""
     from app.core.exceptions import NotFoundException
     
-    product = next(
-        (p for p in PRODUCTS if str(p["id"]) == product_id),
-        None
-    )
+    product = db.query(Product).filter(Product.id == product_id).first()
     
     if not product:
         raise NotFoundException("Product", product_id)
     
-    old_stock = product.get("stock", 0)
-    product["stock"] = stock
-    product["stock_updated_at"] = datetime.now().isoformat()
-    product["stock_updated_by"] = current_user.id
+    old_stock = product.stock_quantity
+    product.stock_quantity = stock
+    
+    db.commit()
     
     return {
         "message": f"Stock updated: {old_stock} → {stock}",

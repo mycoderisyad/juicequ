@@ -6,11 +6,13 @@ from datetime import datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.core.permissions import require_roles
 from app.models.user import User, UserRole
+from app.models.order import Order, OrderStatus, PaymentMethod
 
 router = APIRouter()
 
@@ -26,37 +28,58 @@ async def get_daily_report(
     date: str | None = Query(None, description="Date (YYYY-MM-DD), defaults to today"),
 ):
     """Get daily sales report."""
-    from app.api.v1.endpoints.cashier.transactions import TRANSACTIONS
-    
     # Default to today
-    report_date = date or datetime.now().strftime("%Y-%m-%d")
+    if date:
+        try:
+            report_date = datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            report_date = datetime.now()
+    else:
+        report_date = datetime.now()
     
-    # Filter transactions for the date
-    daily_transactions = [
-        t for t in TRANSACTIONS.values()
-        if t["created_at"].startswith(report_date) and t["status"] == "completed"
-    ]
+    start_of_day = report_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_of_day = start_of_day + timedelta(days=1)
+    
+    # Get completed orders for the date from database
+    completed_orders = db.query(Order).filter(
+        Order.status == OrderStatus.COMPLETED,
+        Order.completed_at >= start_of_day,
+        Order.completed_at < end_of_day
+    ).all()
     
     # Calculate metrics
-    total_sales = sum(t["amount"] for t in daily_transactions)
-    total_transactions = len(daily_transactions)
+    total_sales = sum(o.total for o in completed_orders)
+    total_transactions = len(completed_orders)
     
     # Group by payment method
-    by_payment_method = {}
-    for t in daily_transactions:
-        method = t["payment_method"]
+    by_payment_method: dict = {}
+    for order in completed_orders:
+        method = order.payment_method.value if order.payment_method else "unknown"
         if method not in by_payment_method:
             by_payment_method[method] = {"count": 0, "total": 0}
         by_payment_method[method]["count"] += 1
-        by_payment_method[method]["total"] += t["amount"]
+        by_payment_method[method]["total"] += order.total
+    
+    # Format transactions for response
+    transactions = [
+        {
+            "id": o.id,
+            "order_number": o.order_number,
+            "amount": o.total,
+            "payment_method": o.payment_method.value if o.payment_method else None,
+            "status": "completed",
+            "created_at": o.completed_at.isoformat() if o.completed_at else o.created_at.isoformat(),
+        }
+        for o in completed_orders
+    ]
     
     return {
-        "date": report_date,
+        "date": report_date.strftime("%Y-%m-%d"),
         "total_sales": total_sales,
         "total_transactions": total_transactions,
         "average_transaction": total_sales / total_transactions if total_transactions else 0,
         "by_payment_method": by_payment_method,
-        "transactions": daily_transactions,
+        "transactions": transactions,
     }
 
 
@@ -71,9 +94,6 @@ async def get_sales_summary(
     period: str = Query("today", description="Period: today, week, month"),
 ):
     """Get sales summary for the specified period."""
-    from app.api.v1.endpoints.cashier.transactions import TRANSACTIONS
-    from app.api.v1.endpoints.customer.orders import ORDERS
-    
     now = datetime.now()
     
     # Calculate date range
@@ -86,42 +106,27 @@ async def get_sales_summary(
     else:
         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
     
-    start_str = start_date.isoformat()
+    # Get orders in range from database
+    period_orders = db.query(Order).filter(Order.created_at >= start_date).all()
     
-    # Get transactions in range
-    period_transactions = [
-        t for t in TRANSACTIONS.values()
-        if t["created_at"] >= start_str and t["status"] == "completed"
-    ]
-    
-    # Get orders stats
-    all_orders = []
-    for user_id, orders in ORDERS.items():
-        all_orders.extend(orders)
-    
-    period_orders = [
-        o for o in all_orders
-        if o["created_at"] >= start_str
-    ]
-    
-    completed_orders = [o for o in period_orders if o["status"] == "completed"]
-    cancelled_orders = [o for o in period_orders if o["status"] == "cancelled"]
+    # Completed orders (sales)
+    completed_orders = [o for o in period_orders if o.status == OrderStatus.COMPLETED]
+    cancelled_orders = [o for o in period_orders if o.status == OrderStatus.CANCELLED]
     pending_orders = [
         o for o in period_orders 
-        if o["status"] in ["pending", "confirmed", "preparing", "ready"]
+        if o.status in [OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.PREPARING, OrderStatus.READY]
     ]
+    
+    total_sales = sum(o.total for o in completed_orders)
     
     return {
         "period": period,
-        "start_date": start_str,
+        "start_date": start_date.isoformat(),
         "end_date": now.isoformat(),
         "sales": {
-            "total": sum(t["amount"] for t in period_transactions),
-            "count": len(period_transactions),
-            "average": (
-                sum(t["amount"] for t in period_transactions) / len(period_transactions)
-                if period_transactions else 0
-            ),
+            "total": total_sales,
+            "count": len(completed_orders),
+            "average": total_sales / len(completed_orders) if completed_orders else 0,
         },
         "orders": {
             "total": len(period_orders),
@@ -130,10 +135,8 @@ async def get_sales_summary(
             "pending": len(pending_orders),
         },
         "refunds": {
-            "count": len([t for t in period_transactions if t.get("refunded")]),
-            "total": sum(
-                t["amount"] for t in period_transactions if t.get("refunded")
-            ),
+            "count": len(cancelled_orders),  # Using cancelled as refunds for now
+            "total": sum(o.total for o in cancelled_orders),
         },
     }
 
@@ -149,25 +152,26 @@ async def get_popular_items(
     limit: int = Query(10, ge=1, le=50, description="Number of items"),
 ):
     """Get most popular items by sales."""
-    from app.api.v1.endpoints.customer.orders import ORDERS
+    # Get completed orders
+    completed_orders = db.query(Order).filter(
+        Order.status == OrderStatus.COMPLETED
+    ).all()
     
-    # Aggregate item sales
+    # Aggregate item sales from order items
     item_sales: dict[str, dict] = {}
     
-    for user_id, orders in ORDERS.items():
-        for order in orders:
-            if order["status"] == "completed":
-                for item in order.get("items", []):
-                    product_id = item.get("product_id", item.get("name"))
-                    if product_id not in item_sales:
-                        item_sales[product_id] = {
-                            "id": product_id,
-                            "name": item.get("name", "Unknown"),
-                            "quantity": 0,
-                            "revenue": 0,
-                        }
-                    item_sales[product_id]["quantity"] += item.get("quantity", 1)
-                    item_sales[product_id]["revenue"] += item.get("subtotal", 0)
+    for order in completed_orders:
+        for item in order.items:
+            product_id = item.product_id
+            if product_id not in item_sales:
+                item_sales[product_id] = {
+                    "id": product_id,
+                    "name": item.product_name,
+                    "quantity": 0,
+                    "revenue": 0,
+                }
+            item_sales[product_id]["quantity"] += item.quantity
+            item_sales[product_id]["revenue"] += item.subtotal
     
     # Sort by quantity sold
     popular_items = sorted(

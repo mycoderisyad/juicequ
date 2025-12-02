@@ -6,16 +6,24 @@ import apiClient from "./config";
 
 // Types
 export interface Product {
-  id: number;
+  id: number | string;
   name: string;
   description: string;
-  price: number;
+  price?: number;
+  base_price?: number;
   calories?: number;
-  category: string;
+  category?: string;
+  category_id?: string;
+  category_name?: string;
+  image?: string;
+  image_url?: string;
   image_color?: string;
   is_available: boolean;
   stock?: number;
+  stock_quantity?: number;
   ingredients?: string[];
+  rating?: number;
+  reviews?: number;
   nutrition?: {
     calories: number;
     protein: number;
@@ -83,7 +91,7 @@ export const productsApi = {
   /**
    * Get product by ID.
    */
-  getById: async (id: number): Promise<Product> => {
+  getById: async (id: string | number): Promise<Product> => {
     const response = await apiClient.get(`/customer/products/${id}`);
     return response.data;
   },

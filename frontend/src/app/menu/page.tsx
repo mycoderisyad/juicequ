@@ -6,15 +6,14 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Plus, Minus, ShoppingCart, RefreshCw } from "lucide-react";
+import { Search, Plus, Minus, ShoppingCart, RefreshCw, AlertCircle } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
-import { menuItems as fallbackMenuItems, categories as fallbackCategories } from "@/lib/data";
 import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
 import Link from "next/link";
 
 interface DisplayProduct {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: string;
@@ -33,14 +32,16 @@ function getInitialCategory(searchParams: URLSearchParams): string {
 
 // Transform API product to display format
 function transformProduct(product: ApiProduct): DisplayProduct {
+  // Use base_price as primary, fallback to price if available
+  const priceValue = product.base_price || product.price || 0;
   return {
-    id: product.id,
+    id: String(product.id),
     name: product.name,
     description: product.description,
-    price: typeof product.price === "number" ? product.price.toFixed(2) : String(product.price),
+    price: priceValue.toString(),
     calories: product.calories || 0,
-    category: product.category,
-    color: product.image_color || "bg-green-500",
+    category: product.category_id || product.category || "uncategorized",
+    color: product.image_color || product.image_url || "bg-green-500",
   };
 }
 
@@ -93,11 +94,11 @@ function MenuContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>(() => getInitialCategory(searchParams));
-  const [quantities, setQuantities] = useState<Record<number, number>>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   
   // API state
   const [products, setProducts] = useState<DisplayProduct[]>([]);
-  const [categories, setCategories] = useState<string[]>([...fallbackCategories]);
+  const [categories, setCategories] = useState<string[]>(["All"]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,35 +115,17 @@ function MenuContent() {
         setProducts(transformed);
         
         // Extract unique categories from products
-        const uniqueCategories = ["All", ...new Set(response.items.map((p: ApiProduct) => p.category))];
-        setCategories(uniqueCategories);
+        const uniqueCategories = ["All", ...new Set(response.items.map((p: ApiProduct) => p.category_id || p.category))];
+        setCategories(uniqueCategories.filter(Boolean) as string[]);
       } else {
-        // Use fallback data if API returns empty
-        setProducts(fallbackMenuItems.map(item => ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          price: String(item.price),
-          calories: parseInt(item.calories) || 0,
-          category: item.category,
-          color: item.color,
-        })));
-        setCategories([...fallbackCategories]);
+        setProducts([]);
+        setCategories(["All"]);
       }
     } catch (err) {
       console.error("Failed to fetch products:", err);
-      // Use fallback data on error
-      setProducts(fallbackMenuItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        price: String(item.price),
-        calories: parseInt(item.calories) || 0,
-        category: item.category,
-        color: item.color,
-      })));
-      setCategories([...fallbackCategories]);
-      setError("Failed to load products from server. Showing cached data.");
+      setProducts([]);
+      setCategories(["All"]);
+      setError("Failed to load products from server. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -152,15 +135,15 @@ function MenuContent() {
     fetchProducts();
   }, [fetchProducts]);
 
-  const getQuantity = (id: number) => quantities[id] || 1;
+  const getQuantity = (id: string) => quantities[id] || 1;
 
-  const incrementQuantity = (e: React.MouseEvent, id: number) => {
+  const incrementQuantity = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
     setQuantities(prev => ({ ...prev, [id]: (prev[id] || 1) + 1 }));
   };
 
-  const decrementQuantity = (e: React.MouseEvent, id: number) => {
+  const decrementQuantity = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
     setQuantities(prev => ({ ...prev, [id]: Math.max(1, (prev[id] || 1) - 1) }));
@@ -313,7 +296,7 @@ function MenuContent() {
                         <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
                         <p className="text-sm text-gray-500">{item.calories} {t("common.cal")}</p>
                       </div>
-                      <span className="text-lg font-bold text-green-600">${item.price}</span>
+                      <span className="text-lg font-bold text-green-600">Rp {parseInt(item.price).toLocaleString('id-ID')}</span>
                     </div>
                     
                     <p className="mb-4 line-clamp-2 text-sm text-gray-600">
@@ -351,10 +334,10 @@ function MenuContent() {
                       <button
                         onClick={(e) => handleAddToCart(e, item)}
                         className="flex h-10 items-center justify-center gap-2 rounded-full bg-green-600 px-4 text-sm text-white font-medium transition-all hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                        aria-label={`${t("menu.addToCartFor")} ${item.name}, $${(parseFloat(item.price) * getQuantity(item.id)).toFixed(2)}`}
+                        aria-label={`${t("menu.addToCartFor")} ${item.name}, Rp ${(parseFloat(item.price) * getQuantity(item.id)).toLocaleString('id-ID')}`}
                       >
                         <ShoppingCart className="h-4 w-4" aria-hidden="true" />
-                        <span aria-hidden="true">${(parseFloat(item.price) * getQuantity(item.id)).toFixed(2)}</span>
+                        <span aria-hidden="true">Rp {(parseFloat(item.price) * getQuantity(item.id)).toLocaleString('id-ID')}</span>
                       </button>
                     </div>
                   </div>

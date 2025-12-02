@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Minus, Plus, ArrowLeft, ShoppingBag, RefreshCw } from "lucide-react";
 import { useCartStore } from "@/lib/store";
-import { menuItems } from "@/lib/data";
 import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
 import Link from "next/link";
 
 interface DisplayProduct {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: string;
@@ -31,14 +30,15 @@ interface DisplayProduct {
 
 // Transform API product to display format
 function transformProduct(product: ApiProduct): DisplayProduct {
+  const priceValue = product.base_price || product.price || 0;
   return {
-    id: product.id,
+    id: String(product.id),
     name: product.name,
     description: product.description,
-    price: typeof product.price === "number" ? product.price.toFixed(2) : String(product.price),
+    price: priceValue.toString(),
     calories: product.calories || 0,
-    category: product.category,
-    color: product.image_color || "bg-green-500",
+    category: product.category_id || product.category || "",
+    color: product.image_color || product.image_url || "bg-green-500",
     ingredients: product.ingredients,
     nutrition: product.nutrition,
   };
@@ -54,40 +54,23 @@ export default function ProductPage() {
   
   const idParam = params?.id;
   const idString = Array.isArray(idParam) ? idParam[0] : idParam;
-  const id = idString ? parseInt(idString) : null;
 
   const fetchProduct = useCallback(async () => {
-    if (!id) return;
+    if (!idString) return;
     
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await productsApi.getById(id);
+      const response = await productsApi.getById(idString);
       setProduct(transformProduct(response));
     } catch (err) {
       console.error("Failed to fetch product:", err);
-      
-      // Fallback to local data
-      const localProduct = menuItems.find(item => item.id === id);
-      if (localProduct) {
-        setProduct({
-          id: localProduct.id,
-          name: localProduct.name,
-          description: localProduct.description,
-          price: String(localProduct.price),
-          calories: parseInt(localProduct.calories) || 0,
-          category: localProduct.category,
-          color: localProduct.color,
-        });
-        setError("Failed to load from server. Showing cached data.");
-      } else {
-        setError("Product not found");
-      }
+      setError("Product not found or failed to load.");
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [idString]);
 
   useEffect(() => {
     fetchProduct();
@@ -183,7 +166,7 @@ export default function ProductPage() {
               <div className="mb-6">
                 <h1 className="mb-2 text-4xl font-bold text-gray-900">{product.name}</h1>
                 <div className="flex items-center gap-4">
-                  <span className="text-3xl font-bold text-green-600">${product.price}</span>
+                  <span className="text-3xl font-bold text-green-600">Rp {parseInt(product.price).toLocaleString('id-ID')}</span>
                   <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
                     {product.calories} cal
                   </span>
@@ -229,7 +212,7 @@ export default function ProductPage() {
                   className="h-12 flex-1 rounded-full bg-green-600 text-lg font-medium text-white hover:bg-green-700"
                 >
                   <ShoppingBag className="mr-2 h-5 w-5" />
-                  Add to Cart - ${(parseFloat(product.price) * quantity).toFixed(2)}
+                  Add to Cart - Rp {(parseFloat(product.price) * quantity).toLocaleString('id-ID')}
                 </Button>
               </div>
             </div>

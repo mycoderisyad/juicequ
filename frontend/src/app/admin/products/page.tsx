@@ -112,8 +112,30 @@ function ProductModal({
     });
   };
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(null);
+    
+    // Client-side validation
+    if (formData.name.length < 2) {
+      setValidationError("Product name must be at least 2 characters");
+      return;
+    }
+    if (formData.description.length < 10) {
+      setValidationError("Description must be at least 10 characters");
+      return;
+    }
+    if (formData.price <= 0) {
+      setValidationError("Price must be greater than 0");
+      return;
+    }
+    if (!formData.category) {
+      setValidationError("Please select a category");
+      return;
+    }
+    
     onSave(formData);
   };
 
@@ -134,41 +156,53 @@ function ProductModal({
           </button>
         </div>
 
+        {validationError && (
+          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            {validationError}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Product Name *
+              Product Name * <span className="text-xs text-gray-400">(min. 2 characters)</span>
             </label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g., Berry Blast Smoothie"
+              minLength={2}
+              maxLength={100}
               required
             />
           </div>
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Description *
+              Description * <span className="text-xs text-gray-400">(min. 10 characters)</span>
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Describe the product..."
-              className="w-full rounded-xl border border-gray-200 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              placeholder="Describe the product in detail..."
+              className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               rows={3}
+              minLength={10}
+              maxLength={500}
               required
             />
+            <p className="mt-1 text-xs text-gray-400">{formData.description.length}/500 characters</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Price ($) *
+                Price (Rp) *
               </label>
               <Input
                 type="number"
-                step="0.01"
+                step="1000"
                 min="0"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
@@ -183,7 +217,7 @@ function ProductModal({
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full rounded-xl border border-gray-200 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                 required
               >
                 {categories.map((cat) => (
@@ -486,7 +520,7 @@ export default function AdminProductsPage() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (
@@ -543,7 +577,7 @@ export default function AdminProductsPage() {
                     </Badge>
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-900">
-                    ${(product.price || product.base_price || 0).toFixed(2)}
+                    Rp {(product.price || product.base_price || 0).toLocaleString('id-ID')}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`font-medium ${(product.stock ?? 0) < 10 ? 'text-red-600' : 'text-gray-900'}`}>

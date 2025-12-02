@@ -1,52 +1,96 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
-import { categories } from "@/lib/data";
+import { productsApi } from "@/lib/api/customer";
 
 const categoryData: Record<string, { emoji: string; bgColor: string; iconBg: string }> = {
-  Smoothies: { 
+  smoothies: { 
     emoji: "🍓",
     bgColor: "bg-pink-100 hover:bg-pink-200",
     iconBg: "bg-pink-200"
   },
-  Juices: { 
+  juices: { 
     emoji: "🍊",
     bgColor: "bg-orange-100 hover:bg-orange-200",
     iconBg: "bg-orange-200"
   },
-  Bowls: { 
+  bowls: { 
     emoji: "🥗",
     bgColor: "bg-purple-100 hover:bg-purple-200",
     iconBg: "bg-purple-200"
   },
-  Snacks: { 
+  snacks: { 
     emoji: "🍪",
     bgColor: "bg-amber-100 hover:bg-amber-200",
     iconBg: "bg-amber-200"
   },
+  detox: { 
+    emoji: "💉",
+    bgColor: "bg-green-100 hover:bg-green-200",
+    iconBg: "bg-green-200"
+  },
+  energy: { 
+    emoji: "⚡",
+    bgColor: "bg-yellow-100 hover:bg-yellow-200",
+    iconBg: "bg-yellow-200"
+  },
+};
+
+// Default styling for unknown categories
+const defaultCategoryStyle = {
+  emoji: "🍹",
+  bgColor: "bg-gray-100 hover:bg-gray-200",
+  iconBg: "bg-gray-200"
 };
 
 export function CategoryBrowse() {
   const { t } = useTranslation();
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await productsApi.getCategories();
+        if (response.categories && response.categories.length > 0) {
+          // Extract category names, skip "All"
+          const categoryNames = response.categories
+            .map(cat => cat.name)
+            .filter(name => name.toLowerCase() !== "all");
+          setCategories(categoryNames);
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case "Smoothies":
+    const lowerCategory = category.toLowerCase();
+    switch (lowerCategory) {
+      case "smoothies":
         return t("home.categories.smoothies");
-      case "Juices":
+      case "juices":
         return t("home.categories.juices");
-      case "Bowls":
+      case "bowls":
         return t("home.categories.bowls");
-      case "Snacks":
+      case "snacks":
         return t("home.categories.snacks");
       default:
         return category;
     }
   };
 
-  // Skip "All" category for browse section
-  const browseCategories = categories.filter(cat => cat !== "All");
+  // Don't render if no categories
+  if (isLoading || categories.length === 0) {
+    return null;
+  }
 
   return (
     <section 
@@ -68,14 +112,15 @@ export function CategoryBrowse() {
         {/* Category Cards */}
         <nav aria-label={t("home.browseCategories.title")}>
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto" role="list">
-            {browseCategories.map((category) => {
-              const data = categoryData[category] || categoryData.Smoothies;
+            {categories.map((category) => {
+              const lowerCategory = category.toLowerCase();
+              const data = categoryData[lowerCategory] || defaultCategoryStyle;
               const categoryLabel = getCategoryLabel(category);
               
               return (
                 <li key={category}>
                   <Link
-                    href={`/menu?category=${category.toLowerCase()}`}
+                    href={`/menu?category=${lowerCategory}`}
                     aria-label={`${t("home.browseCategories.browseCategory")} ${categoryLabel}`}
                     className={`
                       group relative flex flex-col items-center justify-center
@@ -110,13 +155,6 @@ export function CategoryBrowse() {
                     <span className="relative z-10 text-lg lg:text-xl font-bold text-gray-800 text-center">
                       {categoryLabel}
                     </span>
-
-                    {/* Arrow indicator */}
-                    <div className="absolute bottom-4 right-4 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300" aria-hidden="true">
-                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
                   </Link>
                 </li>
               );
