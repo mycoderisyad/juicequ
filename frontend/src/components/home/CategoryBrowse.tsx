@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 import { categories } from "@/lib/data";
 
-// Category card data with colors and emoji icons
 const categoryData: Record<string, { emoji: string; bgColor: string; iconBg: string }> = {
   Smoothies: { 
     emoji: "🍓",
@@ -50,53 +49,80 @@ export function CategoryBrowse() {
   const browseCategories = categories.filter(cat => cat !== "All");
 
   return (
-    <section className="py-16 bg-linear-to-b from-white to-orange-50/30">
-      <div className="container mx-auto px-4">
+    <section 
+      className="py-20 bg-gradient-to-b from-white via-orange-50/30 to-white"
+      aria-labelledby="browse-categories-title"
+    >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold text-gray-900">
-            {t("home.browseCategories.title")} <span role="img" aria-label="categories">🛒</span>
-          </h2>
-          <p className="mt-2 text-gray-500">{t("home.browseCategories.subtitle")}</p>
+        <div className="mb-12 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-2 text-sm font-medium text-orange-800 mb-4">
+            <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" aria-hidden="true"></span>
+            <h2 id="browse-categories-title">{t("home.browseCategories.title")}</h2>
+            <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" aria-hidden="true"></span>
+          </div>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            {t("home.browseCategories.subtitle")}
+          </p>
         </div>
-
         {/* Category Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto">
-          {browseCategories.map((category) => {
-            const data = categoryData[category] || categoryData.Smoothies;
-            
-            return (
-              <Link
-                key={category}
-                href={`/menu?category=${category}`}
-                className={`
-                  group flex flex-col items-center justify-center
-                  rounded-2xl p-6 md:p-8
-                  ${data.bgColor}
-                  transition-all duration-300 ease-out
-                  hover:scale-105 hover:shadow-lg
-                  cursor-pointer
-                `}
-              >
-                {/* Emoji Icon */}
-                <div className={`
-                  w-16 h-16 md:w-20 md:h-20 
-                  rounded-full ${data.iconBg}
-                  flex items-center justify-center
-                  mb-4 text-4xl md:text-5xl
-                  group-hover:scale-110 transition-transform duration-300
-                `}>
-                  {data.emoji}
-                </div>
-                
-                {/* Category Name */}
-                <span className="text-sm md:text-base font-semibold text-gray-800 text-center">
-                  {getCategoryLabel(category)}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+        <nav aria-label={t("home.browseCategories.title")}>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto" role="list">
+            {browseCategories.map((category) => {
+              const data = categoryData[category] || categoryData.Smoothies;
+              const categoryLabel = getCategoryLabel(category);
+              
+              return (
+                <li key={category}>
+                  <Link
+                    href={`/menu?category=${category.toLowerCase()}`}
+                    aria-label={`${t("home.browseCategories.browseCategory")} ${categoryLabel}`}
+                    className={`
+                      group relative flex flex-col items-center justify-center
+                      rounded-3xl p-8 lg:p-10
+                      ${data.bgColor}
+                      border-2 border-white/50
+                      transition-all duration-500 ease-out
+                      cursor-pointer overflow-hidden
+                      focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                    `}
+                  >
+                    {/* Background decoration */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true"></div>
+                    
+                    {/* Emoji Icon */}
+                    <div 
+                      className={`
+                        relative z-10 w-20 h-20 lg:w-24 lg:h-24 
+                        rounded-2xl ${data.iconBg}
+                        flex items-center justify-center
+                        mb-6 text-5xl lg:text-6xl
+                        group-hover:scale-110 group-hover:rotate-6 
+                        transition-all duration-500 ease-out
+                        shadow-lg group-hover:shadow-xl
+                      `}
+                      aria-hidden="true"
+                    >
+                      {data.emoji}
+                    </div>
+                    
+                    {/* Category Name */}
+                    <span className="relative z-10 text-lg lg:text-xl font-bold text-gray-800 text-center">
+                      {categoryLabel}
+                    </span>
+
+                    {/* Arrow indicator */}
+                    <div className="absolute bottom-4 right-4 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300" aria-hidden="true">
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
       </div>
     </section>
   );
