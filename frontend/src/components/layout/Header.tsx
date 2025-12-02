@@ -56,18 +56,18 @@ export function Header() {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 md:flex" aria-label={t("nav.mainNavigation")}>
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-green-600 transition-all"
             >
-              <link.icon className={`h-4 w-4 ${link.iconColor || ""}`} />
+              <link.icon className={`h-4 w-4 ${link.iconColor || ""}`} aria-hidden="true" />
               {t(link.labelKey)}
             </Link>
           ))}
-        </div>
+        </nav>
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 lg:gap-3">
@@ -75,16 +75,21 @@ export function Header() {
           <LanguageSwitcher />
 
           {/* Cart Button */}
-          <Link href="/cart">
-            <Button className="relative bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-2 h-10 text-sm font-medium transition-all">
-              <ShoppingBag className="h-4 w-4 lg:mr-2" />
-              <span className="hidden lg:inline">{t("nav.cart")}</span>
+          <Link href="/cart" aria-label={`${t("nav.cart")}${mounted && itemCount > 0 ? `, ${itemCount} ${t("nav.items")}` : ''}`}>
+            <button 
+              className="relative flex h-10 w-10 items-center justify-center rounded-full bg-green-600 hover:bg-green-700 text-white transition-all"
+              aria-label={`${t("nav.cart")}${mounted && itemCount > 0 ? `, ${itemCount} ${t("nav.items")}` : ''}`}
+            >
+              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
               {mounted && itemCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                <span 
+                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
+                  aria-hidden="true"
+                >
                   {itemCount > 99 ? "99+" : itemCount}
                 </span>
               )}
-            </Button>
+            </button>
           </Link>
           
           {/* User Menu */}
@@ -102,8 +107,9 @@ export function Header() {
                 onClick={logout}
                 className="rounded-full p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all"
                 title={t("nav.logout")}
+                aria-label={t("nav.logout")}
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
           ) : (
@@ -119,30 +125,39 @@ export function Header() {
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 transition-all md:hidden"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileMenuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+            {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <MenuIcon className="h-5 w-5" aria-hidden="true" />}
           </button>
         </div>
       </nav>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="absolute left-0 right-0 top-16 border-b border-gray-100 bg-white shadow-lg md:hidden">
+        <div 
+          id="mobile-menu"
+          role="navigation"
+          aria-label={t("nav.mobileNavigation")}
+          className="absolute left-0 right-0 top-16 border-b border-gray-100 bg-white shadow-lg md:hidden"
+        >
           <div className="container mx-auto px-4 py-4">
             {/* Nav Links */}
-            <div className="space-y-1">
+            <ul className="space-y-1" role="list">
               {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-green-600 transition-all"
-                >
-                  <link.icon className={`h-5 w-5 ${link.iconColor || ""}`} />
-                  {t(link.labelKey)}
-                </Link>
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-green-600 transition-all"
+                  >
+                    <link.icon className={`h-5 w-5 ${link.iconColor || ""}`} aria-hidden="true" />
+                    {t(link.labelKey)}
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
 
             {/* Mobile User Section */}
             <div className="mt-4 border-t border-gray-100 pt-4">

@@ -37,11 +37,17 @@
     "aiChat": "AI Chat",
     "about": "Tentang",
     "cart": "Keranjang",
+    "items": "item",
     "login": "Masuk",
     "register": "Daftar",
     "logout": "Keluar",
     "profile": "Profil",
-    "loginRegister": "Masuk / Daftar"
+    "loginRegister": "Masuk / Daftar",
+    "openMenu": "Buka menu",
+    "closeMenu": "Tutup menu",
+    "mainNavigation": "Navigasi utama",
+    "mobileNavigation": "Navigasi mobile",
+    "selectLanguage": "Pilih bahasa"
   },
   "home": {
     "hero": {
@@ -76,7 +82,8 @@
     },
     "browseCategories": {
       "title": "Jelajahi Kategori",
-      "subtitle": "Temukan menu favorit berdasarkan kategori"
+      "subtitle": "Temukan menu favorit berdasarkan kategori",
+      "browseCategory": "Jelajahi"
     },
     "whyChooseUs": {
       "title": "Kenapa Harus Pilih Kami?",
@@ -162,7 +169,11 @@
       "detox": "Detox",
       "energy": "Energi"
     },
-    "addToFavorites": "Tambah ke favorit"
+    "addToFavorites": "Tambah ke favorit",
+    "decreaseQuantity": "Kurangi jumlah",
+    "increaseQuantity": "Tambah jumlah",
+    "quantityFor": "Jumlah untuk",
+    "addToCartFor": "Tambah ke keranjang"
   },
   "product": {
     "addToCart": "Tambah ke Keranjang",
@@ -344,6 +355,7 @@
       "refundPolicy": "Kebijakan Refund"
     },
     "paymentMethods": "Metode Pembayaran yang Diterima",
+    "followUsOn": "Ikuti kami di",
     "secureEncrypted": "Aman & Terenkripsi",
     "sslSecurity": "Keamanan SSL 256-bit",
     "copyright": "© 2025 JuiceQu. Hak cipta dilindungi.",

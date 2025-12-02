@@ -47,108 +47,108 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer className="bg-gray-900 text-gray-300" role="contentinfo">
       {/* Main Footer */}
       <div className="container mx-auto px-4 py-16">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link href="/" className="inline-flex items-center gap-2 text-2xl font-bold text-white mb-4">
+            <Link href="/" className="inline-flex items-center gap-2 text-2xl font-bold text-white mb-4" aria-label="JuiceQu - Back to home">
               <span>JuiceQu</span>
-              <span className="text-xs align-top text-gray-500">TM</span>
+              <span className="text-xs align-top text-gray-500" aria-hidden="true">TM</span>
             </Link>
             <p className="text-gray-400 mb-6 max-w-sm">
               {t("footer.description")}
             </p>
             
             {/* Contact Info */}
-            <div className="space-y-3 text-sm">
+            <address className="space-y-3 text-sm not-italic">
               <div className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 mt-0.5 text-green-500" />
+                <MapPin className="h-4 w-4 mt-0.5 text-green-500" aria-hidden="true" />
                 <span>Jl. Sudirman No. 123, Jakarta Pusat, Indonesia</span>
               </div>
               <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-green-500" />
+                <Phone className="h-4 w-4 text-green-500" aria-hidden="true" />
                 <a href="tel:+6281234567890" className="hover:text-white">+62 812 3456 7890</a>
               </div>
               <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-green-500" />
+                <Mail className="h-4 w-4 text-green-500" aria-hidden="true" />
                 <a href="mailto:hello@juicequ.com" className="hover:text-white">hello@juicequ.com</a>
               </div>
-            </div>
+            </address>
 
             {/* Social Links */}
-            <div className="flex gap-3 mt-6">
+            <nav aria-label="Social media links" className="flex gap-3 mt-6">
               {socialLinks.map((social, index) => (
                 <a
                   key={index}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2.5 bg-gray-800 rounded-full text-gray-400 hover:bg-green-600 hover:text-white transition-colors"
-                  aria-label={social.label}
+                  className="p-2.5 bg-gray-800 rounded-full text-gray-400 hover:bg-green-600 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+                  aria-label={`${t("footer.followUsOn")} ${social.label}`}
                 >
-                  <social.icon className="h-4 w-4" />
+                  <social.icon className="h-4 w-4" aria-hidden="true" />
                 </a>
               ))}
-            </div>
+            </nav>
           </div>
 
           {/* Menu Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">{t("footer.menuTitle")}</h3>
-            <ul className="space-y-2.5">
+          <nav aria-labelledby="footer-menu-title">
+            <h3 id="footer-menu-title" className="text-white font-semibold mb-4">{t("footer.menuTitle")}</h3>
+            <ul className="space-y-2.5" role="list">
               {footerLinks.menu.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="text-sm hover:text-green-400 transition-colors">
+                  <Link href={link.href} className="text-sm hover:text-green-400 transition-colors focus:outline-none focus:text-green-400">
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Company Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">{t("footer.companyTitle")}</h3>
-            <ul className="space-y-2.5">
+          <nav aria-labelledby="footer-company-title">
+            <h3 id="footer-company-title" className="text-white font-semibold mb-4">{t("footer.companyTitle")}</h3>
+            <ul className="space-y-2.5" role="list">
               {footerLinks.company.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="text-sm hover:text-green-400 transition-colors">
+                  <Link href={link.href} className="text-sm hover:text-green-400 transition-colors focus:outline-none focus:text-green-400">
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Support Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">{t("footer.supportTitle")}</h3>
-            <ul className="space-y-2.5">
+          <nav aria-labelledby="footer-support-title">
+            <h3 id="footer-support-title" className="text-white font-semibold mb-4">{t("footer.supportTitle")}</h3>
+            <ul className="space-y-2.5" role="list">
               {footerLinks.support.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="text-sm hover:text-green-400 transition-colors">
+                  <Link href={link.href} className="text-sm hover:text-green-400 transition-colors focus:outline-none focus:text-green-400">
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Legal Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">{t("footer.legalTitle")}</h3>
-            <ul className="space-y-2.5">
+          <nav aria-labelledby="footer-legal-title">
+            <h3 id="footer-legal-title" className="text-white font-semibold mb-4">{t("footer.legalTitle")}</h3>
+            <ul className="space-y-2.5" role="list">
               {footerLinks.legal.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="text-sm hover:text-green-400 transition-colors">
+                  <Link href={link.href} className="text-sm hover:text-green-400 transition-colors focus:outline-none focus:text-green-400">
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
         </div>
 
         {/* Payment Methods */}
@@ -181,7 +181,7 @@ export function Footer() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
             <p>{t("footer.copyright")}</p>
             <p className="flex items-center gap-1">
-              {t("footer.madeWith")} <Heart className="h-4 w-4 text-red-500 fill-red-500" /> {t("footer.inIndonesia")}
+              {t("footer.madeWith")} <Heart className="h-4 w-4 text-red-500 fill-red-500" aria-label="love" /> {t("footer.inIndonesia")}
             </p>
           </div>
         </div>

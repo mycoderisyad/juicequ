@@ -168,8 +168,9 @@ function MenuContent() {
 
   const filteredItems = useMemo(() => {
     return products.filter((item) => {
-      // Filter by category
-      const matchesCategory = activeCategory === "All" || item.category === activeCategory;
+      // Filter by category (case-insensitive comparison)
+      const matchesCategory = activeCategory === "All" || 
+        item.category.toLowerCase() === activeCategory.toLowerCase();
       
       // Filter by search query
       const query = searchQuery.toLowerCase();
@@ -241,19 +242,24 @@ function MenuContent() {
             </div>
             
             <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setActiveCategory(category)}
-                  className={`rounded-full px-6 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
-                    activeCategory === category 
-                      ? "bg-green-600 text-white" 
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+              {categories.map((category) => {
+                const isActive = activeCategory.toLowerCase() === category.toLowerCase();
+                // Capitalize first letter for display
+                const displayName = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setActiveCategory(category)}
+                    className={`rounded-full px-6 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+                      isActive 
+                        ? "bg-green-600 text-white" 
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {displayName}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -317,31 +323,38 @@ function MenuContent() {
                     {/* Quantity Controls and Add to Cart */}
                     <div className="mt-auto flex items-center justify-between">
                       {/* Quantity Selector */}
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1" role="group" aria-label={`${t("menu.quantityFor")} ${item.name}`}>
                         <button
                           onClick={(e) => decrementQuantity(e, item.id)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200"
+                          className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          aria-label={t("menu.decreaseQuantity")}
                         >
-                          <Minus className="h-4 w-4" />
+                          <Minus className="h-4 w-4" aria-hidden="true" />
                         </button>
-                        <span className="w-8 text-center font-semibold text-gray-900">
+                        <span 
+                          className="w-8 text-center font-semibold text-gray-900"
+                          aria-live="polite"
+                          aria-atomic="true"
+                        >
                           {getQuantity(item.id)}
                         </span>
                         <button
                           onClick={(e) => incrementQuantity(e, item.id)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200"
+                          className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          aria-label={t("menu.increaseQuantity")}
                         >
-                          <Plus className="h-4 w-4" />
+                          <Plus className="h-4 w-4" aria-hidden="true" />
                         </button>
                       </div>
 
                       {/* Add to Cart Button */}
                       <button
                         onClick={(e) => handleAddToCart(e, item)}
-                        className="flex h-10 items-center justify-center gap-2 rounded-full bg-green-600 px-4 text-sm text-white font-medium transition-all hover:bg-green-700"
+                        className="flex h-10 items-center justify-center gap-2 rounded-full bg-green-600 px-4 text-sm text-white font-medium transition-all hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        aria-label={`${t("menu.addToCartFor")} ${item.name}, $${(parseFloat(item.price) * getQuantity(item.id)).toFixed(2)}`}
                       >
-                        <ShoppingCart className="h-4 w-4" />
-                        <span>${(parseFloat(item.price) * getQuantity(item.id)).toFixed(2)}</span>
+                        <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+                        <span aria-hidden="true">${(parseFloat(item.price) * getQuantity(item.id)).toFixed(2)}</span>
                       </button>
                     </div>
                   </div>

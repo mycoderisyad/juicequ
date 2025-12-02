@@ -37,11 +37,17 @@
     "aiChat": "AI Chat",
     "about": "About",
     "cart": "Cart",
+    "items": "items",
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
     "profile": "Profile",
-    "loginRegister": "Login / Register"
+    "loginRegister": "Login / Register",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mainNavigation": "Main navigation",
+    "mobileNavigation": "Mobile navigation",
+    "selectLanguage": "Select language"
   },
   "home": {
     "hero": {
@@ -76,7 +82,8 @@
     },
     "browseCategories": {
       "title": "Browse Categories",
-      "subtitle": "Find your favorite menu by category"
+      "subtitle": "Find your favorite menu by category",
+      "browseCategory": "Browse"
     },
     "whyChooseUs": {
       "title": "Why Choose Us?",
@@ -162,7 +169,11 @@
       "detox": "Detox",
       "energy": "Energy"
     },
-    "addToFavorites": "Add to favorites"
+    "addToFavorites": "Add to favorites",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "quantityFor": "Quantity for",
+    "addToCartFor": "Add to cart"
   },
   "product": {
     "addToCart": "Add to Cart",
@@ -344,6 +355,7 @@
       "refundPolicy": "Refund Policy"
     },
     "paymentMethods": "Accepted Payment Methods",
+    "followUsOn": "Follow us on",
     "secureEncrypted": "Secure & Encrypted",
     "sslSecurity": "256-bit SSL Security",
     "copyright": "© 2025 JuiceQu. All rights reserved.",
