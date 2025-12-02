@@ -1,0 +1,332 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  ArrowLeft, 
+  Package, 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  ChefHat,
+  Banknote,
+  Smartphone,
+  CreditCard,
+} from "lucide-react";
+import { useAuthStore } from "@/lib/store";
+import { api } from "@/lib/api";
+
+interface OrderItem {
+  id: string;
+  product_id: string;
+  product_name?: string;
+  name?: string;
+  price?: number;
+  unit_price?: number;
+  quantity: number;
+  subtotal?: number;
+  size?: string;
+  notes?: string;
+}
+
+interface Order {
+  id: string;
+  order_number?: string;
+  status: string;
+  items: OrderItem[];
+  subtotal: number;
+  discount?: number;
+  tax: number;
+  total: number;
+  payment_method?: string;
+  customer_notes?: string;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+const statusConfig: Record<string, { color: "default" | "secondary" | "success" | "warning" | "destructive" | "info"; icon: React.ReactNode; label: string }> = {
+  pending: { color: "warning", icon: <Clock className="h-4 w-4" />, label: "Pending" },
+  confirmed: { color: "info", icon: <CheckCircle className="h-4 w-4" />, label: "Confirmed" },
+  preparing: { color: "info", icon: <ChefHat className="h-4 w-4" />, label: "Preparing" },
+  ready: { color: "success", icon: <Package className="h-4 w-4" />, label: "Ready for Pickup" },
+  completed: { color: "success", icon: <CheckCircle className="h-4 w-4" />, label: "Completed" },
+  cancelled: { color: "destructive", icon: <XCircle className="h-4 w-4" />, label: "Cancelled" },
+};
+
+const paymentIcons: Record<string, React.ReactNode> = {
+  cash: <Banknote className="h-5 w-5 text-green-600" />,
+  qris: <Smartphone className="h-5 w-5 text-blue-600" />,
+  transfer: <CreditCard className="h-5 w-5 text-purple-600" />,
+};
+
+export default function OrderDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const orderId = params?.id as string;
+
+  const fetchOrder = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(`/customer/orders/${orderId}`);
+      setOrder(response.data);
+    } catch (err) {
+      console.error("Failed to fetch order:", err);
+      setError("Order not found or you don't have permission to view it");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login?redirect=/orders");
+      return;
+    }
+
+    if (orderId) {
+      fetchOrder();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, orderId, router]);
+
+  const handleCancelOrder = async () => {
+    if (!order || order.status !== "pending") return;
+
+    const confirmed = window.confirm("Are you sure you want to cancel this order?");
+    if (!confirmed) return;
+
+    try {
+      setIsCancelling(true);
+      await api.post(`/customer/orders/${orderId}/cancel`);
+      await fetchOrder();
+    } catch (err) {
+      console.error("Failed to cancel order:", err);
+      setError("Failed to cancel order");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-gray-50">
+        <Header />
+        <main className="flex-1 py-10">
+          <div className="container mx-auto px-4">
+            <Skeleton className="h-8 w-32 mb-8" />
+            <div className="rounded-3xl bg-white p-8 shadow-sm">
+              <Skeleton className="h-8 w-48 mb-4" />
+              <Skeleton className="h-6 w-64 mb-8" />
+              <div className="space-y-4">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="flex min-h-screen flex-col bg-gray-50">
+        <Header />
+        <main className="flex-1 py-10">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Order Not Found
+            </h1>
+            <p className="text-gray-500 mb-8">{error}</p>
+            <Link href="/orders">
+              <Button>Back to Orders</Button>
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const status = statusConfig[order.status] || statusConfig.pending;
+  const displayOrderId = order.order_number || order.id;
+
+  return (
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      <Header />
+      
+      <main className="flex-1 py-10">
+        <div className="container mx-auto px-4">
+          <Link
+            href="/orders"
+            className="mb-8 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Orders
+          </Link>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Order Details */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Header */}
+              <div className="rounded-3xl bg-white p-6 shadow-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      Order #{displayOrderId}
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Placed on {formatDate(order.created_at)}
+                    </p>
+                  </div>
+                  <Badge variant={status.color} className="flex items-center gap-1 text-base px-4 py-2">
+                    {status.icon}
+                    {status.label}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className="rounded-3xl bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                  Order Items
+                </h2>
+                <div className="space-y-4">
+                  {order.items.map((item, index) => {
+                    const itemName = item.product_name || item.name || "Unknown Product";
+                    const itemPrice = item.unit_price || item.price || 0;
+                    const itemSubtotal = item.subtotal || itemPrice * item.quantity;
+                    
+                    return (
+                      <div
+                        key={item.id || index}
+                        className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
+                            <span className="text-lg">🥤</span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{itemName}</p>
+                            <p className="text-sm text-gray-500">
+                              ${itemPrice.toFixed(2)} × {item.quantity}
+                              {item.size && ` · ${item.size}`}
+                            </p>
+                            {item.notes && (
+                              <p className="text-xs text-gray-400 mt-1">{item.notes}</p>
+                            )}
+                          </div>
+                        </div>
+                        <p className="font-semibold text-gray-900">
+                          ${itemSubtotal.toFixed(2)}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Special Instructions */}
+              {(order.customer_notes || order.notes) && (
+                <div className="rounded-3xl bg-white p-6 shadow-sm">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                    Special Instructions
+                  </h2>
+                  <p className="text-gray-600">{order.customer_notes || order.notes}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Order Summary Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24 space-y-6">
+                {/* Payment Summary */}
+                <div className="rounded-3xl bg-white p-6 shadow-sm">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Payment Summary
+                  </h2>
+                  
+                  {order.payment_method && (
+                    <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+                      {paymentIcons[order.payment_method] || <CreditCard className="h-5 w-5" />}
+                      <span className="capitalize font-medium">{order.payment_method}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-gray-600">
+                      <span>Subtotal</span>
+                      <span>${order.subtotal.toFixed(2)}</span>
+                    </div>
+                    {order.discount && order.discount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount</span>
+                        <span>-${order.discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-gray-600">
+                      <span>Tax</span>
+                      <span>${order.tax.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-100">
+                      <span>Total</span>
+                      <span>${order.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                {order.status === "pending" && (
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={handleCancelOrder}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? "Cancelling..." : "Cancel Order"}
+                  </Button>
+                )}
+
+                <Link href="/menu" className="block">
+                  <Button variant="outline" className="w-full">
+                    Order Again
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

@@ -67,6 +67,17 @@
       "subtitle": "Fresh juices made with love",
       "viewAll": "View All Products"
     },
+    "categories": {
+      "all": "All",
+      "smoothies": "Smoothies",
+      "juices": "Juices",
+      "bowls": "Bowls",
+      "snacks": "Snacks"
+    },
+    "browseCategories": {
+      "title": "Browse Categories",
+      "subtitle": "Find your favorite menu by category"
+    },
     "whyChooseUs": {
       "title": "Why Choose Us?",
       "subtitle": "JuiceQu is committed to providing the best products with the highest quality standards",

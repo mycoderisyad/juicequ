@@ -67,6 +67,17 @@
       "subtitle": "Jus segar dibuat dengan cinta",
       "viewAll": "Lihat Semua Produk"
     },
+    "categories": {
+      "all": "Semua",
+      "smoothies": "Smoothies",
+      "juices": "Jus",
+      "bowls": "Bowls",
+      "snacks": "Camilan"
+    },
+    "browseCategories": {
+      "title": "Jelajahi Kategori",
+      "subtitle": "Temukan menu favorit berdasarkan kategori"
+    },
     "whyChooseUs": {
       "title": "Kenapa Harus Pilih Kami?",
       "subtitle": "JuiceQu berkomitmen memberikan produk terbaik dengan standar kualitas tertinggi",
