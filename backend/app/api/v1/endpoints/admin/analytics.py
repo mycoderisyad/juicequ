@@ -6,11 +6,14 @@ from datetime import datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.core.permissions import require_roles
 from app.models.user import User, UserRole
+from app.models.product import Product
+from app.models.order import Order, OrderStatus
 
 router = APIRouter()
 
@@ -25,39 +28,39 @@ async def get_dashboard(
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
 ):
     """Get dashboard overview with key metrics."""
-    from app.api.v1.endpoints.customer.orders import ORDERS
-    from app.api.v1.endpoints.customer.products import PRODUCTS
-    from app.api.v1.endpoints.cashier.transactions import TRANSACTIONS
-    
     now = datetime.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     
-    # User stats
+    # User stats from database
     total_users = db.query(User).count()
     active_users = db.query(User).filter(User.is_active == True).count()
     
-    # Product stats
-    total_products = len(PRODUCTS)
-    available_products = len([p for p in PRODUCTS if p.get("is_available", True)])
+    # Product stats from database
+    total_products = db.query(Product).count()
+    available_products = db.query(Product).filter(
+        Product.is_available == True,
+        Product.stock_quantity > 0
+    ).count()
     
-    # Order stats
-    all_orders = []
-    for user_id, orders in ORDERS.items():
-        all_orders.extend(orders)
+    # Order stats from database
+    total_orders = db.query(Order).count()
+    today_orders = db.query(Order).filter(Order.created_at >= today_start).count()
+    pending_orders = db.query(Order).filter(
+        Order.status.in_([
+            OrderStatus.PENDING,
+            OrderStatus.PAID,
+            OrderStatus.PREPARING,
+            OrderStatus.READY
+        ])
+    ).count()
     
-    total_orders = len(all_orders)
-    today_orders = len([o for o in all_orders if o["created_at"] >= today_start])
-    pending_orders = len([
-        o for o in all_orders 
-        if o["status"] in ["pending", "confirmed", "preparing", "ready"]
-    ])
+    # Revenue stats from database
+    completed_orders = db.query(Order).filter(Order.status == OrderStatus.COMPLETED)
+    total_revenue = completed_orders.with_entities(func.sum(Order.total)).scalar() or 0.0
     
-    # Transaction stats
-    all_transactions = list(TRANSACTIONS.values())
-    today_transactions = [t for t in all_transactions if t["created_at"] >= today_start]
-    
-    today_revenue = sum(t["amount"] for t in today_transactions if t["status"] == "completed")
-    total_revenue = sum(t["amount"] for t in all_transactions if t["status"] == "completed")
+    today_completed = completed_orders.filter(Order.created_at >= today_start)
+    today_revenue = today_completed.with_entities(func.sum(Order.total)).scalar() or 0.0
+    transactions_today = today_completed.count()
     
     return {
         "users": {
@@ -76,7 +79,7 @@ async def get_dashboard(
         "revenue": {
             "today": today_revenue,
             "total": total_revenue,
-            "transactions_today": len(today_transactions),
+            "transactions_today": transactions_today,
         },
         "generated_at": now.isoformat(),
     }
@@ -93,8 +96,6 @@ async def get_sales_analytics(
     period: str = Query("week", description="Period: today, week, month, year"),
 ):
     """Get sales analytics for the specified period."""
-    from app.api.v1.endpoints.cashier.transactions import TRANSACTIONS
-    
     now = datetime.now()
     
     # Calculate date range
@@ -111,43 +112,41 @@ async def get_sales_analytics(
     else:
         start_date = now - timedelta(days=days)
     
-    start_str = start_date.isoformat()
-    
-    # Filter transactions
-    period_transactions = [
-        t for t in TRANSACTIONS.values()
-        if t["created_at"] >= start_str and t["status"] == "completed"
-    ]
+    # Query completed orders from database
+    completed_orders = db.query(Order).filter(
+        Order.status == OrderStatus.COMPLETED,
+        Order.created_at >= start_date
+    ).all()
     
     # Group by date
     daily_sales: dict[str, dict] = {}
-    for t in period_transactions:
-        date = t["created_at"][:10]
+    for order in completed_orders:
+        date = order.created_at.strftime("%Y-%m-%d")
         if date not in daily_sales:
             daily_sales[date] = {"date": date, "revenue": 0, "transactions": 0}
-        daily_sales[date]["revenue"] += t["amount"]
+        daily_sales[date]["revenue"] += order.total
         daily_sales[date]["transactions"] += 1
     
     # Sort by date
     daily_data = sorted(daily_sales.values(), key=lambda x: x["date"])
     
     # Calculate totals
-    total_revenue = sum(t["amount"] for t in period_transactions)
-    total_transactions = len(period_transactions)
+    total_revenue = sum(o.total for o in completed_orders)
+    total_transactions = len(completed_orders)
     avg_transaction = total_revenue / total_transactions if total_transactions else 0
     
     # Group by payment method
-    by_payment = {}
-    for t in period_transactions:
-        method = t["payment_method"]
+    by_payment: dict = {}
+    for order in completed_orders:
+        method = order.payment_method.value if order.payment_method else "unknown"
         if method not in by_payment:
             by_payment[method] = {"count": 0, "revenue": 0}
         by_payment[method]["count"] += 1
-        by_payment[method]["revenue"] += t["amount"]
+        by_payment[method]["revenue"] += order.total
     
     return {
         "period": period,
-        "start_date": start_str,
+        "start_date": start_date.isoformat(),
         "end_date": now.isoformat(),
         "summary": {
             "total_revenue": total_revenue,
@@ -170,28 +169,30 @@ async def get_product_analytics(
     limit: int = Query(20, ge=1, le=100),
 ):
     """Get product performance analytics."""
-    from app.api.v1.endpoints.customer.orders import ORDERS
-    from app.api.v1.endpoints.customer.products import PRODUCTS, CATEGORIES
+    from app.models.order import OrderItem
+    from app.models.product import ProductCategory
     
-    # Aggregate product sales
+    # Get completed orders
+    completed_orders = db.query(Order).filter(
+        Order.status == OrderStatus.COMPLETED
+    ).all()
+    
+    # Aggregate product sales from order items
     product_sales: dict[str, dict] = {}
-    
-    for user_id, orders in ORDERS.items():
-        for order in orders:
-            if order["status"] == "completed":
-                for item in order.get("items", []):
-                    product_id = str(item.get("product_id", item.get("name")))
-                    if product_id not in product_sales:
-                        product_sales[product_id] = {
-                            "id": product_id,
-                            "name": item.get("name", "Unknown"),
-                            "quantity_sold": 0,
-                            "revenue": 0,
-                            "orders": 0,
-                        }
-                    product_sales[product_id]["quantity_sold"] += item.get("quantity", 1)
-                    product_sales[product_id]["revenue"] += item.get("subtotal", 0)
-                    product_sales[product_id]["orders"] += 1
+    for order in completed_orders:
+        for item in order.items:
+            product_id = item.product_id
+            if product_id not in product_sales:
+                product_sales[product_id] = {
+                    "id": product_id,
+                    "name": item.product_name,
+                    "quantity_sold": 0,
+                    "revenue": 0,
+                    "orders": 0,
+                }
+            product_sales[product_id]["quantity_sold"] += item.quantity
+            product_sales[product_id]["revenue"] += item.subtotal
+            product_sales[product_id]["orders"] += 1
     
     # Sort by revenue
     top_products = sorted(
@@ -204,21 +205,23 @@ async def get_product_analytics(
     category_sales: dict[str, dict] = {}
     for product_id, data in product_sales.items():
         # Find product to get category
-        product = next((p for p in PRODUCTS if str(p["id"]) == product_id), None)
-        if product:
-            category = product["category"]
-            if category not in category_sales:
-                cat_info = next((c for c in CATEGORIES if c["id"] == category), None)
-                category_sales[category] = {
-                    "id": category,
-                    "name": cat_info["name"] if cat_info else category,
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if product and product.category_id:
+            category_id = product.category_id
+            if category_id not in category_sales:
+                category = db.query(ProductCategory).filter(
+                    ProductCategory.id == category_id
+                ).first()
+                category_sales[category_id] = {
+                    "id": category_id,
+                    "name": category.name if category else "Unknown",
                     "quantity_sold": 0,
                     "revenue": 0,
                     "products_sold": 0,
                 }
-            category_sales[category]["quantity_sold"] += data["quantity_sold"]
-            category_sales[category]["revenue"] += data["revenue"]
-            category_sales[category]["products_sold"] += 1
+            category_sales[category_id]["quantity_sold"] += data["quantity_sold"]
+            category_sales[category_id]["revenue"] += data["revenue"]
+            category_sales[category_id]["products_sold"] += 1
     
     top_categories = sorted(
         category_sales.values(),
@@ -244,43 +247,44 @@ async def get_customer_analytics(
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
 ):
     """Get customer analytics."""
-    from app.api.v1.endpoints.customer.orders import ORDERS
+    # Get all users with pembeli role
+    customers = db.query(User).filter(User.role == UserRole.PEMBELI).all()
     
-    # Customer order stats
-    customer_stats: dict[int, dict] = {}
+    # Customer order stats from database
+    customer_stats: list[dict] = []
     
-    for user_id, orders in ORDERS.items():
-        completed_orders = [o for o in orders if o["status"] == "completed"]
-        customer_stats[user_id] = {
-            "user_id": user_id,
-            "total_orders": len(orders),
+    for customer in customers:
+        customer_orders = db.query(Order).filter(Order.user_id == customer.id).all()
+        completed_orders = [o for o in customer_orders if o.status == OrderStatus.COMPLETED]
+        total_spent = sum(o.total for o in completed_orders)
+        
+        customer_stats.append({
+            "user_id": customer.id,
+            "name": customer.nama,
+            "email": customer.email,
+            "total_orders": len(customer_orders),
             "completed_orders": len(completed_orders),
-            "total_spent": sum(o["total"] for o in completed_orders),
-        }
+            "total_spent": total_spent,
+        })
     
-    # Top customers by spending
+    # Sort by spending and get top 10
     top_customers = sorted(
-        customer_stats.values(),
+        customer_stats,
         key=lambda x: x["total_spent"],
         reverse=True
     )[:10]
     
-    # Enrich with user data
-    for customer in top_customers:
-        user = db.query(User).filter(User.id == customer["user_id"]).first()
-        if user:
-            customer["name"] = user.nama
-            customer["email"] = user.email
+    total_customers = len(customer_stats)
+    total_orders = sum(c["total_orders"] for c in customer_stats)
+    total_spent = sum(c["total_spent"] for c in customer_stats)
     
     return {
-        "total_customers": len(customer_stats),
+        "total_customers": total_customers,
         "top_customers": top_customers,
         "average_orders_per_customer": (
-            sum(c["total_orders"] for c in customer_stats.values()) / len(customer_stats)
-            if customer_stats else 0
+            total_orders / total_customers if total_customers else 0
         ),
         "average_spent_per_customer": (
-            sum(c["total_spent"] for c in customer_stats.values()) / len(customer_stats)
-            if customer_stats else 0
+            total_spent / total_customers if total_customers else 0
         ),
     }

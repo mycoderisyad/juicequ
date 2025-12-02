@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { usersApi } from "@/lib/api/admin";
 
 interface UserData {
-  id: number;
+  id: string;
   email: string;
   nama: string;
   full_name?: string;
@@ -48,7 +48,7 @@ function UserModal({
     email: "",
     nama: "",
     password: "",
-    role: "customer",
+    role: "pembeli",
     is_active: true,
   });
 
@@ -66,7 +66,7 @@ function UserModal({
         email: "",
         nama: "",
         password: "",
-        role: "customer",
+        role: "pembeli",
         is_active: true,
       });
     }
@@ -146,10 +146,10 @@ function UserModal({
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="w-full rounded-xl border border-gray-200 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               required
             >
-              <option value="customer">Customer</option>
+              <option value="pembeli">Customer</option>
               <option value="kasir">Cashier</option>
               <option value="admin">Admin</option>
             </select>
@@ -244,13 +244,13 @@ function DeleteModal({
 const roleIcons: Record<string, React.ReactNode> = {
   admin: <ShieldCheck className="h-4 w-4" />,
   kasir: <Shield className="h-4 w-4" />,
-  customer: <User className="h-4 w-4" />,
+  pembeli: <User className="h-4 w-4" />,
 };
 
 const roleColors: Record<string, "default" | "secondary" | "success" | "warning" | "destructive" | "info"> = {
   admin: "destructive",
   kasir: "warning",
-  customer: "secondary",
+  pembeli: "secondary",
 };
 
 export default function AdminUsersPage() {
@@ -377,12 +377,12 @@ export default function AdminUsersPage() {
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
         >
           <option value="">All Roles</option>
           <option value="admin">Admin</option>
           <option value="kasir">Cashier</option>
-          <option value="customer">Customer</option>
+          <option value="pembeli">Customer</option>
         </select>
       </div>
 

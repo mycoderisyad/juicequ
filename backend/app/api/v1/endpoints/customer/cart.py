@@ -11,19 +11,20 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.dependencies import CurrentUser
 from app.models.user import User
+from app.services.product_service import ProductService
 
 router = APIRouter()
 
 
 class CartItem(BaseModel):
     """Schema for a cart item."""
-    product_id: int = Field(..., description="Product ID")
+    product_id: str = Field(..., description="Product ID")
     quantity: int = Field(..., ge=1, le=99, description="Quantity")
 
 
 class AddToCartRequest(BaseModel):
     """Request to add item to cart."""
-    product_id: int = Field(..., description="Product ID to add")
+    product_id: str = Field(..., description="Product ID to add")
     quantity: int = Field(1, ge=1, le=99, description="Quantity to add")
 
 
@@ -32,7 +33,7 @@ class UpdateCartItemRequest(BaseModel):
     quantity: int = Field(..., ge=0, le=99, description="New quantity (0 to remove)")
 
 
-# In-memory cart storage (will be replaced with database)
+# In-memory cart storage (session-based, will be cleared on server restart)
 CARTS: dict[str, list[dict]] = {}
 
 
@@ -91,12 +92,8 @@ async def add_to_cart(
     if existing_item:
         existing_item["quantity"] += request.quantity
     else:
-        # Mock product data (should fetch from database)
-        from app.api.v1.endpoints.customer.products import PRODUCTS
-        product = next(
-            (p for p in PRODUCTS if p["id"] == request.product_id),
-            None
-        )
+        # Fetch product from database
+        product = ProductService.get_by_id(db, request.product_id)
         
         if not product:
             from app.core.exceptions import NotFoundException
@@ -104,10 +101,10 @@ async def add_to_cart(
         
         CARTS[user.id].append({
             "product_id": request.product_id,
-            "name": product["name"],
-            "price": product["price"],
+            "name": product.name,
+            "price": product.price,
             "quantity": request.quantity,
-            "image_color": product["image_color"],
+            "image": product.image,
         })
     
     return {"message": "Item added to cart", "success": True}
@@ -119,7 +116,7 @@ async def add_to_cart(
     description="Update quantity of a cart item.",
 )
 async def update_cart_item(
-    product_id: int,
+    product_id: str,
     request: UpdateCartItemRequest,
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
@@ -160,7 +157,7 @@ async def update_cart_item(
     description="Remove an item from the cart.",
 )
 async def remove_from_cart(
-    product_id: int,
+    product_id: str,
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ):

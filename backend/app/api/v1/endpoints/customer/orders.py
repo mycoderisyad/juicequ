@@ -13,45 +13,27 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.dependencies import CurrentUser
 from app.models.user import User
+from app.models.order import Order, OrderItem, OrderStatus, PaymentMethod
+from app.models.product import Product
 from app.schemas.order import OrderCreate, OrderResponse, OrderListResponse
 from app.services.order_service import OrderService
 
 router = APIRouter()
 
 
-# Fallback in-memory storage (for development without database connection)
-ORDERS: dict[str, list[dict]] = {}
-
-
-class OrderItem(BaseModel):
-    """Schema for an order item (legacy support)."""
+class OrderItemRequest(BaseModel):
+    """Schema for an order item."""
     product_id: str
     name: str
     price: float
     quantity: int
 
 
-class CreateOrderRequestLegacy(BaseModel):
-    """Request to create a new order (legacy format)."""
-    items: list[OrderItem] = Field(..., min_length=1, description="Order items")
+class CreateOrderRequest(BaseModel):
+    """Request to create a new order."""
+    items: list[OrderItemRequest] = Field(..., min_length=1, description="Order items")
     notes: str | None = Field(None, max_length=500, description="Special instructions")
     payment_method: str = Field("cash", description="Payment method")
-
-
-class OrderStatusConst:
-    """Order status constants."""
-    PENDING = "pending"
-    CONFIRMED = "confirmed"
-    PREPARING = "preparing"
-    READY = "ready"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-
-
-def _use_in_memory_storage() -> bool:
-    """Check if we should use in-memory storage (development mode)."""
-    # For now, always use in-memory storage until database is seeded
-    return True
 
 
 @router.get(
@@ -71,42 +53,18 @@ async def get_my_orders(
     if not isinstance(user, User):
         return {"orders": [], "total": 0}
     
-    if _use_in_memory_storage():
-        user_orders = ORDERS.get(user.id, [])
-        
-        # Filter by status if provided
-        if status_filter:
-            user_orders = [
-                order for order in user_orders 
-                if order["status"] == status_filter
-            ]
-        
-        # Sort by date (newest first)
-        user_orders = sorted(
-            user_orders, 
-            key=lambda x: x["created_at"], 
-            reverse=True
-        )
-        
-        # Pagination
-        total = len(user_orders)
-        start = (page - 1) * page_size
-        end = start + page_size
-        items = user_orders[start:end]
-        
-        return {
-            "orders": items,
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-            "total_pages": (total + page_size - 1) // page_size if total > 0 else 1,
-        }
-    
     # Use database
+    status_enum = None
+    if status_filter:
+        try:
+            status_enum = OrderStatus(status_filter)
+        except ValueError:
+            pass
+    
     orders, total = OrderService.get_user_orders(
         db,
         user_id=user.id,
-        status=status_filter,
+        status=status_enum,
         page=page,
         page_size=page_size,
     )
@@ -150,7 +108,7 @@ async def get_my_orders(
     description="Create a new order from cart or direct items.",
 )
 async def create_order(
-    request: CreateOrderRequestLegacy,
+    request: CreateOrderRequest,
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ):
@@ -162,50 +120,7 @@ async def create_order(
             detail="Authentication required to place an order"
         )
     
-    if _use_in_memory_storage():
-        # Initialize orders list if not exists
-        if user.id not in ORDERS:
-            ORDERS[user.id] = []
-        
-        # Calculate total
-        subtotal = sum(item.price * item.quantity for item in request.items)
-        tax = subtotal * 0.1  # 10% tax
-        total = subtotal + tax
-        
-        # Generate order number
-        date_part = datetime.now().strftime("%y%m%d")
-        order_num = f"JQ-{date_part}-{str(uuid4())[:4].upper()}"
-        
-        # Create order
-        order = {
-            "id": order_num,
-            "order_number": order_num,
-            "user_id": user.id,
-            "items": [item.model_dump() for item in request.items],
-            "subtotal": round(subtotal, 2),
-            "tax": round(tax, 2),
-            "total": round(total, 2),
-            "status": OrderStatusConst.PENDING,
-            "notes": request.notes,
-            "payment_method": request.payment_method,
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
-        }
-        
-        ORDERS[user.id].append(order)
-        
-        # Clear cart after order (if using cart storage)
-        from app.api.v1.endpoints.customer.cart import CARTS
-        if user.id in CARTS:
-            CARTS[user.id] = []
-        
-        return {
-            "message": "Order placed successfully",
-            "order": order,
-            "success": True,
-        }
-    
-    # Use database - convert legacy format to new format
+    # Use database - create order items
     try:
         from app.schemas.order import OrderCreate as OrderCreateSchema, OrderItemCreate, ProductSize
         
@@ -218,9 +133,20 @@ async def create_order(
             for item in request.items
         ]
         
+        # Map payment method
+        payment_method_map = {
+            "cash": "cash",
+            "qris": "qris",
+            "transfer": "transfer",
+            "digital": "qris",
+            "card": "transfer",
+        }
+        mapped_payment = payment_method_map.get(request.payment_method, "cash")
+        
         order_data = OrderCreateSchema(
             items=order_items,
             customer_notes=request.notes,
+            payment_method=mapped_payment,
         )
         
         order = OrderService.create_order(db, order_data, user)
@@ -271,21 +197,6 @@ async def get_order(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required"
         )
-    
-    if _use_in_memory_storage():
-        user_orders = ORDERS.get(user.id, [])
-        order = next(
-            (order for order in user_orders if order["id"] == order_id),
-            None
-        )
-        
-        if not order:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Order {order_id} not found"
-            )
-        
-        return order
     
     # Use database
     order = OrderService.get_order_by_id(db, order_id)
@@ -348,35 +259,6 @@ async def cancel_order(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required"
         )
-    
-    if _use_in_memory_storage():
-        user_orders = ORDERS.get(user.id, [])
-        order = next(
-            (order for order in user_orders if order["id"] == order_id),
-            None
-        )
-        
-        if not order:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Order {order_id} not found"
-            )
-        
-        # Only pending orders can be cancelled
-        if order["status"] != OrderStatusConst.PENDING:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only pending orders can be cancelled"
-            )
-        
-        order["status"] = OrderStatusConst.CANCELLED
-        order["updated_at"] = datetime.now().isoformat()
-        
-        return {
-            "message": "Order cancelled successfully",
-            "order": order,
-            "success": True,
-        }
     
     # Use database
     order = OrderService.get_order_by_id(db, order_id)

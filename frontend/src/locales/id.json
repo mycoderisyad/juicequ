@@ -57,7 +57,7 @@
       "title3": "lebih segar",
       "subtitle": "Temukan jus lokal segar, pesan online dan ambil di outlet terdekat.",
       "orderNow": "Pesan Sekarang",
-      "howItWorks": "Cara Kerja"
+      "viewMenu": "Lihat Menu"
     },
     "promo": {
       "firstOrder": "Diskon Pesanan Pertama!",
@@ -361,6 +361,65 @@
     "copyright": "© 2025 JuiceQu. Hak cipta dilindungi.",
     "madeWith": "Dibuat dengan",
     "inIndonesia": "di Indonesia"
+  },
+  "about": {
+    "badge": "Cerita Kami",
+    "hero": {
+      "title": "Jus Segar, Hidup Sehat",
+      "description": "JuiceQu lahir dari keyakinan sederhana: setiap orang berhak mendapatkan akses ke minuman segar, lezat, dan bergizi. Kami memiliki misi untuk membuat hidup sehat menjadi mudah, terjangkau, dan menyenangkan bagi semua orang."
+    },
+    "stats": {
+      "customers": "Pelanggan Puas",
+      "products": "Variasi Produk",
+      "outlets": "Outlet Nasional",
+      "rating": "Rating Rata-rata"
+    },
+    "mission": {
+      "badge": "Misi Kami",
+      "title": "Membuat Hidup Sehat Jadi Mudah",
+      "description": "Di JuiceQu, kami percaya bahwa kesehatan tidak harus rumit. Itulah mengapa kami berdedikasi untuk menciptakan jus dan smoothie lezat yang kaya nutrisi dan cocok dengan gaya hidup sibuk Anda.",
+      "description2": "Setiap minuman yang kami buat dibuat dengan bahan-bahan pilihan yang bersumber dari lokal. Kami bermitra dengan petani lokal untuk memastikan produk tersegar sampai ke gelas Anda.",
+      "noPreservatives": "Tanpa pengawet"
+    },
+    "values": {
+      "title": "Nilai Inti Kami",
+      "subtitle": "Prinsip-prinsip ini memandu semua yang kami lakukan di JuiceQu",
+      "fresh": {
+        "title": "Selalu Segar",
+        "description": "Kami hanya menggunakan bahan-bahan tersegar, dipasok setiap hari dari petani lokal."
+      },
+      "health": {
+        "title": "Kesehatan Utama",
+        "description": "Kesejahteraan Anda adalah prioritas kami. Tanpa bahan tambahan buatan, selamanya."
+      },
+      "quality": {
+        "title": "Kualitas Premium",
+        "description": "Kami tidak pernah berkompromi pada kualitas, dari bahan hingga layanan."
+      },
+      "community": {
+        "title": "Fokus Komunitas",
+        "description": "Kami berkomitmen untuk mendukung petani dan komunitas lokal."
+      }
+    },
+    "story": {
+      "title": "Perjalanan Kami",
+      "paragraph1": "JuiceQu dimulai pada tahun 2020 sebagai gerobak jus kecil di Jakarta. Pendiri kami, Sarah, menyadari bahwa menemukan minuman segar dan sehat saat bepergian ternyata sangat sulit. Kebanyakan pilihan yang ada penuh gula atau kurang nilai gizi.",
+      "paragraph2": "Dengan passion untuk kesehatan dan latar belakang di bidang nutrisi, Sarah mulai bereksperimen dengan kombinasi jus yang lezat sekaligus benar-benar sehat. Kabar menyebar dengan cepat, dan yang dimulai sebagai gerobak tunggal tumbuh menjadi brand yang dicintai.",
+      "paragraph3": "Hari ini, JuiceQu melayani ribuan pelanggan setiap hari di berbagai lokasi. Tapi komitmen kami tetap sama: menyediakan minuman segar, sehat, dan lezat yang membantu Anda merasa terbaik, setiap hari."
+    },
+    "team": {
+      "title": "Tim Kami",
+      "subtitle": "Orang-orang bersemangat di balik JuiceQu",
+      "founder": "Pendiri & CEO",
+      "headChef": "Kepala Produk",
+      "operations": "Direktur Operasional"
+    },
+    "cta": {
+      "title": "Siap Mencoba JuiceQu?",
+      "description": "Rasakan kesegarannya sendiri. Pesan sekarang dan rasakan perbedaannya!",
+      "viewMenu": "Lihat Menu",
+      "chatWithUs": "Chat Dengan Kami"
+    }
   },
   "errors": {
     "notFound": {

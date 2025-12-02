@@ -11,11 +11,14 @@ import {
   Sparkles,
   LogOut,
   Home,
-  X
+  X,
+  Settings,
+  ClipboardList,
+  ChevronDown
 } from "lucide-react";
 import { useAuthStore, useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export function Header() {
   const { user, logout, fetchUser } = useAuthStore();
@@ -23,6 +26,8 @@ export function Header() {
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -32,6 +37,17 @@ export function Header() {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -44,7 +60,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
-      <nav className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
+      <nav className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link
           href="/"
@@ -94,23 +110,70 @@ export function Header() {
           
           {/* User Menu */}
           {mounted && user ? (
-            <div className="hidden items-center gap-2 sm:flex">
-              <Link href="/profile">
-                <button className="flex items-center gap-2 rounded-full bg-gray-100 py-1.5 pl-1.5 pr-3 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-all">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-600 text-white text-xs font-bold">
-                    {user.full_name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="max-w-[80px] truncate hidden lg:block">{user.full_name.split(' ')[0]}</span>
-                </button>
-              </Link>
+            <div className="hidden items-center sm:flex relative" ref={dropdownRef}>
               <button 
-                onClick={logout}
-                className="rounded-full p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all"
-                title={t("nav.logout")}
-                aria-label={t("nav.logout")}
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="flex items-center gap-2 rounded-full bg-gray-100 py-1.5 pl-1.5 pr-3 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-all"
               >
-                <LogOut className="h-5 w-5" aria-hidden="true" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-600 text-white text-xs font-bold">
+                  {user.full_name.charAt(0).toUpperCase()}
+                </div>
+                <span className="max-w-20 truncate hidden lg:block">{user.full_name.split(' ')[0]}</span>
+                <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
+
+              {/* Profile Dropdown */}
+              {profileDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-xl bg-white shadow-lg border border-gray-100 py-2 z-50">
+                  {/* User Info */}
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="text-sm font-semibold text-gray-900">{user.full_name}</p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+
+                  {/* Menu Items */}
+                  <div className="py-1">
+                    <Link 
+                      href="/profile" 
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <User className="h-4 w-4 text-gray-500" />
+                      My Profile
+                    </Link>
+                    <Link 
+                      href="/orders" 
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <ClipboardList className="h-4 w-4 text-gray-500" />
+                      Order History
+                    </Link>
+                    <Link 
+                      href="/profile/settings" 
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Settings className="h-4 w-4 text-gray-500" />
+                      Settings
+                    </Link>
+                  </div>
+
+                  {/* Logout */}
+                  <div className="border-t border-gray-100 pt-1">
+                    <button 
+                      onClick={() => {
+                        logout();
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {t("nav.logout")}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <Link href="/login" className="hidden sm:block">

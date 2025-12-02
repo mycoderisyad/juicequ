@@ -3,43 +3,57 @@
  */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Users,
   Package,
   ShoppingCart,
   DollarSign,
   TrendingUp,
-  ArrowRight
+  ArrowRight,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import Link from "next/link";
+import { analyticsApi, type DashboardData } from "@/lib/api/index";
 
-// Mock data
-const mockDashboard = {
-  users: { total: 150, active: 142, growth: 12 },
-  products: { total: 24, available: 22 },
-  orders: { total: 856, today: 23, pending: 8 },
-  revenue: { today: 2450000, total: 45600000, growth: 8.5 },
-};
-
-const mockTopProducts = [
-  { name: "Berry Blast", sold: 156, revenue: 1326000 },
-  { name: "Green Goddess", sold: 134, revenue: 1206000 },
-  { name: "Tropical Paradise", sold: 98, revenue: 857500 },
-  { name: "Protein Power", sold: 87, revenue: 870000 },
-];
-
-const mockRecentActivity = [
-  { type: "order", message: "Order baru dari John D.", time: "2 menit lalu" },
-  { type: "user", message: "User baru terdaftar: sarah@email.com", time: "15 menit lalu" },
-  { type: "product", message: "Stok 'Acai Bowl' hampir habis", time: "1 jam lalu" },
-  { type: "order", message: "Order #ORD-123 selesai", time: "2 jam lalu" },
-];
+interface TopProduct {
+  id: string;
+  name: string;
+  quantity_sold: number;
+  revenue: number;
+}
 
 export default function AdminDashboardPage() {
-  const [dashboard] = useState(mockDashboard);
-  const [topProducts] = useState(mockTopProducts);
-  const [recentActivity] = useState(mockRecentActivity);
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch dashboard and product analytics in parallel
+        const [dashboardData, productsData] = await Promise.all([
+          analyticsApi.getDashboard(),
+          analyticsApi.getProducts(4), // Get top 4 products
+        ]);
+        
+        setDashboard(dashboardData);
+        setTopProducts(productsData.top_products || []);
+      } catch (err) {
+        console.error("Failed to load dashboard:", err);
+        setError("Gagal memuat data dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -48,6 +62,37 @@ export default function AdminDashboardPage() {
       minimumFractionDigits: 0,
     }).format(amount);
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-green-600" />
+          <p className="mt-2 text-gray-500">Memuat dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !dashboard) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+          <h2 className="mt-4 text-lg font-semibold text-gray-900">
+            {error || "Gagal memuat data"}
+          </h2>
+          <p className="mt-2 text-gray-500">Silakan coba lagi nanti</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+          >
+            Muat Ulang
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -65,10 +110,6 @@ export default function AdminDashboardPage() {
             <div className="rounded-lg bg-blue-100 p-3">
               <Users className="h-6 w-6 text-blue-600" />
             </div>
-            <span className="flex items-center gap-1 text-sm font-medium text-green-600">
-              <TrendingUp className="h-4 w-4" />
-              +{dashboard.users.growth}%
-            </span>
           </div>
           <p className="mt-4 text-2xl font-bold text-gray-900">{dashboard.users.total}</p>
           <p className="text-sm text-gray-500">Total Users</p>
@@ -108,10 +149,6 @@ export default function AdminDashboardPage() {
             <div className="rounded-lg bg-green-100 p-3">
               <DollarSign className="h-6 w-6 text-green-600" />
             </div>
-            <span className="flex items-center gap-1 text-sm font-medium text-green-600">
-              <TrendingUp className="h-4 w-4" />
-              +{dashboard.revenue.growth}%
-            </span>
           </div>
           <p className="mt-4 text-2xl font-bold text-gray-900">
             {formatCurrency(dashboard.revenue.total)}
@@ -138,40 +175,71 @@ export default function AdminDashboardPage() {
           </div>
           
           <div className="space-y-4">
-            {topProducts.map((product, index) => (
-              <div key={product.name} className="flex items-center gap-4">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600">
-                  {index + 1}
-                </span>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{product.name}</p>
-                  <p className="text-sm text-gray-500">{product.sold} terjual</p>
+            {topProducts.length > 0 ? (
+              topProducts.map((product, index) => (
+                <div key={product.id} className="flex items-center gap-4">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600">
+                    {index + 1}
+                  </span>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{product.name}</p>
+                    <p className="text-sm text-gray-500">{product.quantity_sold} terjual</p>
+                  </div>
+                  <p className="font-medium text-gray-900">
+                    {formatCurrency(product.revenue)}
+                  </p>
                 </div>
-                <p className="font-medium text-gray-900">
-                  {formatCurrency(product.revenue)}
-                </p>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-4">Belum ada data penjualan</p>
+            )}
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Quick Stats */}
         <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Aktivitas Terbaru</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Ringkasan Hari Ini</h2>
           
           <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <div className={`mt-1 h-2 w-2 rounded-full ${
-                  activity.type === "order" ? "bg-green-500" :
-                  activity.type === "user" ? "bg-blue-500" : "bg-yellow-500"
-                }`} />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">{activity.message}</p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
-                </div>
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <span className="text-gray-700">Pendapatan</span>
               </div>
-            ))}
+              <span className="font-semibold text-green-700">
+                {formatCurrency(dashboard.revenue.today)}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="h-5 w-5 text-blue-600" />
+                <span className="text-gray-700">Transaksi</span>
+              </div>
+              <span className="font-semibold text-blue-700">
+                {dashboard.revenue.transactions_today} transaksi
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Package className="h-5 w-5 text-orange-600" />
+                <span className="text-gray-700">Order Baru</span>
+              </div>
+              <span className="font-semibold text-orange-700">
+                {dashboard.orders.today} order
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-5 w-5 text-yellow-600" />
+                <span className="text-gray-700">Pending</span>
+              </div>
+              <span className="font-semibold text-yellow-700">
+                {dashboard.orders.pending} order
+              </span>
+            </div>
           </div>
         </div>
       </div>

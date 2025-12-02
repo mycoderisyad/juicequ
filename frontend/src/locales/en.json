@@ -57,7 +57,7 @@
       "title3": "smooth",
       "subtitle": "Discover local fresh juice, order online and pick up at the nearest outlet.",
       "orderNow": "Order Now",
-      "howItWorks": "How It Works"
+      "viewMenu": "View Menu"
     },
     "promo": {
       "firstOrder": "First Order Discount!",
@@ -361,6 +361,65 @@
     "copyright": "© 2025 JuiceQu. All rights reserved.",
     "madeWith": "Made with",
     "inIndonesia": "in Indonesia"
+  },
+  "about": {
+    "badge": "Our Story",
+    "hero": {
+      "title": "Fresh Juice, Healthy Life",
+      "description": "JuiceQu was born from a simple belief: everyone deserves access to fresh, delicious, and nutritious beverages. We're on a mission to make healthy living easy, accessible, and enjoyable for everyone."
+    },
+    "stats": {
+      "customers": "Happy Customers",
+      "products": "Product Varieties",
+      "outlets": "Outlets Nationwide",
+      "rating": "Average Rating"
+    },
+    "mission": {
+      "badge": "Our Mission",
+      "title": "Making Healthy Living Simple",
+      "description": "At JuiceQu, we believe that health should never be complicated. That's why we've dedicated ourselves to creating delicious, nutrient-packed juices and smoothies that fit seamlessly into your busy lifestyle.",
+      "description2": "Every drink we craft is made with carefully selected, locally-sourced ingredients. We partner with local farmers to ensure the freshest produce makes it into your cup.",
+      "noPreservatives": "No preservatives added"
+    },
+    "values": {
+      "title": "Our Core Values",
+      "subtitle": "These principles guide everything we do at JuiceQu",
+      "fresh": {
+        "title": "Always Fresh",
+        "description": "We use only the freshest ingredients, sourced daily from local farms."
+      },
+      "health": {
+        "title": "Health First",
+        "description": "Your wellbeing is our priority. No artificial additives, ever."
+      },
+      "quality": {
+        "title": "Premium Quality",
+        "description": "We never compromise on quality, from ingredients to service."
+      },
+      "community": {
+        "title": "Community Focused",
+        "description": "We're committed to supporting local farmers and communities."
+      }
+    },
+    "story": {
+      "title": "Our Journey",
+      "paragraph1": "JuiceQu started in 2020 as a small juice cart in Jakarta. Our founder, Sarah, noticed that finding fresh, healthy drinks on-the-go was surprisingly difficult. Most options were either loaded with sugar or lacked real nutritional value.",
+      "paragraph2": "With a passion for health and a background in nutrition, Sarah began experimenting with juice combinations that were both delicious and genuinely healthy. Word spread quickly, and what started as a single cart grew into a beloved brand.",
+      "paragraph3": "Today, JuiceQu serves thousands of customers daily across multiple locations. But our commitment remains the same: to provide fresh, healthy, and delicious beverages that help you feel your best, every single day."
+    },
+    "team": {
+      "title": "Meet Our Team",
+      "subtitle": "The passionate people behind JuiceQu",
+      "founder": "Founder & CEO",
+      "headChef": "Head of Product",
+      "operations": "Operations Director"
+    },
+    "cta": {
+      "title": "Ready to Try JuiceQu?",
+      "description": "Experience the freshness yourself. Order now and taste the difference!",
+      "viewMenu": "View Menu",
+      "chatWithUs": "Chat With Us"
+    }
   },
   "errors": {
     "notFound": {

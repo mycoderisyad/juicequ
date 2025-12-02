@@ -12,11 +12,9 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.permissions import require_roles
 from app.models.user import User, UserRole
+from app.models.product import Product, ProductCategory
 
 router = APIRouter()
-
-# Import shared categories list
-from app.api.v1.endpoints.customer.products import CATEGORIES
 
 
 class CreateCategoryRequest(BaseModel):
@@ -34,6 +32,19 @@ class UpdateCategoryRequest(BaseModel):
     description: str | None = Field(None, max_length=500)
 
 
+def category_to_dict(category: ProductCategory, product_count: int = 0) -> dict:
+    """Convert ProductCategory model to dictionary."""
+    return {
+        "id": category.id,
+        "name": category.name,
+        "icon": category.icon,
+        "description": category.description,
+        "product_count": product_count,
+        "created_at": category.created_at.isoformat() if category.created_at else None,
+        "updated_at": category.updated_at.isoformat() if category.updated_at else None,
+    }
+
+
 @router.get(
     "",
     summary="Get all categories",
@@ -44,16 +55,12 @@ async def get_categories(
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
 ):
     """Get all categories."""
-    # Add product count for each category
-    from app.api.v1.endpoints.customer.products import PRODUCTS
+    categories = db.query(ProductCategory).all()
     
     categories_with_count = []
-    for category in CATEGORIES:
-        product_count = len([p for p in PRODUCTS if p["category"] == category["id"]])
-        categories_with_count.append({
-            **category,
-            "product_count": product_count,
-        })
+    for category in categories:
+        product_count = db.query(Product).filter(Product.category_id == category.id).count()
+        categories_with_count.append(category_to_dict(category, product_count))
     
     return {
         "categories": categories_with_count,
@@ -72,25 +79,31 @@ async def get_category(
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
 ):
     """Get category by ID."""
-    from app.api.v1.endpoints.customer.products import PRODUCTS
+    from app.core.exceptions import NotFoundException
     
-    category = next(
-        (c for c in CATEGORIES if c["id"] == category_id),
-        None
-    )
+    category = db.query(ProductCategory).filter(ProductCategory.id == category_id).first()
     
     if not category:
-        from app.core.exceptions import NotFoundException
         raise NotFoundException("Category", category_id)
     
     # Get products in this category
-    products = [p for p in PRODUCTS if p["category"] == category_id]
+    products = db.query(Product).filter(Product.category_id == category_id).all()
+    products_list = []
+    for p in products:
+        products_list.append({
+            "id": p.id,
+            "name": p.name,
+            "description": p.description,
+            "price": p.base_price,
+            "image": p.image_url,
+            "is_available": p.is_available,
+            "stock": p.stock_quantity,
+        })
     
-    return {
-        **category,
-        "product_count": len(products),
-        "products": products,
-    }
+    result = category_to_dict(category, len(products))
+    result["products"] = products_list
+    
+    return result
 
 
 @router.post(
@@ -107,28 +120,25 @@ async def create_category(
     from app.core.exceptions import BadRequestException
     
     # Check for duplicate ID
-    existing = next(
-        (c for c in CATEGORIES if c["id"] == request.id),
-        None
-    )
+    existing = db.query(ProductCategory).filter(ProductCategory.id == request.id).first()
     if existing:
         raise BadRequestException("A category with this ID already exists")
     
     # Create category
-    new_category = {
-        "id": request.id,
-        "name": request.name,
-        "icon": request.icon,
-        "description": request.description,
-        "created_at": datetime.now().isoformat(),
-        "created_by": current_user.id,
-    }
+    new_category = ProductCategory(
+        id=request.id,
+        name=request.name,
+        icon=request.icon,
+        description=request.description,
+    )
     
-    CATEGORIES.append(new_category)
+    db.add(new_category)
+    db.commit()
+    db.refresh(new_category)
     
     return {
         "message": "Category created successfully",
-        "category": new_category,
+        "category": category_to_dict(new_category),
         "success": True,
     }
 
@@ -147,30 +157,27 @@ async def update_category(
     """Update a category."""
     from app.core.exceptions import NotFoundException
     
-    category = next(
-        (c for c in CATEGORIES if c["id"] == category_id),
-        None
-    )
+    category = db.query(ProductCategory).filter(ProductCategory.id == category_id).first()
     
     if not category:
         raise NotFoundException("Category", category_id)
     
     # Update fields
     if request.name is not None:
-        category["name"] = request.name
+        category.name = request.name
     
     if request.icon is not None:
-        category["icon"] = request.icon
+        category.icon = request.icon
     
     if request.description is not None:
-        category["description"] = request.description
+        category.description = request.description
     
-    category["updated_at"] = datetime.now().isoformat()
-    category["updated_by"] = current_user.id
+    db.commit()
+    db.refresh(category)
     
     return {
         "message": "Category updated successfully",
-        "category": category,
+        "category": category_to_dict(category),
         "success": True,
     }
 
@@ -187,29 +194,27 @@ async def delete_category(
 ):
     """Delete a category."""
     from app.core.exceptions import NotFoundException, BadRequestException
-    from app.api.v1.endpoints.customer.products import PRODUCTS
     
-    category_index = next(
-        (i for i, c in enumerate(CATEGORIES) if c["id"] == category_id),
-        None
-    )
+    category = db.query(ProductCategory).filter(ProductCategory.id == category_id).first()
     
-    if category_index is None:
+    if not category:
         raise NotFoundException("Category", category_id)
     
     # Check if category has products
-    products_in_category = [p for p in PRODUCTS if p["category"] == category_id]
-    if products_in_category:
+    product_count = db.query(Product).filter(Product.category_id == category_id).count()
+    if product_count > 0:
         raise BadRequestException(
-            f"Cannot delete category with {len(products_in_category)} products. "
+            f"Cannot delete category with {product_count} products. "
             "Move or delete products first."
         )
     
-    deleted_category = CATEGORIES.pop(category_index)
+    category_name = category.name
+    db.delete(category)
+    db.commit()
     
     return {
         "message": "Category deleted successfully",
         "category_id": category_id,
-        "category_name": deleted_category["name"],
+        "category_name": category_name,
         "success": True,
     }

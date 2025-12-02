@@ -44,7 +44,6 @@ export function LanguageSwitcher() {
         id="language-switcher-button"
       >
         <Globe className="h-4 w-4" aria-hidden="true" />
-        <span className="hidden sm:inline" aria-hidden="true">{localeFlags[locale]}</span>
         <span className="hidden md:inline">{locale.toUpperCase()}</span>
         <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
       </button>

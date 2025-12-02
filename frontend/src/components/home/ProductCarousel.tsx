@@ -7,7 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
 interface Product {
-  id: number;
+  id: string | number;
   name: string;
   price: string;
   color: string;
@@ -26,7 +26,7 @@ export function ProductCarousel({ products, speed = 30 }: ProductCarouselProps) 
   // Duplicate products for seamless infinite scroll
   const duplicatedProducts = [...products, ...products];
 
-  const handleProductClick = (productId: number) => {
+  const handleProductClick = (productId: string | number) => {
     router.push(`/products/${productId}`);
   };
 
@@ -84,7 +84,7 @@ export function ProductCarousel({ products, speed = 30 }: ProductCarouselProps) 
                 <div className="mt-2 flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500">{t("common.starting")}</p>
-                    <p className="text-lg font-bold text-gray-900">${product.price}</p>
+                    <p className="text-lg font-bold text-gray-900">Rp {product.price}</p>
                   </div>
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm transition-colors group-hover:bg-green-600 group-hover:text-white">
                     <ArrowRight className="h-5 w-5" />

@@ -100,7 +100,7 @@ async def get_users(
     description="Get detailed information about a user.",
 )
 async def get_user(
-    user_id: int,
+    user_id: str,
     db: Annotated[Session, Depends(get_db)],
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
 ):
@@ -179,7 +179,7 @@ async def create_user(
     description="Update user information.",
 )
 async def update_user(
-    user_id: int,
+    user_id: str,
     request: UpdateUserRequest,
     db: Annotated[Session, Depends(get_db)],
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
@@ -242,14 +242,14 @@ async def update_user(
 @router.delete(
     "/{user_id}",
     summary="Delete user",
-    description="Delete a user (soft delete).",
+    description="Delete a user permanently.",
 )
 async def delete_user(
-    user_id: int,
+    user_id: str,
     db: Annotated[Session, Depends(get_db)],
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
 ):
-    """Delete a user (soft delete by deactivating)."""
+    """Delete a user permanently from database."""
     from app.core.exceptions import NotFoundException, BadRequestException
     
     user = db.query(User).filter(User.id == user_id).first()
@@ -260,8 +260,8 @@ async def delete_user(
     if user.id == current_user.id:
         raise BadRequestException("Cannot delete your own account")
     
-    # Soft delete
-    user.is_active = False
+    # Hard delete - remove from database
+    db.delete(user)
     db.commit()
     
     return {
