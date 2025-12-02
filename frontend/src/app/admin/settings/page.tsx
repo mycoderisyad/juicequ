@@ -69,15 +69,36 @@ export default function AdminSettingsPage() {
       setIsLoading(true);
       setError(null);
       
-      const [storeRes, opRes, payRes] = await Promise.all([
-        settingsApi.getStore(),
-        settingsApi.getOperational(),
-        settingsApi.getPayment(),
-      ]);
+      const allSettings = await settingsApi.getAll();
       
-      if (storeRes) setStoreSettings(storeRes);
-      if (opRes) setOperationalSettings(opRes);
-      if (payRes) setPaymentSettings(payRes);
+      if (allSettings.store) {
+        setStoreSettings({
+          store_name: allSettings.store.name || "",
+          store_address: allSettings.store.address || "",
+          store_phone: allSettings.store.phone || "",
+          store_email: allSettings.store.email || "",
+          tax_rate: allSettings.payments?.tax_rate || 0,
+          currency: "USD",
+        });
+      }
+      if (allSettings.operations) {
+        setOperationalSettings({
+          opening_time: allSettings.operations.opening_hours || "08:00",
+          closing_time: allSettings.operations.closing_hours || "22:00",
+          days_open: DAYS_OF_WEEK,
+          order_types: ORDER_TYPES,
+        });
+      }
+      if (allSettings.payments) {
+        const methods: string[] = [];
+        if (allSettings.payments.cash_enabled) methods.push("cash");
+        if (allSettings.payments.card_enabled) methods.push("credit_card");
+        if (allSettings.payments.digital_enabled) methods.push("e_wallet");
+        setPaymentSettings({
+          payment_methods: methods.length > 0 ? methods : ["cash"],
+          minimum_order: allSettings.operations?.minimum_order || 0,
+        });
+      }
     } catch (err) {
       console.error("Failed to fetch settings:", err);
       setError("Failed to load settings. Using defaults.");
@@ -98,7 +119,12 @@ export default function AdminSettingsPage() {
   const saveStoreSettings = async () => {
     try {
       setIsSaving("store");
-      await settingsApi.updateStore(storeSettings);
+      await settingsApi.updateStore({
+        name: storeSettings.store_name,
+        address: storeSettings.store_address,
+        phone: storeSettings.store_phone,
+        email: storeSettings.store_email,
+      });
       showSuccess("Store settings saved successfully!");
     } catch (err) {
       console.error("Failed to save store settings:", err);
@@ -111,7 +137,10 @@ export default function AdminSettingsPage() {
   const saveOperationalSettings = async () => {
     try {
       setIsSaving("operational");
-      await settingsApi.updateOperational(operationalSettings);
+      await settingsApi.updateOperations({
+        opening_hours: operationalSettings.opening_time,
+        closing_hours: operationalSettings.closing_time,
+      });
       showSuccess("Operational settings saved successfully!");
     } catch (err) {
       console.error("Failed to save operational settings:", err);
@@ -124,7 +153,12 @@ export default function AdminSettingsPage() {
   const savePaymentSettings = async () => {
     try {
       setIsSaving("payment");
-      await settingsApi.updatePayment(paymentSettings);
+      await settingsApi.updatePayments({
+        cash_enabled: paymentSettings.payment_methods.includes("cash"),
+        card_enabled: paymentSettings.payment_methods.includes("credit_card") || paymentSettings.payment_methods.includes("debit_card"),
+        digital_enabled: paymentSettings.payment_methods.includes("e_wallet") || paymentSettings.payment_methods.includes("bank_transfer"),
+        tax_rate: storeSettings.tax_rate,
+      });
       showSuccess("Payment settings saved successfully!");
     } catch (err) {
       console.error("Failed to save payment settings:", err);

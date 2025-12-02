@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -45,6 +45,49 @@ function transformProduct(product: ApiProduct): DisplayProduct {
 }
 
 export default function MenuPage() {
+  return (
+    <Suspense fallback={<MenuLoadingSkeleton />}>
+      <MenuContent />
+    </Suspense>
+  );
+}
+
+function MenuLoadingSkeleton() {
+  return (
+    <div className="flex min-h-screen flex-col bg-white">
+      <Header />
+      <main className="flex-1 py-10">
+        <div className="container mx-auto px-4">
+          <div className="mb-10 text-center">
+            <Skeleton className="mx-auto h-10 w-48" />
+            <Skeleton className="mx-auto mt-2 h-6 w-64" />
+          </div>
+          <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <Skeleton className="h-12 w-full max-w-md" />
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-10 w-24 rounded-full" />
+              ))}
+            </div>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="rounded-3xl border border-gray-100 p-4">
+                <Skeleton className="mb-4 aspect-square w-full rounded-2xl" />
+                <Skeleton className="mb-2 h-6 w-3/4" />
+                <Skeleton className="mb-4 h-4 w-1/2" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+function MenuContent() {
   const addItem = useCartStore((state) => state.addItem);
   const { t } = useTranslation();
   const searchParams = useSearchParams();
@@ -156,38 +199,7 @@ export default function MenuPage() {
 
   // Loading skeleton
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen flex-col bg-white">
-        <Header />
-        <main className="flex-1 py-10">
-          <div className="container mx-auto px-4">
-            <div className="mb-10 text-center">
-              <Skeleton className="mx-auto h-10 w-48" />
-              <Skeleton className="mx-auto mt-2 h-6 w-64" />
-            </div>
-            <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <Skeleton className="h-12 w-full max-w-md" />
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Skeleton key={i} className="h-10 w-24 rounded-full" />
-                ))}
-              </div>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} className="rounded-3xl border border-gray-100 p-4">
-                  <Skeleton className="mb-4 aspect-square w-full rounded-2xl" />
-                  <Skeleton className="mb-2 h-6 w-3/4" />
-                  <Skeleton className="mb-4 h-4 w-1/2" />
-                  <Skeleton className="h-12 w-full" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <MenuLoadingSkeleton />;
   }
 
   return (

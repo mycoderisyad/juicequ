@@ -19,7 +19,7 @@ router = APIRouter()
 class CreateUserRequest(BaseModel):
     """Request to create a new user."""
     email: EmailStr
-    nama: str = Field(..., min_length=2, max_length=100)
+    full_name: str = Field(..., min_length=2, max_length=100)
     password: str = Field(..., min_length=6)
     role: str = Field(default="pembeli", description="User role")
 
@@ -27,7 +27,7 @@ class CreateUserRequest(BaseModel):
 class UpdateUserRequest(BaseModel):
     """Request to update a user."""
     email: EmailStr | None = None
-    nama: str | None = Field(None, min_length=2, max_length=100)
+    full_name: str | None = Field(None, min_length=2, max_length=100)
     role: str | None = None
     is_active: bool | None = None
 
@@ -63,7 +63,7 @@ async def get_users(
     if search:
         search_pattern = f"%{search}%"
         query = query.filter(
-            (User.nama.ilike(search_pattern)) | 
+            (User.full_name.ilike(search_pattern)) | 
             (User.email.ilike(search_pattern))
         )
     
@@ -78,7 +78,7 @@ async def get_users(
         {
             "id": user.id,
             "email": user.email,
-            "nama": user.nama,
+            "full_name": user.full_name,
             "role": user.role.value if user.role else "pembeli",
             "is_active": user.is_active,
             "created_at": user.created_at.isoformat() if user.created_at else None,
@@ -114,7 +114,7 @@ async def get_user(
     return {
         "id": user.id,
         "email": user.email,
-        "nama": user.nama,
+        "full_name": user.full_name,
         "role": user.role.value if user.role else "pembeli",
         "is_active": user.is_active,
         "created_at": user.created_at.isoformat() if user.created_at else None,
@@ -151,7 +151,7 @@ async def create_user(
     # Create user
     new_user = User(
         email=request.email,
-        nama=request.nama,
+        full_name=request.full_name,
         hashed_password=get_password_hash(request.password),
         role=role_enum,
         is_active=True,
@@ -166,7 +166,7 @@ async def create_user(
         "user": {
             "id": new_user.id,
             "email": new_user.email,
-            "nama": new_user.nama,
+            "full_name": new_user.full_name,
             "role": new_user.role.value,
         },
         "success": True,
@@ -206,8 +206,8 @@ async def update_user(
             raise BadRequestException("Email already in use")
         user.email = request.email
     
-    if request.nama:
-        user.nama = request.nama
+    if request.full_name:
+        user.full_name = request.full_name
     
     if request.role:
         try:
@@ -231,7 +231,7 @@ async def update_user(
         "user": {
             "id": user.id,
             "email": user.email,
-            "nama": user.nama,
+            "full_name": user.full_name,
             "role": user.role.value,
             "is_active": user.is_active,
         },
