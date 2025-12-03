@@ -48,14 +48,57 @@ async def chat_with_ai(
     try:
         user_id = current_user.id if current_user else None
         service = AIService(db)
-        result = await service.chat(request.message, user_id, request.session_id)
+        
+        # Convert conversation history to list of dicts if provided
+        conversation_history = None
+        if request.conversation_history:
+            conversation_history = [
+                {"role": msg.role, "content": msg.content}
+                for msg in request.conversation_history
+            ]
+        
+        result = await service.chat(
+            request.message,
+            user_id,
+            request.session_id,
+            request.locale or "id",
+            conversation_history,
+        )
         await service.close()
+        
+        # Build order data response if present
+        order_data = None
+        if result.get("order_data"):
+            from app.schemas.ai import ChatOrderData, ChatOrderItem
+            order_items = [
+                ChatOrderItem(
+                    product_id=item["product_id"],
+                    product_name=item["product_name"],
+                    quantity=item["quantity"],
+                    size=item["size"],
+                    unit_price=item["unit_price"],
+                    total_price=item["total_price"],
+                    image_url=item.get("image_url"),
+                    description=item.get("description"),
+                )
+                for item in result["order_data"]["items"]
+            ]
+            order_data = ChatOrderData(
+                items=order_items,
+                subtotal=result["order_data"]["subtotal"],
+                tax=result["order_data"]["tax"],
+                total=result["order_data"]["total"],
+                notes=result["order_data"].get("notes"),
+            )
         
         return ChatResponse(
             response=result["response"],
             session_id=result["session_id"],
             context_used=result.get("context_used"),
             response_time_ms=result["response_time_ms"],
+            intent=result.get("intent"),
+            order_data=order_data,
+            show_checkout=result.get("show_checkout", False),
         )
     except ExternalServiceException:
         raise

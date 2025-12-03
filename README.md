@@ -15,8 +15,8 @@
 
 ## Demo
 
-- **Live URL**: [https://juicequ.app](https://juicequ.app) <!-- TODO: Update after deploy -->
-- **Video Demo**: [YouTube Link](https://youtube.com/...) <!-- TODO: Add video link -->
+- **Live URL**: [https://juicequ.app](https://juicequ.app)
+- **Video Demo**: [YouTube Link](https://youtube.com/...)
 
 ---
 
@@ -243,22 +243,9 @@ Project ini mengikuti **WCAG 2.1 Level AA**:
 
 ---
 
-## Additional Documentation
-
-- [INSTRUCTIONS.md](./INSTRUCTIONS.md) - Dokumentasi lengkap
-- [RULES.md](./RULES.md) - Coding standards
-- [EXECUTION_PLAN.md](./EXECUTION_PLAN.md) - Implementation plan
-- [HACKATHON_RULES.md](./HACKATHON_RULES.md) - Scoring criteria
-
----
-
 ## License
 
 MIT License - see [LICENSE](./LICENSE)
-
-## Team
-
-- [Your Name] - Full Stack Developer
 
 ---
 

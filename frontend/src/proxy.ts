@@ -54,7 +54,7 @@ function hasAccess(userRole: string | undefined, requiredRoles: string[]): boole
   return requiredRoles.includes(userRole);
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Skip API routes and static files

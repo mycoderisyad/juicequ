@@ -1,8 +1,34 @@
 import { apiClient } from "./config";
 
+export interface ChatMessageHistory {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export interface ChatRequest {
   message: string;
   session_id?: string;
+  locale?: string;
+  conversation_history?: ChatMessageHistory[];
+}
+
+export interface ChatOrderItem {
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  size: "small" | "medium" | "large";
+  unit_price: number;
+  total_price: number;
+  image_url?: string;
+  description?: string;
+}
+
+export interface ChatOrderData {
+  items: ChatOrderItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  notes?: string;
 }
 
 export interface ChatResponse {
@@ -10,6 +36,9 @@ export interface ChatResponse {
   session_id: string;
   context_used?: Array<{ text: string; metadata: Record<string, unknown> }>;
   response_time_ms: number;
+  intent?: "order" | "inquiry" | "greeting";
+  order_data?: ChatOrderData;
+  show_checkout: boolean;
 }
 
 export interface VoiceResponse {

@@ -306,10 +306,12 @@
     }
   },
   "chat": {
-    "title": "AI Chat Assistant",
+    "title": "Asisten AI Chat",
     "subtitle": "Tanya apa saja tentang menu kami",
     "placeholder": "Ketik pesan Anda...",
+    "recording": "Merekam...",
     "send": "Kirim",
+    "loginForPersonalized": "Masuk untuk rekomendasi yang dipersonalisasi",
     "suggestions": {
       "title": "Saran Pertanyaan",
       "items": [

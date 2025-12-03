@@ -11,10 +11,39 @@ from pydantic import BaseModel, Field, ConfigDict
 # Chat Schemas
 # =============================================================================
 
+class ChatMessageHistory(BaseModel):
+    """Schema for chat message in conversation history."""
+    role: str = Field(..., description="Message role (user/assistant)")
+    content: str = Field(..., description="Message content")
+
+
 class ChatRequest(BaseModel):
     """Schema for chat request."""
     message: str = Field(..., min_length=1, max_length=2000, description="User message")
     session_id: Optional[str] = Field(None, description="Session ID for conversation context")
+    locale: Optional[str] = Field("id", description="Language locale (id/en)")
+    conversation_history: Optional[List[ChatMessageHistory]] = Field(None, description="Previous conversation messages")
+
+
+class ChatOrderItem(BaseModel):
+    """Schema for an order item in chat response."""
+    product_id: str = Field(..., description="Product ID")
+    product_name: str = Field(..., description="Product name")
+    quantity: int = Field(1, description="Number of items")
+    size: str = Field("medium", description="Product size (small/medium/large)")
+    unit_price: float = Field(..., description="Unit price")
+    total_price: float = Field(..., description="Total price for this item")
+    image_url: Optional[str] = Field(None, description="Product image URL")
+    description: Optional[str] = Field(None, description="Product description")
+
+
+class ChatOrderData(BaseModel):
+    """Schema for order data in chat response."""
+    items: List[ChatOrderItem] = Field(default_factory=list, description="Order items")
+    subtotal: float = Field(0, description="Subtotal before tax")
+    tax: float = Field(0, description="Tax amount")
+    total: float = Field(0, description="Total amount")
+    notes: Optional[str] = Field(None, description="Order notes")
 
 
 class ChatResponse(BaseModel):
@@ -23,6 +52,9 @@ class ChatResponse(BaseModel):
     session_id: str = Field(..., description="Session ID for continuing conversation")
     context_used: Optional[List[Dict[str, Any]]] = Field(None, description="Context chunks used for response")
     response_time_ms: int = Field(..., description="Response time in milliseconds")
+    intent: Optional[str] = Field(None, description="Detected intent (order/inquiry/greeting)")
+    order_data: Optional[ChatOrderData] = Field(None, description="Order data if intent is order")
+    show_checkout: bool = Field(False, description="Whether to show checkout button")
 
 
 # =============================================================================
