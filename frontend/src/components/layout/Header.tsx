@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { CurrencySwitcher } from "@/components/ui/CurrencySwitcher";
 import { 
   ShoppingBag, 
   User, 
@@ -87,6 +88,9 @@ export function Header() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 lg:gap-3">
+          {/* Currency Switcher */}
+          <CurrencySwitcher variant="compact" />
+
           {/* Language Switcher */}
           <LanguageSwitcher />
 
@@ -221,6 +225,11 @@ export function Header() {
                 </li>
               ))}
             </ul>
+
+            {/* Currency Switcher - Mobile */}
+            <div className="mt-4 px-4">
+              <CurrencySwitcher variant="default" />
+            </div>
 
             {/* Mobile User Section */}
             <div className="mt-4 border-t border-gray-100 pt-4">

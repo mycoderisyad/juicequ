@@ -283,6 +283,26 @@ class ProductService:
             Product.is_available == True,
         ).order_by(Product.order_count.desc()).limit(limit).all()
     
+    @staticmethod
+    def get_bestsellers_for_hero(
+        db: Session,
+        limit: int = 3,
+    ) -> list[Product]:
+        """
+        Get bestseller products for hero section.
+        Sorted by order_count (most sold first).
+        Only returns available products.
+        """
+        return db.query(Product).options(
+            joinedload(Product.category)
+        ).filter(
+            Product.is_available == True,
+        ).order_by(
+            Product.order_count.desc(),
+            Product.average_rating.desc(),
+            Product.created_at.desc(),
+        ).limit(limit).all()
+    
     # ==========================================================================
     # Price Calculations
     # ==========================================================================

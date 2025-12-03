@@ -116,6 +116,22 @@ class Product(Base):
         String(500),
         nullable=True,
     )
+    # Hero images for bestseller display
+    hero_image: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="Background image for hero section (WebP)",
+    )
+    bottle_image: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="Bottle/product image for hero section (WebP)",
+    )
+    thumbnail_image: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="Thumbnail image for catalog (WebP)",
+    )
     
     # Category relationship
     category_id: Mapped[str] = mapped_column(

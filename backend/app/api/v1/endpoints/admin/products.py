@@ -26,6 +26,9 @@ class CreateProductRequest(BaseModel):
     price: float = Field(..., gt=0)
     category: str
     image: str | None = None
+    hero_image: str | None = None
+    bottle_image: str | None = None
+    thumbnail_image: str | None = None
     is_available: bool = True
     stock: int = Field(default=100, ge=0)
     ingredients: list[str] = []
@@ -39,6 +42,9 @@ class UpdateProductRequest(BaseModel):
     price: float | None = Field(None, gt=0)
     category: str | None = None
     image: str | None = None
+    hero_image: str | None = None
+    bottle_image: str | None = None
+    thumbnail_image: str | None = None
     is_available: bool | None = None
     stock: int | None = Field(None, ge=0)
     ingredients: list[str] | None = None
@@ -65,6 +71,9 @@ def product_to_dict(product: Product) -> dict:
         "category_name": product.category.name if product.category else None,
         "image": product.image_url,
         "image_color": product.image_url,  # For frontend compatibility
+        "hero_image": product.hero_image,
+        "bottle_image": product.bottle_image,
+        "thumbnail_image": product.thumbnail_image,
         "is_available": product.is_available,
         "stock": product.stock_quantity,
         "stock_quantity": product.stock_quantity,
@@ -72,6 +81,7 @@ def product_to_dict(product: Product) -> dict:
         "calories": product.calories,
         "rating": product.average_rating,
         "reviews": product.order_count,
+        "order_count": product.order_count,
         "created_at": product.created_at.isoformat() if product.created_at else None,
         "updated_at": product.updated_at.isoformat() if product.updated_at else None,
     }
@@ -172,6 +182,9 @@ async def create_product(
         base_price=request.price,
         category_id=request.category,
         image_url=request.image or "bg-green-500",
+        hero_image=request.hero_image,
+        bottle_image=request.bottle_image,
+        thumbnail_image=request.thumbnail_image,
         is_available=request.is_available,
         stock_quantity=request.stock,
         ingredients=json.dumps(request.ingredients) if request.ingredients else None,
@@ -233,6 +246,15 @@ async def update_product(
     
     if request.image is not None:
         product.image_url = request.image
+    
+    if request.hero_image is not None:
+        product.hero_image = request.hero_image
+    
+    if request.bottle_image is not None:
+        product.bottle_image = request.bottle_image
+    
+    if request.thumbnail_image is not None:
+        product.thumbnail_image = request.thumbnail_image
     
     if request.is_available is not None:
         product.is_available = request.is_available

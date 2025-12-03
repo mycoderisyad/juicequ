@@ -4,7 +4,7 @@ Organized by role: customer, cashier, admin.
 """
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, ai
+from app.api.v1.endpoints import auth, ai, currency
 from app.api.v1.endpoints.customer import router as customer_router
 from app.api.v1.endpoints.cashier import router as cashier_router
 from app.api.v1.endpoints.admin import router as admin_router
@@ -24,6 +24,9 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 # AI Assistant endpoints (public, optional auth)
 api_router.include_router(ai.router, prefix="/ai", tags=["AI Assistant"])
+
+# Currency exchange rates (public + admin)
+api_router.include_router(currency.router, prefix="/currency", tags=["Currency"])
 
 # Customer endpoints (authenticated users)
 api_router.include_router(customer_router, prefix="/customer")

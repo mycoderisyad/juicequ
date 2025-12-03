@@ -142,6 +142,33 @@ class SettingsService:
         }
 
     @staticmethod
+    def get_api_keys_settings(db: Session) -> Dict[str, Any]:
+        """Get API keys settings (masked for security)."""
+        settings = SettingsService.get_settings_by_category(db, "api_keys")
+        
+        # Mask API key for security
+        api_key = settings.get("exchangerate_api_key", "")
+        masked_key = f"{api_key[:8]}..." if api_key and len(api_key) > 8 else ""
+        
+        return {
+            "exchangerate_api_key_configured": bool(api_key),
+            "exchangerate_api_key_preview": masked_key,
+        }
+
+    @staticmethod
+    def get_currency_settings(db: Session) -> Dict[str, Any]:
+        """Get currency and exchange rate settings."""
+        settings = SettingsService.get_settings_by_category(db, "currency")
+        store_settings = SettingsService.get_settings_by_category(db, "store")
+        return {
+            "base_currency": settings.get("base_currency", "USD"),
+            "display_currency_code": store_settings.get("currency_code", "IDR"),
+            "display_currency_symbol": store_settings.get("currency_symbol", "Rp"),
+            "exchange_rates_updated": settings.get("exchange_rates_updated", ""),
+            "has_cached_rates": bool(settings.get("exchange_rates")),
+        }
+
+    @staticmethod
     def get_public_store_info(db: Session) -> Dict[str, Any]:
         """Get public store information for customers."""
         store = SettingsService.get_store_settings(db)

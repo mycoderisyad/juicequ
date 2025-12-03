@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from "react";
 import storeApi, { type StoreInfo, type CurrencyInfo, type StoreHours } from "@/lib/api/store";
 import { setCurrencySettings } from "@/lib/currency";
+import { useCurrencyStore } from "@/store/currency-store";
 
 interface StoreContextType {
   storeInfo: StoreInfo | null;
@@ -102,29 +103,38 @@ export function useStore() {
 }
 
 /**
- * Hook for just currency formatting.
+ * Hook for currency with dynamic conversion.
+ * Uses currency store for display currency selection and exchange rates.
+ * Base currency is IDR (prices in database).
  */
 export function useCurrency() {
-  const { currency } = useStore();
+  const currencyStore = useCurrencyStore();
   
-  const format = useCallback((amount: number) => {
-    if (!currency) {
-      return `Rp ${amount.toLocaleString("id-ID")}`;
+  // Fetch exchange rates if user selected non-IDR currency
+  useEffect(() => {
+    if (currencyStore.displayCurrency.code !== "IDR" && !currencyStore.exchangeRates && !currencyStore.isLoadingRates) {
+      currencyStore.fetchExchangeRates();
     }
-    
-    try {
-      return new Intl.NumberFormat(currency.locale, {
-        style: "currency",
-        currency: currency.code,
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(amount);
-    } catch {
-      return `${currency.symbol} ${amount.toLocaleString()}`;
-    }
-  }, [currency]);
+  }, [currencyStore]);
   
-  return { currency, format };
+  const format = useCallback((amount: number, fromCurrency: string = "IDR") => {
+    return currencyStore.formatPrice(amount, fromCurrency);
+  }, [currencyStore]);
+  
+  const convert = useCallback((amount: number, fromCurrency: string = "IDR") => {
+    return currencyStore.convertPrice(amount, fromCurrency);
+  }, [currencyStore]);
+  
+  return { 
+    currency: currencyStore.displayCurrency,
+    displayCurrency: currencyStore.displayCurrency,
+    availableCurrencies: currencyStore.availableCurrencies,
+    setDisplayCurrency: currencyStore.setDisplayCurrency,
+    exchangeRates: currencyStore.exchangeRates,
+    isLoading: currencyStore.isLoadingRates,
+    format,
+    convert,
+  };
 }
 
 /**

@@ -212,6 +212,9 @@ export const adminProductsApi = {
     price: number;
     category: string;
     image?: string;
+    hero_image?: string;
+    bottle_image?: string;
+    thumbnail_image?: string;
     is_available?: boolean;
     stock?: number;
     ingredients?: string[];
@@ -232,6 +235,9 @@ export const adminProductsApi = {
       price: number;
       category: string;
       image: string;
+      hero_image: string;
+      bottle_image: string;
+      thumbnail_image: string;
       is_available: boolean;
       stock: number;
       ingredients: string[];
@@ -394,6 +400,17 @@ export const settingsApi = {
     operations: OperationsSettings;
     payments: PaymentSettings;
     notifications: Record<string, boolean>;
+    api_keys?: {
+      exchangerate_api_key_configured: boolean;
+      exchangerate_api_key_preview: string;
+    };
+    currency?: {
+      base_currency: string;
+      display_currency_code: string;
+      display_currency_symbol: string;
+      exchange_rates_updated: string;
+      has_cached_rates: boolean;
+    };
   }> => {
     const response = await apiClient.get("/admin/settings");
     return response.data;
@@ -495,12 +512,87 @@ export const settingsApi = {
   },
 };
 
+// Upload API
+export const uploadApi = {
+  /**
+   * Upload single image.
+   * Auto-converts to WebP format.
+   */
+  uploadImage: async (
+    file: File,
+    imageType: "hero" | "bottle" | "thumbnail" | "catalog",
+    productId?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    url: string;
+    filename: string;
+    image_type: string;
+    original_size: number;
+    webp_size: number;
+    size_reduction: string;
+    product_id?: string;
+  }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("image_type", imageType);
+    if (productId) {
+      formData.append("product_id", productId);
+    }
+
+    const response = await apiClient.post("/admin/upload/image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Upload batch images for a product.
+   */
+  uploadBatch: async (
+    productId: string,
+    images: {
+      hero?: File;
+      bottle?: File;
+      thumbnail?: File;
+    }
+  ): Promise<{
+    success: boolean;
+    message: string;
+    product_id: string;
+    results: Record<string, { success?: boolean; url?: string; error?: string; size_reduction?: string }>;
+  }> => {
+    const formData = new FormData();
+    formData.append("product_id", productId);
+    
+    if (images.hero) {
+      formData.append("hero_image", images.hero);
+    }
+    if (images.bottle) {
+      formData.append("bottle_image", images.bottle);
+    }
+    if (images.thumbnail) {
+      formData.append("thumbnail_image", images.thumbnail);
+    }
+
+    const response = await apiClient.post("/admin/upload/images/batch", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+};
+
 const adminApi = {
   users: usersApi,
   products: adminProductsApi,
   categories: categoriesApi,
   analytics: analyticsApi,
   settings: settingsApi,
+  upload: uploadApi,
 };
 
 export default adminApi;

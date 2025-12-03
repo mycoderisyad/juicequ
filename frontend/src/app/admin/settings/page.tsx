@@ -7,11 +7,15 @@ import {
   OperationalSettingsPanel, 
   PaymentSettingsPanel, 
   NotificationsPanel,
+  ApiKeysPanel,
   type StoreSettings,
   type OperationalSettings,
-  type PaymentSettings 
+  type PaymentSettings,
+  type ApiKeysSettings,
+  type CurrencyInfo,
 } from "@/components/admin";
 import { settingsApi } from "@/lib/api/admin";
+import { currencyApi } from "@/lib/api/currency";
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const ORDER_TYPES = ["dine_in", "takeaway", "delivery"];
@@ -53,6 +57,18 @@ function useSettings() {
     bank_transfer_enabled: false,
     tax_rate: 11,
     service_charge: 0,
+  });
+  
+  const [apiKeysSettings, setApiKeysSettings] = useState<ApiKeysSettings>({
+    exchangerate_api_key_configured: false,
+    exchangerate_api_key_preview: "",
+  });
+  
+  const [currencyInfo, setCurrencyInfo] = useState<CurrencyInfo>({
+    base_currency: "USD",
+    display_currency_code: "IDR",
+    exchange_rates_updated: "",
+    has_cached_rates: false,
   });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -107,6 +123,24 @@ function useSettings() {
           bank_transfer_enabled: allSettings.payments.bank_transfer_enabled ?? false,
           tax_rate: allSettings.payments.tax_rate || 11,
           service_charge: allSettings.payments.service_charge || 0,
+        });
+      }
+      
+      // API Keys settings
+      if (allSettings.api_keys) {
+        setApiKeysSettings({
+          exchangerate_api_key_configured: allSettings.api_keys.exchangerate_api_key_configured ?? false,
+          exchangerate_api_key_preview: allSettings.api_keys.exchangerate_api_key_preview || "",
+        });
+      }
+      
+      // Currency info
+      if (allSettings.currency) {
+        setCurrencyInfo({
+          base_currency: allSettings.currency.base_currency || "USD",
+          display_currency_code: allSettings.currency.display_currency_code || "IDR",
+          exchange_rates_updated: allSettings.currency.exchange_rates_updated || "",
+          has_cached_rates: allSettings.currency.has_cached_rates ?? false,
         });
       }
     } catch {
@@ -192,12 +226,27 @@ function useSettings() {
     }
   };
 
+  const saveApiKey = async (apiKey: string) => {
+    const result = await currencyApi.updateApiKey(apiKey);
+    // Refresh settings to update status
+    await fetchSettings();
+    return result;
+  };
+
+  const refreshRates = async () => {
+    await currencyApi.refreshRates();
+    // Refresh settings to update status
+    await fetchSettings();
+  };
+
   return {
     storeSettings, setStoreSettings,
     operationalSettings, setOperationalSettings,
     paymentSettings, setPaymentSettings,
+    apiKeysSettings, currencyInfo,
     isLoading, isSaving, error, success,
     saveStoreSettings, saveOperationalSettings, savePaymentSettings,
+    saveApiKey, refreshRates,
   };
 }
 
@@ -251,6 +300,12 @@ export default function AdminSettingsPage() {
           onChange={settings.setPaymentSettings}
           onSave={settings.savePaymentSettings}
           isSaving={settings.isSaving === "payment"}
+        />
+        <ApiKeysPanel
+          settings={settings.apiKeysSettings}
+          currencyInfo={settings.currencyInfo}
+          onSaveApiKey={settings.saveApiKey}
+          onRefreshRates={settings.refreshRates}
         />
         <NotificationsPanel />
       </div>

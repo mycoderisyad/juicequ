@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { X, Check, Loader2, AlertCircle } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { X, Check, Loader2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ImageUpload } from "./ImageUpload";
 
 interface Product {
   id: number | string;
@@ -17,6 +18,9 @@ interface Product {
   image?: string;
   image_url?: string;
   image_color?: string;
+  hero_image?: string;
+  bottle_image?: string;
+  thumbnail_image?: string;
   is_available: boolean;
   stock?: number;
   stock_quantity?: number;
@@ -47,6 +51,9 @@ interface FormData {
   stock: number;
   ingredients: string[];
   image: string;
+  hero_image: string;
+  bottle_image: string;
+  thumbnail_image: string;
 }
 
 function getInitialFormData(product: Product | null, categories: Category[]): FormData {
@@ -60,6 +67,9 @@ function getInitialFormData(product: Product | null, categories: Category[]): Fo
       stock: product.stock ?? 100,
       ingredients: product.ingredients || [],
       image: product.image || product.image_color || "",
+      hero_image: product.hero_image || "",
+      bottle_image: product.bottle_image || "",
+      thumbnail_image: product.thumbnail_image || "",
     };
   }
   return {
@@ -71,6 +81,9 @@ function getInitialFormData(product: Product | null, categories: Category[]): Fo
     stock: 100,
     ingredients: [],
     image: "",
+    hero_image: "",
+    bottle_image: "",
+    thumbnail_image: "",
   };
 }
 
@@ -159,6 +172,8 @@ export function ProductModal({
     validationError,
     validate,
   } = useProductForm(product, categories);
+  
+  const [showImageSection, setShowImageSection] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,7 +186,7 @@ export function ProductModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
         <ModalHeader
           title={product ? "Edit Product" : "Add New Product"}
           onClose={onClose}
@@ -233,6 +248,59 @@ export function ProductModal({
               onChange={(v) => updateField("image", v)}
               placeholder="e.g., bg-red-500"
             />
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="border-t pt-4">
+            <button
+              type="button"
+              onClick={() => setShowImageSection(!showImageSection)}
+              className="flex w-full items-center justify-between text-left"
+            >
+              <span className="font-medium text-gray-900">
+                Product Images {!product && <span className="text-xs text-gray-400 ml-2">(optional)</span>}
+              </span>
+              {showImageSection ? (
+                <ChevronUp className="h-5 w-5 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-gray-500" />
+              )}
+            </button>
+            
+            {showImageSection && (
+              <div className="mt-4 space-y-4">
+                <p className="text-sm text-gray-500">
+                  Upload images for the product. All images are auto-converted to WebP for optimal performance.
+                  {!product && " You can also upload images after creating the product."}
+                </p>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <ImageUpload
+                    label="Thumbnail"
+                    imageType="thumbnail"
+                    productId={product ? String(product.id) : undefined}
+                    currentImage={formData.thumbnail_image}
+                    onUploadComplete={(url) => updateField("thumbnail_image", url)}
+                    helpText="400x400 for product cards"
+                  />
+                  <ImageUpload
+                    label="Hero Background"
+                    imageType="hero"
+                    productId={product ? String(product.id) : undefined}
+                    currentImage={formData.hero_image}
+                    onUploadComplete={(url) => updateField("hero_image", url)}
+                    helpText="1920x1080 recommended"
+                  />
+                  <ImageUpload
+                    label="Bottle Image"
+                    imageType="bottle"
+                    productId={product ? String(product.id) : undefined}
+                    currentImage={formData.bottle_image}
+                    onUploadComplete={(url) => updateField("bottle_image", url)}
+                    helpText="500x800, transparent PNG"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <IngredientsField

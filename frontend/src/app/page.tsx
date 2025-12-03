@@ -14,76 +14,104 @@ import { WhyChooseUs } from "@/components/home/WhyChooseUs";
 import { CTABanner } from "@/components/home/CTABanner";
 import { StoreInfoSection } from "@/components/home/StoreInfoSection";
 import { useTranslation } from "@/lib/i18n";
+import { useCurrency } from "@/lib/hooks/use-store";
 import { 
   ChevronLeft, 
   ChevronRight,
   Star,
 } from "lucide-react";
-import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
+import { productsApi, type Product as ApiProduct, type BestsellerProduct } from "@/lib/api/customer";
 
-// Top 3 bestseller products with their colors
-// Images stored in: /public/images/products/hero/
-const bestsellerProducts = [
+// Fallback bestseller products (used when API fails or while loading)
+const fallbackBestsellerProducts: BestsellerProduct[] = [
   {
-    id: 1,
+    id: "1",
     name: "Berry Blast",
     price: "8.50",
     rating: 5,
+    order_count: 100,
     description: "Fresh berries blended to perfection.",
     color: "bg-red-500",
-    gradientFrom: "from-red-400",
-    gradientTo: "to-red-600",
-    buttonBg: "bg-red-600",
-    buttonHover: "hover:bg-red-700",
-    shadowColor: "shadow-red-600/20",
-    accentColor: "text-red-600",
-    bgAccent: "bg-red-50/50",
-    bgImage: "/images/products/hero/berry-blast.webp",
-    bottleImage: "/images/products/bottles/berry-blast.webp",
+    gradient_from: "from-red-400",
+    gradient_to: "to-red-600",
+    button_bg: "bg-red-600",
+    button_hover: "hover:bg-red-700",
+    shadow_color: "shadow-red-600/20",
+    accent_color: "text-red-600",
+    bg_accent: "bg-red-50/50",
+    hero_image: "/images/products/hero/berry-blast.webp",
+    bottle_image: "/images/products/bottles/berry-blast.webp",
+    thumbnail_image: "bg-red-500",
   },
   {
-    id: 2,
+    id: "2",
     name: "Green Goddess",
     price: "9.00",
     rating: 5,
+    order_count: 80,
     description: "Healthy green smoothie with spinach and apple.",
     color: "bg-green-500",
-    gradientFrom: "from-green-400",
-    gradientTo: "to-green-600",
-    buttonBg: "bg-green-600",
-    buttonHover: "hover:bg-green-700",
-    shadowColor: "shadow-green-600/20",
-    accentColor: "text-green-600",
-    bgAccent: "bg-green-50/50",
-    bgImage: "/images/products/hero/green-goddess.webp",
-    bottleImage: "/images/products/bottles/green-goddess.webp",
+    gradient_from: "from-green-400",
+    gradient_to: "to-green-600",
+    button_bg: "bg-green-600",
+    button_hover: "hover:bg-green-700",
+    shadow_color: "shadow-green-600/20",
+    accent_color: "text-green-600",
+    bg_accent: "bg-green-50/50",
+    hero_image: "/images/products/hero/green-goddess.webp",
+    bottle_image: "/images/products/bottles/green-goddess.webp",
+    thumbnail_image: "bg-green-500",
   },
   {
-    id: 3,
+    id: "3",
     name: "Tropical Paradise",
     price: "8.75",
     rating: 5,
+    order_count: 75,
     description: "Refreshing blend of pineapple, mango, and coconut.",
     color: "bg-yellow-500",
-    gradientFrom: "from-yellow-400",
-    gradientTo: "to-orange-500",
-    buttonBg: "bg-orange-500",
-    buttonHover: "hover:bg-orange-600",
-    shadowColor: "shadow-orange-500/20",
-    accentColor: "text-orange-500",
-    bgAccent: "bg-orange-50/50",
-    bgImage: "/images/products/hero/tropical-paradise.webp",
-    bottleImage: "/images/products/bottles/tropical-paradise.webp",
+    gradient_from: "from-yellow-400",
+    gradient_to: "to-orange-500",
+    button_bg: "bg-orange-500",
+    button_hover: "hover:bg-orange-600",
+    shadow_color: "shadow-orange-500/20",
+    accent_color: "text-orange-500",
+    bg_accent: "bg-orange-50/50",
+    hero_image: "/images/products/hero/tropical-paradise.webp",
+    bottle_image: "/images/products/bottles/tropical-paradise.webp",
+    thumbnail_image: "bg-yellow-500",
   },
 ];
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [carouselProducts, setCarouselProducts] = useState<Array<{id: string; name: string; price: string; color: string}>>([]);
+  const [bestsellerProducts, setBestsellerProducts] = useState<BestsellerProduct[]>(fallbackBestsellerProducts);
+  const [isLoadingBestsellers, setIsLoadingBestsellers] = useState(true);
 
   const currentProduct = bestsellerProducts[currentIndex];
+
+  // Fetch bestseller products for hero
+  useEffect(() => {
+    const fetchBestsellers = async () => {
+      try {
+        setIsLoadingBestsellers(true);
+        const response = await productsApi.getBestsellers(3);
+        if (response.items && response.items.length > 0) {
+          setBestsellerProducts(response.items);
+        }
+      } catch (err) {
+        console.error("Failed to fetch bestsellers, using fallback:", err);
+        // Keep fallback products
+      } finally {
+        setIsLoadingBestsellers(false);
+      }
+    };
+    fetchBestsellers();
+  }, []);
 
   // Fetch products for carousel
   useEffect(() => {
@@ -152,7 +180,7 @@ export default function HomePage() {
                 }`}
               >
                 <Image
-                  src={product.bgImage}
+                  src={product.hero_image}
                   alt={product.name}
                   fill
                   className="object-cover object-center"
@@ -188,7 +216,7 @@ export default function HomePage() {
                   <Link href="/menu">
                     <Button 
                       size="xl" 
-                      className={`${currentProduct.buttonBg} ${currentProduct.buttonHover} text-white shadow-lg ${currentProduct.shadowColor} h-14 px-8 rounded-full transition-all duration-500 ease-out`}
+                      className={`${currentProduct.button_bg} ${currentProduct.button_hover} text-white shadow-lg ${currentProduct.shadow_color} h-14 px-8 rounded-full transition-all duration-500 ease-out`}
                     >
                       {t("home.hero.orderNow")}
                     </Button>
@@ -210,7 +238,7 @@ export default function HomePage() {
                       }`}
                     >
                       <Image
-                        src={product.bottleImage}
+                        src={product.bottle_image}
                         alt={product.name}
                         fill
                         className="object-contain drop-shadow-2xl"
@@ -227,9 +255,9 @@ export default function HomePage() {
                     <h3 className="text-sm font-medium text-gray-500">Details</h3>
                     <div className="mt-1 flex items-baseline gap-2">
                       <span 
-                        className={`text-2xl lg:text-3xl font-bold transition-all duration-500 ease-out ${currentProduct.accentColor}`}
+                        className={`text-2xl lg:text-3xl font-bold transition-all duration-500 ease-out ${currentProduct.accent_color}`}
                       >
-                        ${currentProduct.price}
+                        {format(parseFloat(currentProduct.price))}
                       </span>
                     </div>
                     <p className="text-sm font-medium text-gray-900 transition-all duration-300">

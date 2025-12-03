@@ -19,6 +19,9 @@ interface Product {
   image?: string;
   image_url?: string;
   image_color?: string;
+  hero_image?: string;
+  bottle_image?: string;
+  thumbnail_image?: string;
   is_available: boolean;
   stock?: number;
   stock_quantity?: number;
