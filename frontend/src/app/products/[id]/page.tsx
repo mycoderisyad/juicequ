@@ -86,11 +86,13 @@ export default function ProductPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
+    const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
     addItem({
       id: product.id,
       name: product.name,
       price: parseFloat(product.price),
       color: product.color,
+      image: productImage,
       quantity: quantity
     });
   };

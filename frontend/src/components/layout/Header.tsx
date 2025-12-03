@@ -90,11 +90,15 @@ export function Header() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 lg:gap-3">
-          {/* Currency Switcher */}
-          <CurrencySwitcher variant="compact" />
+          {/* Currency Switcher - Hidden on mobile, shown in mobile menu */}
+          <div className="hidden md:block">
+            <CurrencySwitcher variant="compact" />
+          </div>
 
-          {/* Language Switcher */}
-          <LanguageSwitcher />
+          {/* Language Switcher - Hidden on mobile, shown in mobile menu */}
+          <div className="hidden md:block">
+            <LanguageSwitcher />
+          </div>
 
           {/* Cart Button */}
           <Link href="/cart" aria-label={`${t("nav.cart")}${mounted && itemCount > 0 ? `, ${itemCount} ${t("nav.items")}` : ''}`}>
@@ -265,9 +269,16 @@ export function Header() {
               ))}
             </ul>
 
-            {/* Currency Switcher - Mobile */}
-            <div className="mt-4 px-4">
-              <CurrencySwitcher variant="default" />
+            {/* Currency & Language Switcher - Mobile */}
+            <div className="mt-4 px-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">Currency</span>
+                <CurrencySwitcher variant="compact" />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">Language</span>
+                <LanguageSwitcher />
+              </div>
             </div>
 
             {/* Mobile User Section */}

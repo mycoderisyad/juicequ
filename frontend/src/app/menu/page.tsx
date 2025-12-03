@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Plus, Minus, ShoppingCart, RefreshCw, AlertCircle } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
-import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
+import { productsApi, type Product as ApiProduct, type Category } from "@/lib/api/customer";
 import Link from "next/link";
 import Image from "next/image";
 import { useCurrency } from "@/lib/hooks/use-store";
@@ -20,9 +20,16 @@ interface DisplayProduct {
   description: string;
   price: string;
   calories: number;
-  category: string;
+  category_id: string;
+  category_name: string;
   color: string;
   thumbnail_image?: string;
+}
+
+interface DisplayCategory {
+  id: string;
+  name: string;
+  icon?: string;
 }
 
 function getInitialCategory(searchParams: URLSearchParams): string {
@@ -30,7 +37,7 @@ function getInitialCategory(searchParams: URLSearchParams): string {
   if (categoryParam) {
     return categoryParam;
   }
-  return "All";
+  return "all";
 }
 
 // Transform API product to display format
@@ -43,7 +50,8 @@ function transformProduct(product: ApiProduct): DisplayProduct {
     description: product.description,
     price: priceValue.toString(),
     calories: product.calories || 0,
-    category: product.category_id || product.category || "uncategorized",
+    category_id: product.category_id || "uncategorized",
+    category_name: product.category_name || product.category || "Uncategorized",
     color: product.image_color || product.image_url || "bg-green-500",
     thumbnail_image: product.thumbnail_image || product.bottle_image || product.hero_image,
   };
@@ -103,33 +111,41 @@ function MenuContent() {
   
   // API state
   const [products, setProducts] = useState<DisplayProduct[]>([]);
-  const [categories, setCategories] = useState<string[]>(["All"]);
+  const [categories, setCategories] = useState<DisplayCategory[]>([{ id: "all", name: "All", icon: "📋" }]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch products from API
-  const fetchProducts = useCallback(async () => {
+  // Fetch products and categories from API
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await productsApi.getAll();
+      // Fetch both products and categories
+      const [productsResponse, categoriesResponse] = await Promise.all([
+        productsApi.getAll(),
+        productsApi.getCategories(),
+      ]);
       
-      if (response.items && response.items.length > 0) {
-        const transformed = response.items.map(transformProduct);
+      if (productsResponse.items && productsResponse.items.length > 0) {
+        const transformed = productsResponse.items.map(transformProduct);
         setProducts(transformed);
-        
-        // Extract unique categories from products
-        const uniqueCategories = ["All", ...new Set(response.items.map((p: ApiProduct) => p.category_id || p.category))];
-        setCategories(uniqueCategories.filter(Boolean) as string[]);
       } else {
         setProducts([]);
-        setCategories(["All"]);
+      }
+      
+      // Set categories from API (backend already includes "All" category)
+      if (categoriesResponse.categories && categoriesResponse.categories.length > 0) {
+        const apiCategories: DisplayCategory[] = categoriesResponse.categories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          icon: cat.icon,
+        }));
+        setCategories(apiCategories);
       }
     } catch (err) {
-      console.error("Failed to fetch products:", err);
+      console.error("Failed to fetch data:", err);
       setProducts([]);
-      setCategories(["All"]);
       setError("Failed to load products from server. Please try again.");
     } finally {
       setIsLoading(false);
@@ -137,8 +153,8 @@ function MenuContent() {
   }, []);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    fetchData();
+  }, [fetchData]);
 
   const getQuantity = (id: string) => quantities[id] || 1;
 
@@ -156,9 +172,9 @@ function MenuContent() {
 
   const filteredItems = useMemo(() => {
     return products.filter((item) => {
-      // Filter by category (case-insensitive comparison)
-      const matchesCategory = activeCategory === "All" || 
-        item.category.toLowerCase() === activeCategory.toLowerCase();
+      // Filter by category ID
+      const matchesCategory = activeCategory === "all" || 
+        item.category_id.toLowerCase() === activeCategory.toLowerCase();
       
       // Filter by search query
       const query = searchQuery.toLowerCase();
@@ -179,7 +195,8 @@ function MenuContent() {
         id: item.id,
         name: item.name,
         price: parseFloat(item.price),
-        color: item.color
+        color: item.color,
+        image: item.thumbnail_image,
       });
     }
     // Reset quantity after adding
@@ -202,7 +219,7 @@ function MenuContent() {
             <div className="mb-6 flex items-center justify-between rounded-xl bg-yellow-50 p-4 text-yellow-800">
               <span>{error}</span>
               <button
-                onClick={fetchProducts}
+                onClick={fetchData}
                 className="flex items-center gap-2 text-sm font-medium hover:underline"
               >
                 <RefreshCw className="h-4 w-4" />
@@ -231,20 +248,19 @@ function MenuContent() {
             
             <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
               {categories.map((category) => {
-                const isActive = activeCategory.toLowerCase() === category.toLowerCase();
-                // Capitalize first letter for display
-                const displayName = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+                const isActive = activeCategory.toLowerCase() === category.id.toLowerCase();
                 return (
                   <button
-                    key={category}
-                    onClick={() => setActiveCategory(category)}
-                    className={`rounded-full px-6 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+                    key={category.id}
+                    onClick={() => setActiveCategory(category.id)}
+                    className={`rounded-full px-6 py-2 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
                       isActive 
                         ? "bg-green-600 text-white" 
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
-                    {displayName}
+                    {category.icon && <span>{category.icon}</span>}
+                    {category.name}
                   </button>
                 );
               })}
@@ -262,7 +278,7 @@ function MenuContent() {
               <button
                 onClick={() => {
                   setSearchQuery("");
-                  setActiveCategory("All");
+                  setActiveCategory("all");
                 }}
                 className="mt-4 text-green-600 hover:underline"
               >
@@ -304,7 +320,7 @@ function MenuContent() {
                     </button>
                     {/* Category Badge */}
                     <span className="absolute left-3 top-3 z-10 rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-gray-700 backdrop-blur-sm">
-                      {item.category}
+                      {item.category_name}
                     </span>
                   </div>
 

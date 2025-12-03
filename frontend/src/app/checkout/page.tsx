@@ -30,6 +30,16 @@ export default function CheckoutPage() {
   const cartTotal = total();
   const tax = cartTotal * 0.1;
 
+  // Helper to get image URL from item (check image, then color if it's a URL)
+  const getItemImage = (item: { image?: string; color?: string }) => {
+    if (item.image) return item.image;
+    // Check if color is actually an image URL (not a CSS class)
+    if (item.color && (item.color.startsWith('http') || item.color.startsWith('/'))) {
+      return item.color;
+    }
+    return null;
+  };
+
   const handleSubmitOrder = async () => {
     if (!isAuthenticated) {
       router.push("/login?redirect=/checkout");
@@ -162,20 +172,31 @@ export default function CheckoutPage() {
                   Order Items ({items.length})
                 </h2>
                 <div className="space-y-4">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`h-12 w-12 rounded-xl ${item.color || "bg-gray-100"}`} />
-                        <div>
-                          <p className="font-medium text-gray-900">{item.name}</p>
-                          <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                  {items.map((item) => {
+                    const imageUrl = getItemImage(item);
+                    return (
+                      <div key={item.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          {imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={item.name}
+                              className="h-12 w-12 rounded-xl object-cover"
+                            />
+                          ) : (
+                            <div className={`h-12 w-12 rounded-xl ${item.color || "bg-gray-100"}`} />
+                          )}
+                          <div>
+                            <p className="font-medium text-gray-900">{item.name}</p>
+                            <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                          </div>
                         </div>
+                        <p className="font-semibold text-gray-900">
+                          {formatCurrency(item.price * item.quantity)}
+                        </p>
                       </div>
-                      <p className="font-semibold text-gray-900">
-                        {formatCurrency(item.price * item.quantity)}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
