@@ -1,0 +1,208 @@
+"""AI API endpoints for chatbot, voice processing, and recommendations."""
+import logging
+from typing import Annotated, Optional
+
+from fastapi import APIRouter, Depends, File, UploadFile, Query
+from sqlalchemy.orm import Session
+
+from app.core.dependencies import CurrentUser, OptionalUser
+from app.core.exceptions import BadRequestException, ExternalServiceException
+from app.db.session import get_db
+from app.schemas.ai import (
+    AIFeedbackRequest,
+    AIFeedbackResponse,
+    AIInteractionListResponse,
+    AIInteractionResponse,
+    ChatRequest,
+    ChatResponse,
+    RecommendationResponse,
+    ProductRecommendation,
+    VoiceOrderResponse,
+    VoiceResponse,
+)
+from app.services.ai_service import AIService
+from app.models.ai_interaction import AIInteraction
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+ALLOWED_AUDIO_TYPES = ["audio/wav", "audio/mp3", "audio/mpeg", "audio/webm", "audio/ogg"]
+MAX_AUDIO_SIZE = 10 * 1024 * 1024
+
+
+def validate_audio_file(audio: UploadFile, audio_data: bytes) -> None:
+    if audio.content_type and audio.content_type not in ALLOWED_AUDIO_TYPES:
+        raise BadRequestException(f"Invalid audio format. Allowed: {', '.join(ALLOWED_AUDIO_TYPES)}")
+    if len(audio_data) == 0:
+        raise BadRequestException("Empty audio file")
+    if len(audio_data) > MAX_AUDIO_SIZE:
+        raise BadRequestException("Audio file too large. Maximum size is 10MB")
+
+
+@router.post("/chat", response_model=ChatResponse)
+async def chat_with_ai(
+    request: ChatRequest,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: OptionalUser = None,
+):
+    try:
+        user_id = current_user.id if current_user else None
+        service = AIService(db)
+        result = await service.chat(request.message, user_id, request.session_id)
+        await service.close()
+        
+        return ChatResponse(
+            response=result["response"],
+            session_id=result["session_id"],
+            context_used=result.get("context_used"),
+            response_time_ms=result["response_time_ms"],
+        )
+    except ExternalServiceException:
+        raise
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
+        raise BadRequestException(f"Failed to process chat: {e}")
+
+
+@router.post("/voice", response_model=VoiceResponse)
+async def process_voice(
+    db: Annotated[Session, Depends(get_db)],
+    audio: UploadFile = File(...),
+    session_id: Optional[str] = Query(None),
+    current_user: OptionalUser = None,
+):
+    try:
+        audio_data = await audio.read()
+        validate_audio_file(audio, audio_data)
+        
+        user_id = current_user.id if current_user else None
+        service = AIService(db)
+        result = await service.process_voice(audio_data, user_id, session_id)
+        await service.close()
+        
+        return VoiceResponse(
+            transcription=result["transcription"],
+            response=result["response"],
+            session_id=result["session_id"],
+            response_time_ms=result["response_time_ms"],
+        )
+    except (ExternalServiceException, BadRequestException):
+        raise
+    except Exception as e:
+        logger.error(f"Voice error: {e}")
+        raise BadRequestException(f"Failed to process voice: {e}")
+
+
+@router.get("/recommendations", response_model=RecommendationResponse)
+async def get_recommendations(
+    db: Annotated[Session, Depends(get_db)],
+    preferences: Optional[str] = Query(None),
+    limit: int = Query(5, ge=1, le=20),
+    current_user: OptionalUser = None,
+):
+    try:
+        user_id = current_user.id if current_user else None
+        service = AIService(db)
+        results = await service.get_recommendations(user_id, preferences, limit)
+        await service.close()
+        
+        recommendations = [
+            ProductRecommendation(
+                id=r["id"],
+                name=r["name"],
+                description=r.get("description"),
+                base_price=r["base_price"],
+                image_url=r.get("image_url"),
+                calories=r.get("calories"),
+                category_name=r.get("category_name"),
+                reason=r.get("reason", "Recommended for you"),
+                score=r.get("score", 8.0),
+            )
+            for r in results
+        ]
+        return RecommendationResponse(recommendations=recommendations, total=len(recommendations))
+    except ExternalServiceException:
+        raise
+    except Exception as e:
+        logger.error(f"Recommendation error: {e}")
+        raise BadRequestException(f"Failed to get recommendations: {e}")
+
+
+@router.post("/voice/order", response_model=VoiceOrderResponse)
+async def process_voice_order(
+    db: Annotated[Session, Depends(get_db)],
+    audio: UploadFile = File(...),
+    current_user: OptionalUser = None,
+):
+    try:
+        audio_data = await audio.read()
+        validate_audio_file(audio, audio_data)
+        
+        user_id = current_user.id if current_user else None
+        service = AIService(db)
+        result = await service.process_voice_order(audio_data, user_id)
+        await service.close()
+        
+        return VoiceOrderResponse(transcription=result["transcription"], order_data=result["order_data"])
+    except (ExternalServiceException, BadRequestException):
+        raise
+    except Exception as e:
+        logger.error(f"Voice order error: {e}")
+        raise BadRequestException(f"Failed to process voice order: {e}")
+
+
+@router.post("/feedback", response_model=AIFeedbackResponse)
+async def submit_feedback(
+    request: AIFeedbackRequest,
+    db: Annotated[Session, Depends(get_db)],
+):
+    interaction = db.query(AIInteraction).filter(AIInteraction.id == request.interaction_id).first()
+    if not interaction:
+        raise BadRequestException("Interaction not found")
+    
+    interaction.user_rating = request.rating
+    if request.feedback:
+        interaction.user_feedback = request.feedback
+    db.commit()
+    
+    return AIFeedbackResponse(message="Feedback submitted successfully", interaction_id=request.interaction_id)
+
+
+@router.get("/history", response_model=AIInteractionListResponse)
+async def get_interaction_history(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: CurrentUser,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+):
+    total = db.query(AIInteraction).filter(AIInteraction.user_id == current_user.id).count()
+    interactions = (
+        db.query(AIInteraction)
+        .filter(AIInteraction.user_id == current_user.id)
+        .order_by(AIInteraction.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    
+    return AIInteractionListResponse(
+        interactions=[
+            AIInteractionResponse(
+                id=i.id,
+                session_id=i.session_id,
+                interaction_type=i.interaction_type.value,
+                status=i.status.value,
+                user_input=i.user_input,
+                ai_response=i.ai_response,
+                detected_intent=i.detected_intent,
+                response_time_ms=i.response_time_ms,
+                user_rating=i.user_rating,
+                created_at=i.created_at,
+                completed_at=i.completed_at,
+            )
+            for i in interactions
+        ],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
