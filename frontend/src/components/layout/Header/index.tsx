@@ -101,16 +101,18 @@ export function Header() {
             : 'bg-white py-3'
         }`}
       >
-        <nav className="container mx-auto flex items-center justify-between px-4 md:px-6">
+        <nav className="container mx-auto flex items-center px-4 md:px-6">
           
-          {/* 1. LOGO */}
-          <Logo />
+          {/* 1. LOGO - flex-1 untuk balance dengan utility section */}
+          <div className="flex-1 flex items-center">
+            <Logo />
+          </div>
 
-          {/* 2. CENTER NAVIGATION (Desktop) */}
+          {/* 2. CENTER NAVIGATION (Desktop) - absolute center */}
           <DesktopNav navLinks={navLinks} />
 
-          {/* 3. UTILITY & PROFILE SECTION */}
-          <div className="flex items-center gap-2 md:gap-3">
+          {/* 3. UTILITY & PROFILE SECTION - flex-1 untuk balance dengan logo */}
+          <div className="flex-1 flex items-center justify-end gap-2 md:gap-3">
             
             {/* Currency & Language Group - Desktop only */}
             <div className="hidden md:flex items-center text-xs font-semibold text-slate-500 border-r border-slate-200 pr-3 mr-1 gap-2">

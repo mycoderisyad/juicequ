@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Sparkles, User, Bot, Mic, MicOff, Loader2, AlertCircle } from "lucide-react";
-import aiApi, { ChatResponse } from "@/lib/api/ai";
+import { Send, Sparkles, User, Bot, Mic, MicOff, Loader2, AlertCircle, ShoppingCart } from "lucide-react";
+import aiApi, { ChatResponse, ChatOrderData, ChatMessageHistory } from "@/lib/api/ai";
 import { useAuthStore } from "@/store/auth-store";
+import { useTranslation } from "@/lib/i18n";
+import { useCartStore } from "@/store/cart-store";
 
 interface Message {
   id: number;
@@ -15,28 +19,50 @@ interface Message {
   isLoading?: boolean;
   isError?: boolean;
   responseTimeMs?: number;
+  orderData?: ChatOrderData;
+  showCheckout?: boolean;
 }
 
-const INITIAL_MESSAGE: Message = {
-  id: 1,
-  role: "assistant",
-  content: "Hi there! I'm your JuiceQu AI assistant. I can help you find the perfect smoothie based on your mood, health goals, or favorite ingredients. What are you in the mood for today?",
-};
-
-const SUGGESTIONS = [
-  "I want something refreshing",
-  "High protein options",
-  "Low sugar juices",
+const SUGGESTIONS_EN = [
+  "I want to buy Berry Blast",
+  "Order 2 Acai Mango",
   "What's your bestseller?",
+  "Low sugar options",
   "Recommend something healthy",
 ];
 
-function useChat() {
-  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
+const SUGGESTIONS_ID = [
+  "Beli Berry Blast 1",
+  "Pesan Acai Mango 2",
+  "Apa yang paling laris?",
+  "Jus rendah gula",
+  "Rekomendasikan yang sehat",
+];
+
+function useChat(locale: string) {
+  const getInitialMessage = useCallback((): Message => ({
+    id: 1,
+    role: "assistant",
+    content: locale === "en" 
+      ? "Hi there! I'm your JuiceQu AI assistant. I can help you find the perfect smoothie or place an order directly! Just tell me what you'd like, for example: 'I want to buy 2 Acai Mango'."
+      : "Halo! Saya asisten AI JuiceQu. Saya bisa membantu Anda menemukan smoothie yang sempurna atau langsung memesan! Cukup bilang apa yang Anda mau, contoh: 'Beli Acai Mango 2'.",
+  }), [locale]);
+
+  const [messages, setMessages] = useState<Message[]>(() => [getInitialMessage()]);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update initial message when locale changes
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].role === "assistant") {
+        return [getInitialMessage()];
+      }
+      return prev;
+    });
+  }, [locale, getInitialMessage]);
 
   const addMessage = (message: Message) => {
     setMessages((prev) => [...prev, message]);
@@ -47,6 +73,16 @@ function useChat() {
       prev.map((msg) => (msg.id === id ? { ...msg, ...updates } : msg))
     );
   };
+
+  // Build conversation history from messages
+  const getConversationHistory = useCallback((): ChatMessageHistory[] => {
+    return messages
+      .filter(m => !m.isLoading && m.content)
+      .map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
+  }, [messages]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
@@ -61,33 +97,42 @@ function useChat() {
     setError(null);
 
     try {
+      // Include conversation history for context
+      const conversationHistory = getConversationHistory();
+      
       const response: ChatResponse = await aiApi.sendChatMessage({
         message: input,
         session_id: sessionId,
+        locale: locale,
+        conversation_history: conversationHistory,
       });
       setSessionId(response.session_id);
       updateMessage(loadingMessageId, {
         content: response.response,
         isLoading: false,
         responseTimeMs: response.response_time_ms,
+        orderData: response.order_data,
+        showCheckout: response.show_checkout,
       });
     } catch (err) {
       updateMessage(loadingMessageId, {
-        content: "Sorry, I couldn't process your request. Please try again.",
+        content: locale === "en" 
+          ? "Sorry, I couldn't process your request. Please try again."
+          : "Maaf, saya tidak bisa memproses permintaan Anda. Silakan coba lagi.",
         isLoading: false,
         isError: true,
       });
-      setError(err instanceof Error ? err.message : "Failed to get response");
+      setError(err instanceof Error ? err.message : (locale === "en" ? "Failed to get response" : "Gagal mendapatkan respons"));
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages.length, sessionId]);
+  }, [input, isLoading, messages.length, sessionId, locale, getConversationHistory]);
 
   const processVoice = useCallback(async (audioBlob: Blob) => {
     const userMessageId = messages.length + 1;
     const loadingMessageId = messages.length + 2;
 
-    addMessage({ id: userMessageId, role: "user", content: "🎤 Voice message...", isLoading: true });
+    addMessage({ id: userMessageId, role: "user", content: locale === "en" ? "🎤 Voice message..." : "🎤 Pesan suara...", isLoading: true });
     addMessage({ id: loadingMessageId, role: "assistant", content: "", isLoading: true });
     setIsLoading(true);
 
@@ -103,20 +148,22 @@ function useChat() {
     } catch (err) {
       setMessages((prev) => prev.filter((msg) => msg.id !== userMessageId));
       updateMessage(loadingMessageId, {
-        content: "Sorry, I couldn't process your voice message. Please try again.",
+        content: locale === "en" 
+          ? "Sorry, I couldn't process your voice message. Please try again."
+          : "Maaf, saya tidak bisa memproses pesan suara Anda. Silakan coba lagi.",
         isLoading: false,
         isError: true,
       });
-      setError(err instanceof Error ? err.message : "Failed to process voice");
+      setError(err instanceof Error ? err.message : (locale === "en" ? "Failed to process voice" : "Gagal memproses suara"));
     } finally {
       setIsLoading(false);
     }
-  }, [messages.length, sessionId]);
+  }, [messages.length, sessionId, locale]);
 
   return { messages, input, setInput, isLoading, error, setError, sendMessage, processVoice };
 }
 
-function useVoiceRecorder(onRecordingComplete: (blob: Blob) => void) {
+function useVoiceRecorder(onRecordingComplete: (blob: Blob) => void, locale: string) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -140,9 +187,11 @@ function useVoiceRecorder(onRecordingComplete: (blob: Blob) => void) {
       setIsRecording(true);
       setRecordingError(null);
     } catch {
-      setRecordingError("Could not access microphone. Please check permissions.");
+      setRecordingError(locale === "en" 
+        ? "Could not access microphone. Please check permissions."
+        : "Tidak dapat mengakses mikrofon. Silakan periksa izin.");
     }
-  }, [onRecordingComplete]);
+  }, [onRecordingComplete, locale]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
@@ -154,16 +203,16 @@ function useVoiceRecorder(onRecordingComplete: (blob: Blob) => void) {
   return { isRecording, recordingError, startRecording, stopRecording };
 }
 
-function ChatHeader({ isAuthenticated }: { isAuthenticated: boolean }) {
+function ChatHeader({ isAuthenticated, t }: { isAuthenticated: boolean; t: (key: string) => string }) {
   return (
     <div className="border-b border-gray-100 bg-white p-4 text-center">
       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
         <Sparkles className="h-6 w-6" />
       </div>
-      <h1 className="text-lg font-bold text-gray-900">JuiceQu AI Assistant</h1>
-      <p className="text-sm text-gray-500">Ask me anything about our menu!</p>
+      <h1 className="text-lg font-bold text-gray-900">{t("chat.title")}</h1>
+      <p className="text-sm text-gray-500">{t("chat.subtitle")}</p>
       {!isAuthenticated && (
-        <p className="mt-1 text-xs text-amber-600">Log in for personalized recommendations</p>
+        <p className="mt-1 text-xs text-amber-600">{t("chat.loginForPersonalized")}</p>
       )}
     </div>
   );
@@ -179,7 +228,141 @@ function ErrorBanner({ error, onDismiss }: { error: string; onDismiss: () => voi
   );
 }
 
-function MessageBubble({ message }: { message: Message }) {
+// Product card for small orders (less than 3 items)
+function OrderProductCards({ orderData, locale, onCheckout }: { 
+  orderData: ChatOrderData; 
+  locale: string;
+  onCheckout: () => void;
+}) {
+  return (
+    <div className="mt-3 space-y-3">
+      <div className="grid gap-3">
+        {orderData.items.map((item, index) => (
+          <div 
+            key={index} 
+            className="flex items-center gap-3 rounded-xl bg-white border border-gray-200 p-3 shadow-sm"
+          >
+            <div className="relative h-16 w-16 overflow-hidden rounded-lg bg-gray-100 shrink-0">
+              {item.image_url ? (
+                <Image
+                  src={item.image_url}
+                  alt={item.product_name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-gray-400">
+                  <ShoppingCart className="h-6 w-6" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-gray-900 truncate">{item.product_name}</h4>
+              <p className="text-xs text-gray-500">
+                {item.quantity}x • {item.size} • Rp {item.unit_price.toLocaleString("id-ID")}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="font-bold text-green-600">
+                Rp {item.total_price.toLocaleString("id-ID")}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Total and Checkout */}
+      <div className="rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 p-4 border border-green-200">
+        <div className="flex justify-between text-sm text-gray-600 mb-1">
+          <span>Subtotal</span>
+          <span>Rp {orderData.subtotal.toLocaleString("id-ID")}</span>
+        </div>
+        <div className="flex justify-between text-sm text-gray-600 mb-2">
+          <span>{locale === "en" ? "Tax (10%)" : "Pajak (10%)"}</span>
+          <span>Rp {orderData.tax.toLocaleString("id-ID")}</span>
+        </div>
+        <div className="flex justify-between font-bold text-lg text-gray-900 pt-2 border-t border-green-200">
+          <span>Total</span>
+          <span className="text-green-600">Rp {orderData.total.toLocaleString("id-ID")}</span>
+        </div>
+        <Button 
+          onClick={onCheckout}
+          className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2"
+        >
+          <ShoppingCart className="h-5 w-5" />
+          {locale === "en" ? "Proceed to Checkout" : "Lanjut ke Checkout"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Bill format for larger orders (3+ items)
+function OrderBill({ orderData, locale, onCheckout }: { 
+  orderData: ChatOrderData; 
+  locale: string;
+  onCheckout: () => void;
+}) {
+  return (
+    <div className="mt-3">
+      <div className="rounded-xl bg-white border-2 border-dashed border-gray-300 p-4 font-mono text-sm">
+        {/* Header */}
+        <div className="text-center border-b border-dashed border-gray-300 pb-3 mb-3">
+          <h3 className="font-bold text-lg">🧃 JuiceQu</h3>
+          <p className="text-xs text-gray-500">{locale === "en" ? "Order Summary" : "Ringkasan Pesanan"}</p>
+        </div>
+        
+        {/* Items */}
+        <div className="space-y-2 mb-3">
+          {orderData.items.map((item, index) => (
+            <div key={index} className="flex justify-between">
+              <div className="flex-1">
+                <span className="font-medium">{item.quantity}x</span>{" "}
+                <span>{item.product_name}</span>
+                <span className="text-gray-500 text-xs ml-1">({item.size})</span>
+              </div>
+              <span>Rp {item.total_price.toLocaleString("id-ID")}</span>
+            </div>
+          ))}
+        </div>
+        
+        {/* Totals */}
+        <div className="border-t border-dashed border-gray-300 pt-3 space-y-1">
+          <div className="flex justify-between text-gray-600">
+            <span>Subtotal</span>
+            <span>Rp {orderData.subtotal.toLocaleString("id-ID")}</span>
+          </div>
+          <div className="flex justify-between text-gray-600">
+            <span>{locale === "en" ? "Tax (10%)" : "Pajak (10%)"}</span>
+            <span>Rp {orderData.tax.toLocaleString("id-ID")}</span>
+          </div>
+          <div className="flex justify-between font-bold text-lg pt-2 border-t border-dashed border-gray-300">
+            <span>TOTAL</span>
+            <span>Rp {orderData.total.toLocaleString("id-ID")}</span>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="text-center mt-3 pt-3 border-t border-dashed border-gray-300">
+          <p className="text-xs text-gray-500">
+            {locale === "en" ? "Thank you for ordering!" : "Terima kasih telah memesan!"}
+          </p>
+        </div>
+      </div>
+      
+      {/* Checkout Button */}
+      <Button 
+        onClick={onCheckout}
+        className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2"
+      >
+        <ShoppingCart className="h-5 w-5" />
+        {locale === "en" ? "Proceed to Checkout" : "Lanjut ke Checkout"}
+      </Button>
+    </div>
+  );
+}
+
+function MessageBubble({ message, locale, onCheckout }: { message: Message; locale: string; onCheckout: (orderData: ChatOrderData) => void }) {
   const isUser = message.role === "user";
   
   return (
@@ -189,20 +372,39 @@ function MessageBubble({ message }: { message: Message }) {
       }`}>
         {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
       </div>
-      <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-        isUser
-          ? "bg-gray-900 text-white rounded-tr-none"
-          : message.isError
-          ? "bg-red-50 text-red-800 rounded-tl-none"
-          : "bg-gray-100 text-gray-800 rounded-tl-none"
-      }`}>
-        {message.isLoading ? (
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Thinking...</span>
-          </div>
-        ) : (
-          message.content
+      <div className={`max-w-[85%] ${isUser ? "" : ""}`}>
+        <div className={`rounded-2xl px-4 py-3 text-sm ${
+          isUser
+            ? "bg-gray-900 text-white rounded-tr-none"
+            : message.isError
+            ? "bg-red-50 text-red-800 rounded-tl-none"
+            : "bg-gray-100 text-gray-800 rounded-tl-none"
+        }`}>
+          {message.isLoading ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>{locale === "en" ? "Thinking..." : "Berpikir..."}</span>
+            </div>
+          ) : (
+            message.content
+          )}
+        </div>
+        
+        {/* Order Data Display */}
+        {message.orderData && message.showCheckout && message.orderData.items.length > 0 && (
+          message.orderData.items.length < 3 ? (
+            <OrderProductCards 
+              orderData={message.orderData} 
+              locale={locale} 
+              onCheckout={() => onCheckout(message.orderData!)}
+            />
+          ) : (
+            <OrderBill 
+              orderData={message.orderData} 
+              locale={locale} 
+              onCheckout={() => onCheckout(message.orderData!)}
+            />
+          )
         )}
       </div>
     </div>
@@ -217,6 +419,8 @@ function ChatInput({
   onSend,
   onStartRecording,
   onStopRecording,
+  suggestions,
+  t,
 }: {
   input: string;
   setInput: (v: string) => void;
@@ -225,6 +429,8 @@ function ChatInput({
   onSend: () => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
+  suggestions: string[];
+  t: (key: string) => string;
 }) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -249,7 +455,7 @@ function ChatInput({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={isRecording ? "Recording..." : "Type your message..."}
+          placeholder={isRecording ? t("chat.recording") : t("chat.placeholder")}
           className="pr-12"
           disabled={isLoading || isRecording}
         />
@@ -263,7 +469,7 @@ function ChatInput({
         </Button>
       </div>
       <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-        {SUGGESTIONS.map((suggestion) => (
+        {suggestions.map((suggestion) => (
           <button
             key={suggestion}
             onClick={() => setInput(suggestion)}
@@ -279,10 +485,15 @@ function ChatInput({
 }
 
 export default function ChatPage() {
+  const router = useRouter();
   const { isAuthenticated } = useAuthStore();
-  const { messages, input, setInput, isLoading, error, setError, sendMessage, processVoice } = useChat();
-  const { isRecording, recordingError, startRecording, stopRecording } = useVoiceRecorder(processVoice);
+  const { t, locale } = useTranslation();
+  const { messages, input, setInput, isLoading, error, setError, sendMessage, processVoice } = useChat(locale);
+  const { isRecording, recordingError, startRecording, stopRecording } = useVoiceRecorder(processVoice, locale);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { addItem, clearCart } = useCartStore();
+  
+  const suggestions = locale === "en" ? SUGGESTIONS_EN : SUGGESTIONS_ID;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -290,16 +501,43 @@ export default function ChatPage() {
 
   const displayError = error || recordingError;
 
+  // Handle checkout - add items to cart and redirect
+  const handleCheckout = useCallback((orderData: ChatOrderData) => {
+    // Clear existing cart and add new items
+    clearCart();
+    
+    for (const item of orderData.items) {
+      addItem({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        unit_price: item.unit_price,
+        quantity: item.quantity,
+        size: item.size as "small" | "medium" | "large",
+        image_url: item.image_url || undefined,
+      });
+    }
+    
+    // Redirect to checkout
+    router.push("/checkout");
+  }, [addItem, clearCart, router]);
+
   return (
     <div className="flex h-screen flex-col bg-gray-50">
       <Header />
       <main className="flex flex-1 flex-col overflow-hidden">
         <div className="container mx-auto flex flex-1 flex-col px-4 py-4 overflow-hidden">
           <div className="flex flex-1 flex-col overflow-hidden rounded-3xl bg-white shadow-xl shadow-gray-200/50">
-            <ChatHeader isAuthenticated={isAuthenticated} />
+            <ChatHeader isAuthenticated={isAuthenticated} t={t} />
             {displayError && <ErrorBanner error={displayError} onDismiss={() => setError(null)} />}
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)}
+              {messages.map((msg) => (
+                <MessageBubble 
+                  key={msg.id} 
+                  message={msg} 
+                  locale={locale} 
+                  onCheckout={handleCheckout}
+                />
+              ))}
               <div ref={messagesEndRef} />
             </div>
             <ChatInput
@@ -310,6 +548,8 @@ export default function ChatPage() {
               onSend={sendMessage}
               onStartRecording={startRecording}
               onStopRecording={stopRecording}
+              suggestions={suggestions}
+              t={t}
             />
           </div>
         </div>

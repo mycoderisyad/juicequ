@@ -3,24 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { ProductCarousel } from "@/components/home/ProductCarousel";
 import { CategoryBrowse } from "@/components/home/CategoryBrowse";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import { CustomerReviews } from "@/components/home/CustomerReviews";
 import { WhyChooseUs } from "@/components/home/WhyChooseUs";
 import { CTABanner } from "@/components/home/CTABanner";
 import { StoreInfoSection } from "@/components/home/StoreInfoSection";
-import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/hooks/use-store";
-import { 
-  ChevronLeft, 
-  ChevronRight,
-  Star,
-} from "lucide-react";
-import { productsApi, type Product as ApiProduct, type BestsellerProduct } from "@/lib/api/customer";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { productsApi, type BestsellerProduct } from "@/lib/api/customer";
 
 // Fallback bestseller products (used when API fails or while loading)
 const fallbackBestsellerProducts: BestsellerProduct[] = [
@@ -84,17 +77,22 @@ const fallbackBestsellerProducts: BestsellerProduct[] = [
 ];
 
 export default function HomePage() {
-  const { t } = useTranslation();
   const { format } = useCurrency();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [carouselProducts, setCarouselProducts] = useState<Array<{id: string; name: string; price: string; color: string; thumbnail_image?: string; bottle_image?: string}>>([]);
+  const [selectedSize, setSelectedSize] = useState<'S' | 'M' | 'L'>('S');
   const [bestsellerProducts, setBestsellerProducts] = useState<BestsellerProduct[]>([]);
   const [isLoadingBestsellers, setIsLoadingBestsellers] = useState(true);
 
   // Get current product safely - only show when we have products
   const safeCurrentIndex = bestsellerProducts.length > 0 ? currentIndex % bestsellerProducts.length : 0;
   const currentProduct = bestsellerProducts.length > 0 ? bestsellerProducts[safeCurrentIndex] : null;
+  
+  // Calculate prev and next products for the 3-cup view
+  const prevIndex = bestsellerProducts.length > 0 ? (safeCurrentIndex - 1 + bestsellerProducts.length) % bestsellerProducts.length : 0;
+  const nextIndex = bestsellerProducts.length > 0 ? (safeCurrentIndex + 1) % bestsellerProducts.length : 0;
+  const prevProduct = bestsellerProducts.length > 0 ? bestsellerProducts[prevIndex] : null;
+  const nextProduct = bestsellerProducts.length > 0 ? bestsellerProducts[nextIndex] : null;
 
   // Fetch bestseller products for hero
   useEffect(() => {
@@ -120,28 +118,6 @@ export default function HomePage() {
     fetchBestsellers();
   }, []);
 
-  // Fetch products for carousel
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await productsApi.getAll();
-        if (response.items && response.items.length > 0) {
-          const transformed = response.items.map((p: ApiProduct) => ({
-            id: String(p.id),
-            name: p.name,
-            price: String(p.base_price || p.price || 0),
-            color: p.image_color || p.image_url || "bg-green-500",
-            thumbnail_image: p.thumbnail_image,
-            bottle_image: p.bottle_image,
-          }));
-          setCarouselProducts(transformed);
-        }
-      } catch (err) {
-        console.error("Failed to fetch products for carousel:", err);
-      }
-    };
-    fetchProducts();
-  }, []);
 
   const goToNext = useCallback(() => {
     if (isTransitioning || bestsellerProducts.length === 0) return;
@@ -175,199 +151,191 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main id="main-content" className="flex-1">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh] flex items-center">
-          {/* Loading State */}
-          {isLoadingBestsellers && (
-            <div className="absolute inset-0 z-0 bg-gradient-to-r from-green-50 to-green-100 animate-pulse" />
-          )}
+        {/* Hero Section - Redesigned with smooth animations */}
+        <section className="relative min-h-[calc(100svh-100px)] sm:min-h-[calc(100vh-80px)] flex flex-col items-center justify-center sm:justify-start sm:pt-8 lg:pt-12 pb-2 sm:pb-8 bg-linear-to-b from-gray-50/50 to-white overflow-hidden">
           
-          {/* Background Product Image - Full Size */}
-          {!isLoadingBestsellers && bestsellerProducts.length > 0 && (
-            <div className="absolute inset-0 z-0">
-              {bestsellerProducts.map((product, index) => (
-                <div
-                  key={product.id}
-                  className={`absolute inset-0 transition-all duration-700 ease-out ${
-                    index === currentIndex 
-                      ? 'opacity-100 scale-100' 
-                      : 'opacity-0 scale-105 pointer-events-none'
-                  }`}
-                >
-                  <Image
-                    src={product.hero_image}
-                    alt={product.name}
-                    fill
-                    className="object-cover object-center"
-                    sizes="100vw"
-                    priority={index === 0}
-                  />
-                  {/* Gradient overlay for text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent lg:via-white/70"></div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="container relative z-10 mx-auto px-4 py-10 sm:py-20">
-            <div className="grid gap-8 lg:gap-12 lg:grid-cols-2 lg:items-center">
-              {/* Left Content */}
-              <div className="relative z-10 max-w-2xl">
-                <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-orange-800">
-                  <span>{t("home.hero.badge")}</span>
-                  <span role="img" aria-label="juice">🍹</span>
-                </div>
-                
-                <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold leading-tight tracking-tight text-gray-900">
-                  {t("home.hero.title1")} <br />
-                  {t("home.hero.title2")} <br />
-                  {t("home.hero.title3")}
-                </h1>
-                
-                <p className="mt-4 sm:mt-6 text-sm sm:text-lg text-gray-600 max-w-md">
-                  {t("home.hero.subtitle")}
-                </p>
-                
-                <div className="mt-6 sm:mt-10 flex flex-wrap items-center gap-4">
-                  <Link href="/menu">
-                    <Button 
-                      size="xl" 
-                      className={`${currentProduct?.button_bg || 'bg-green-600'} ${currentProduct?.button_hover || 'hover:bg-green-700'} text-white shadow-lg ${currentProduct?.shadow_color || 'shadow-green-600/20'} h-12 sm:h-14 px-6 sm:px-8 rounded-full transition-all duration-500 ease-out text-sm sm:text-base`}
-                    >
-                      {t("home.hero.orderNow")}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Right Content - Bottle + Details Card */}
-              <div className="relative flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-4">
-                {/* Product Bottle Image - Hidden on very small screens, shown from sm up */}
-                <div className="relative h-[250px] w-[140px] sm:h-[350px] sm:w-[180px] lg:h-[500px] lg:w-[250px] hidden sm:block">
-                  {bestsellerProducts.map((product, index) => (
-                    <div
-                      key={product.id}
-                      className={`absolute inset-0 transition-all duration-500 ease-out ${
-                        index === currentIndex 
-                          ? 'opacity-100 scale-100' 
-                          : 'opacity-0 scale-95 pointer-events-none'
-                      }`}
-                    >
-                      <Image
-                        src={product.bottle_image}
-                        alt={product.name}
-                        fill
-                        className="object-contain drop-shadow-2xl"
-                        sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 250px"
-                        priority={index === 0}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Floating Details Card - Only show when product is loaded */}
-                {currentProduct && (
-                <div className="relative z-20 w-full max-w-[280px] sm:w-48 lg:w-64 rounded-2xl sm:rounded-3xl bg-white/95 backdrop-blur-sm p-4 sm:p-5 shadow-xl sm:shadow-2xl">
-                  <div className="mb-2 sm:mb-3">
-                    <h3 className="text-xs sm:text-sm font-medium text-gray-500">Details</h3>
-                    <div className="mt-1 flex items-baseline gap-2">
-                      <span 
-                        className={`text-xl sm:text-2xl lg:text-3xl font-bold transition-all duration-500 ease-out ${currentProduct.accent_color}`}
-                      >
-                        {format(parseFloat(currentProduct.price))}
-                      </span>
-                    </div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-900 transition-all duration-300 truncate">
-                      {currentProduct.name}
-                    </p>
-                  </div>
-                  
-                  <div className="mb-2 sm:mb-3 flex gap-0.5 sm:gap-1">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star 
-                        key={i} 
-                        className={`h-3 w-3 sm:h-4 sm:w-4 fill-current transition-colors duration-500 ${
-                          i <= currentProduct.rating ? 'text-orange-400' : 'text-gray-200'
-                        }`} 
-                      />
-                    ))}
-                  </div>
-
-                  <p className="text-[10px] sm:text-xs text-gray-500 mb-3 sm:mb-4 line-clamp-2">
-                    {currentProduct.description}
-                  </p>
-
-                  {/* Navigation Arrows */}
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={goToPrev}
-                      disabled={isTransitioning}
-                      className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                        isTransitioning 
-                          ? 'border-gray-100 text-gray-300 cursor-not-allowed' 
-                          : 'border-gray-200 text-gray-400 hover:border-gray-900 hover:text-gray-900'
-                      }`}
-                      aria-label={t("common.previous")}
-                    >
-                      <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-                    </button>
-                    <button 
-                      onClick={goToNext}
-                      disabled={isTransitioning}
-                      className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                        isTransitioning 
-                          ? 'border-gray-100 text-gray-300 cursor-not-allowed' 
-                          : 'border-gray-200 text-gray-400 hover:border-gray-900 hover:text-gray-900'
-                      }`}
-                      aria-label={t("common.next")}
-                    >
-                      <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-                    </button>
-                  </div>
-
-                  {/* Dots Indicator */}
-                  <div className="mt-3 sm:mt-4 flex justify-center gap-1.5 sm:gap-2">
-                    {bestsellerProducts.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          if (!isTransitioning && index !== currentIndex) {
-                            setIsTransitioning(true);
-                            setCurrentIndex(index);
-                            setTimeout(() => setIsTransitioning(false), 500);
-                          }
-                        }}
-                        className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
-                          index === currentIndex 
-                            ? `w-4 sm:w-6 ${currentProduct.color}` 
-                            : 'w-1.5 sm:w-2 bg-gray-200 hover:bg-gray-300'
-                        }`}
-                        aria-label={`Go to product ${index + 1}`}
-                        aria-current={index === currentIndex ? 'true' : 'false'}
-                      />
-                    ))}
-                  </div>
-                </div>
-                )}
-              </div>
-            </div>
+          {/* Background Decorative Blobs - Color follows product */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+             {/* Left Blob */}
+             <div 
+               className={`absolute -left-40 bottom-20 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] rounded-full transition-all duration-1500 ease-in-out ${currentProduct?.color?.replace('bg-', 'bg-') || 'bg-green-300'}`}
+               style={{ opacity: 0.15, filter: 'blur(100px)' }}
+             />
+             {/* Right Blob */}
+             <div 
+               className={`absolute -right-40 bottom-10 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] rounded-full transition-all duration-1500 ease-in-out ${currentProduct?.color?.replace('bg-', 'bg-') || 'bg-green-200'}`}
+               style={{ opacity: 0.12, filter: 'blur(80px)' }}
+             />
           </div>
+
+          {/* Main Content Area - 3 Products View (This is the visual anchor) */}
+          <div className="relative w-full max-w-5xl mx-auto flex items-center justify-center h-44 sm:h-64 lg:h-80 mt-0 sm:mt-4">
+
+              {/* Products Container */}
+              <div className="relative flex items-center justify-center w-full h-full">
+                 {/* Previous Product (Left) */}
+                 {prevProduct && (
+                   <div 
+                     className="absolute left-[8%] sm:left-[18%] lg:left-[22%] top-1/2 -translate-y-1/2 w-[90px] h-[110px] sm:w-40 sm:h-[200px] lg:w-[180px] lg:h-[220px] cursor-pointer z-10 transition-all duration-700 ease-in-out" 
+                     onClick={goToPrev}
+                     style={{ 
+                       opacity: 0.4, 
+                       filter: 'blur(1.5px)',
+                       transform: 'translateY(-50%) scale(0.85)'
+                     }}
+                   >
+                      <div className="relative w-full h-full transition-transform duration-300 hover:scale-110">
+                        <Image src={prevProduct.bottle_image} alt={prevProduct.name} fill className="object-contain" />
+                      </div>
+                   </div>
+                 )}
+
+                 {/* Main Product (Center) */}
+                 <div className={`relative z-20 transition-all duration-500 ease-in-out ${
+                   selectedSize === 'S' 
+                     ? 'w-32 h-[160px] sm:w-[200px] sm:h-[260px] lg:w-60 lg:h-[300px]'
+                     : selectedSize === 'M'
+                       ? 'w-40 h-[200px] sm:w-[260px] sm:h-[340px] lg:w-[300px] lg:h-[380px]'
+                       : 'w-48 h-[240px] sm:w-80 sm:h-[400px] lg:w-[360px] lg:h-[440px]'
+                 }`}>
+                     {currentProduct && (
+                       <Image 
+                         src={currentProduct.bottle_image} 
+                         alt={currentProduct.name} 
+                         fill 
+                         className="object-contain drop-shadow-[0_25px_40px_rgba(0,0,0,0.15)] transition-all duration-700 ease-in-out"
+                         priority
+                       />
+                     )}
+                 </div>
+
+                 {/* Next Product (Right) */}
+                 {nextProduct && (
+                   <div 
+                     className="absolute right-[8%] sm:right-[18%] lg:right-[22%] top-1/2 -translate-y-1/2 w-[90px] h-[110px] sm:w-40 sm:h-[200px] lg:w-[180px] lg:h-[220px] cursor-pointer z-10 transition-all duration-700 ease-in-out" 
+                     onClick={goToNext}
+                     style={{ 
+                       opacity: 0.4, 
+                       filter: 'blur(1.5px)',
+                       transform: 'translateY(-50%) scale(0.85)'
+                     }}
+                   >
+                      <div className="relative w-full h-full transition-transform duration-300 hover:scale-110">
+                        <Image src={nextProduct.bottle_image} alt={nextProduct.name} fill className="object-contain" />
+                      </div>
+                   </div>
+                 )}
+              </div>
+          </div>
+
+          {/* Title & Price (Below Products) */}
+          <div className="text-center z-20 mb-3 sm:mb-4 mt-2 sm:mt-4">
+             <h1 
+               className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight transition-all duration-500 ease-in-out"
+               style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+             >
+                {currentProduct?.name || 'Green Glow'}
+             </h1>
+             <p className={`text-base sm:text-xl font-bold mt-1.5 sm:mt-1 transition-all duration-500 ease-in-out ${currentProduct?.accent_color || 'text-green-500'}`}>
+                {currentProduct ? format(parseFloat(currentProduct.price)) : '$6.50'}
+             </p>
+          </div>
+
+          {/* Size Selector */}
+          <div className="flex items-center justify-center z-20 mt-2 sm:mt-0 mb-4 sm:mb-4">
+             <div className="flex items-center gap-1 sm:gap-2 bg-white rounded-full px-1.5 sm:px-2 py-1 sm:py-1.5 shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100">
+                {(['S', 'M', 'L'] as const).map((size) => (
+                  <button 
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold transition-all duration-300 ease-out ${
+                      selectedSize === size 
+                        ? `bg-white shadow-md ring-2 ring-gray-100 ${currentProduct?.accent_color || 'text-green-600'}` 
+                        : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+             </div>
+          </div>
+
+          {/* Buy Button */}
+          <Link href="/menu" className="z-20 mb-6 sm:mb-6">
+            <button 
+              className={`inline-flex items-center justify-center rounded-full shadow-lg px-8 h-12 font-semibold text-sm transition-all duration-300 ease-out ${
+                currentProduct?.bg_accent || 'bg-green-50'
+              } ${
+                currentProduct?.color?.replace('bg-', 'hover:bg-')?.replace('-500', '-100') || 'hover:bg-green-100'
+              } ${
+                currentProduct?.accent_color || 'text-green-600'
+              } ${
+                currentProduct?.color?.replace('bg-', 'ring-') || 'ring-green-500'
+              } ring-2`}
+            >
+               Buy now
+            </button>
+          </Link>
+
+          {/* Thumbnail Carousel */}
+          <div className="w-full max-w-4xl mx-auto px-4 relative pb-2 sm:pb-6 mt-8 sm:mt-0">
+              <button 
+                onClick={goToPrev} 
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gray-300 hover:text-gray-600 transition-colors duration-200 z-10"
+              >
+                 <ChevronLeft className="w-6 h-6 stroke-[1.5]" />
+              </button>
+              
+              <div className="flex justify-center items-center gap-6 sm:gap-10 py-4 px-12">
+                 {bestsellerProducts.map((product, index) => (
+                   <div 
+                     key={product.id}
+                     onClick={() => {
+                        if (!isTransitioning && index !== currentIndex) {
+                          setIsTransitioning(true);
+                          setCurrentIndex(index);
+                          setTimeout(() => setIsTransitioning(false), 800);
+                        }
+                     }}
+                     className={`flex flex-col items-center cursor-pointer transition-all duration-500 ease-in-out group shrink-0 ${
+                       index === currentIndex 
+                         ? 'opacity-100' 
+                         : 'opacity-40 hover:opacity-70'
+                     }`}
+                   >
+                      <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden transition-all duration-500 ease-in-out ${
+                        index === currentIndex 
+                          ? `${product.bg_accent || 'bg-green-50'} shadow-lg ring-2 ring-offset-2 ${product.color?.replace('bg-', 'ring-') || 'ring-green-200'}` 
+                          : 'bg-gray-50/80'
+                      }`}>
+                        <Image 
+                          src={product.bottle_image} 
+                          alt={product.name} 
+                          fill 
+                          className="object-contain p-2 transition-transform duration-300 group-hover:scale-110" 
+                        />
+                      </div>
+                      <span className={`mt-2.5 text-xs font-semibold text-center transition-all duration-500 ease-in-out max-w-[100px] leading-tight ${
+                        index === currentIndex ? 'text-gray-900' : 'text-gray-400'
+                      }`}>
+                        {product.name}
+                      </span>
+                   </div>
+                 ))}
+              </div>
+
+              <button 
+                onClick={goToNext} 
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gray-300 hover:text-gray-600 transition-colors duration-200 z-10"
+              >
+                 <ChevronRight className="w-6 h-6 stroke-[1.5]" />
+              </button>
+          </div>
+
         </section>
 
         {/* Browse Categories Section */}
         <CategoryBrowse />
-
-        {/* Lineup Section */}
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            {carouselProducts.length > 0 && (
-              <ProductCarousel 
-                products={carouselProducts} 
-                speed={25}
-              />
-            )}
-          </div>
-        </section>
 
         {/* Why Choose Us */}
         <WhyChooseUs />

@@ -116,10 +116,17 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await api.get('/auth/me');
           set({ user: response.data, isAuthenticated: true });
-        } catch (error) {
-          console.error("Failed to fetch user:", error);
+        } catch (error: any) {
+          // Only log actual errors, not expected 401s (expired session)
+          if (error.response?.status !== 401) {
+            console.error("Failed to fetch user:", error);
+          }
           set({ user: null, token: null, isAuthenticated: false });
           localStorage.removeItem('token');
+          // Also clear cookie
+          if (typeof document !== 'undefined') {
+            document.cookie = 'token=; path=/; max-age=0';
+          }
         }
       },
     }),

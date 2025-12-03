@@ -309,7 +309,9 @@
     "title": "AI Chat Assistant",
     "subtitle": "Ask anything about our menu",
     "placeholder": "Type your message...",
+    "recording": "Recording...",
     "send": "Send",
+    "loginForPersonalized": "Log in for personalized recommendations",
     "suggestions": {
       "title": "Suggested Questions",
       "items": [
