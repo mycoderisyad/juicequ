@@ -7,9 +7,10 @@ import { useCurrency } from "@/lib/hooks/use-store";
 interface CurrencySwitcherProps {
   className?: string;
   variant?: "default" | "compact" | "minimal";
+  upwards?: boolean;
 }
 
-export function CurrencySwitcher({ className = "", variant = "default" }: CurrencySwitcherProps) {
+export function CurrencySwitcher({ className = "", variant = "default", upwards = false }: CurrencySwitcherProps) {
   const { displayCurrency, availableCurrencies, setDisplayCurrency, isLoading } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -49,12 +50,14 @@ export function CurrencySwitcher({ className = "", variant = "default" }: Curren
               onClick={() => setIsOpen(false)}
               aria-hidden="true"
             />
-            <div className="absolute right-0 bottom-full mb-2 z-50 w-36 rounded-lg bg-white shadow-lg ring-1 ring-black/5 py-1">
+            <div className={`absolute right-0 z-50 min-w-[90px] w-auto rounded-lg bg-white shadow-lg ring-1 ring-black/5 py-1 ${
+              upwards ? "bottom-full mb-2" : "top-full mt-2"
+            }`}>
               {availableCurrencies.map((currency) => (
                 <button
                   key={currency.code}
                   onClick={() => handleSelect(currency)}
-                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center justify-between ${
+                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-3 justify-between whitespace-nowrap ${
                     currency.code === displayCurrency.code ? "text-green-600 font-medium" : "text-gray-700"
                   }`}
                 >

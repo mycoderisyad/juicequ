@@ -7,9 +7,10 @@ import { ChevronDown, Globe, Check } from "lucide-react";
 
 interface LanguageSwitcherProps {
   variant?: "default" | "minimal";
+  upwards?: boolean;
 }
 
-export function LanguageSwitcher({ variant = "default" }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ variant = "default", upwards = false }: LanguageSwitcherProps) {
   const { locale, setLocale, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -62,7 +63,9 @@ export function LanguageSwitcher({ variant = "default" }: LanguageSwitcherProps)
               aria-hidden="true"
             />
             <ul 
-              className="absolute right-0 bottom-full z-50 mb-2 min-w-[140px] overflow-hidden rounded-lg border border-gray-100 bg-white shadow-lg py-1"
+              className={`absolute right-0 z-50 min-w-[140px] overflow-hidden rounded-lg border border-gray-100 bg-white shadow-lg py-1 ${
+                upwards ? "bottom-full mb-2" : "top-full mt-2"
+              }`}
               role="listbox"
               aria-labelledby="language-switcher-button"
               aria-activedescendant={`lang-${locale}`}
