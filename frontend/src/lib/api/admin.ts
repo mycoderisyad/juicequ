@@ -68,6 +68,8 @@ export interface StoreSettings {
   latitude?: number;
   longitude?: number;
   city?: string;
+  district?: string;
+  village?: string;
   province?: string;
   postal_code?: string;
   currency_code?: string;
