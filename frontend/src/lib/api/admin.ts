@@ -59,12 +59,20 @@ export interface SalesAnalytics {
 
 export interface StoreSettings {
   name: string;
-  tagline: string;
-  description: string;
-  logo: string;
+  tagline?: string;
+  description?: string;
+  logo?: string;
   address: string;
   phone: string;
   email: string;
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  currency_code?: string;
+  currency_symbol?: string;
+  currency_locale?: string;
 }
 
 export interface OperationsSettings {
@@ -74,12 +82,15 @@ export interface OperationsSettings {
   accept_orders: boolean;
   delivery_available: boolean;
   minimum_order: number;
+  days_open?: string[];
+  order_types?: string[];
 }
 
 export interface PaymentSettings {
   cash_enabled: boolean;
   card_enabled: boolean;
   digital_enabled: boolean;
+  bank_transfer_enabled?: boolean;
   tax_rate: number;
   service_charge: number;
 }
@@ -400,9 +411,42 @@ export const settingsApi = {
    * Update store settings.
    */
   updateStore: async (
-    data: Partial<StoreSettings>
+    data: Partial<StoreSettings & {
+      // Additional keys with different names
+      store_name?: string;
+      store_tagline?: string;
+      store_description?: string;
+      store_address?: string;
+      store_phone?: string;
+      store_email?: string;
+      store_latitude?: number;
+      store_longitude?: number;
+      store_city?: string;
+      store_province?: string;
+      store_postal_code?: string;
+    }>
   ): Promise<{ settings: StoreSettings; message: string }> => {
-    const response = await apiClient.put("/admin/settings/store", data);
+    // Map frontend keys to backend keys if needed
+    const payload: Record<string, unknown> = {};
+    if (data.name || data.store_name) payload.store_name = data.name || data.store_name;
+    if (data.tagline || data.store_tagline) payload.store_tagline = data.tagline || data.store_tagline;
+    if (data.description || data.store_description) payload.store_description = data.description || data.store_description;
+    if (data.address || data.store_address) payload.store_address = data.address || data.store_address;
+    if (data.phone || data.store_phone) payload.store_phone = data.phone || data.store_phone;
+    if (data.email || data.store_email) payload.store_email = data.email || data.store_email;
+    if (data.logo) payload.store_logo = data.logo;
+    if (data.latitude !== undefined || data.store_latitude !== undefined) 
+      payload.store_latitude = data.latitude ?? data.store_latitude;
+    if (data.longitude !== undefined || data.store_longitude !== undefined) 
+      payload.store_longitude = data.longitude ?? data.store_longitude;
+    if (data.city || data.store_city) payload.store_city = data.city || data.store_city;
+    if (data.province || data.store_province) payload.store_province = data.province || data.store_province;
+    if (data.postal_code || data.store_postal_code) payload.store_postal_code = data.postal_code || data.store_postal_code;
+    if (data.currency_code) payload.currency_code = data.currency_code;
+    if (data.currency_symbol) payload.currency_symbol = data.currency_symbol;
+    if (data.currency_locale) payload.currency_locale = data.currency_locale;
+
+    const response = await apiClient.put("/admin/settings/store", payload);
     return response.data;
   },
 
@@ -410,9 +454,25 @@ export const settingsApi = {
    * Update operations settings.
    */
   updateOperations: async (
-    data: Partial<OperationsSettings>
+    data: Partial<OperationsSettings & {
+      opening_time?: string;
+      closing_time?: string;
+      is_store_open?: boolean;
+    }>
   ): Promise<{ settings: OperationsSettings; message: string }> => {
-    const response = await apiClient.put("/admin/settings/operations", data);
+    // Map frontend keys to backend keys
+    const payload: Record<string, unknown> = {};
+    if (data.opening_hours || data.opening_time) payload.opening_time = data.opening_hours || data.opening_time;
+    if (data.closing_hours || data.closing_time) payload.closing_time = data.closing_hours || data.closing_time;
+    if (data.days_open) payload.days_open = data.days_open;
+    if (data.is_open !== undefined || data.is_store_open !== undefined) 
+      payload.is_store_open = data.is_open ?? data.is_store_open;
+    if (data.accept_orders !== undefined) payload.accept_orders = data.accept_orders;
+    if (data.delivery_available !== undefined) payload.delivery_available = data.delivery_available;
+    if (data.minimum_order !== undefined) payload.minimum_order = data.minimum_order;
+    if (data.order_types) payload.order_types = data.order_types;
+
+    const response = await apiClient.put("/admin/settings/operations", payload);
     return response.data;
   },
 

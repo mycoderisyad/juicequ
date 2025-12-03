@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Minus, Plus, ArrowLeft, ShoppingBag, RefreshCw } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
+import { useCurrency } from "@/lib/hooks/use-store";
 import Link from "next/link";
 
 interface DisplayProduct {
@@ -47,6 +48,7 @@ function transformProduct(product: ApiProduct): DisplayProduct {
 export default function ProductPage() {
   const params = useParams();
   const { addItem } = useCartStore();
+  const { format } = useCurrency();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<DisplayProduct | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -166,7 +168,7 @@ export default function ProductPage() {
               <div className="mb-6">
                 <h1 className="mb-2 text-4xl font-bold text-gray-900">{product.name}</h1>
                 <div className="flex items-center gap-4">
-                  <span className="text-3xl font-bold text-green-600">Rp {parseInt(product.price).toLocaleString('id-ID')}</span>
+                  <span className="text-3xl font-bold text-green-600">{format(parseInt(product.price))}</span>
                   <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
                     {product.calories} cal
                   </span>
@@ -212,7 +214,7 @@ export default function ProductPage() {
                   className="h-12 flex-1 rounded-full bg-green-600 text-lg font-medium text-white hover:bg-green-700"
                 >
                   <ShoppingBag className="mr-2 h-5 w-5" />
-                  Add to Cart - Rp {(parseFloat(product.price) * quantity).toLocaleString('id-ID')}
+                  Add to Cart - {format(parseFloat(product.price) * quantity)}
                 </Button>
               </div>
             </div>

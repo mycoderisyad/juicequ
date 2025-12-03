@@ -14,27 +14,10 @@ import {
   AlertCircle
 } from "lucide-react";
 import { cashierOrdersApi, transactionsApi } from "@/lib/api/index";
-
-interface OrderItem {
-  id: string;
-  product_id: string;
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  subtotal: number;
-}
-
-interface CashierOrder {
-  id: string;
-  order_number: string;
-  status: string;
-  total: number;
-  items: OrderItem[];
-  created_at: string;
-}
+import type { Order } from "@/lib/api/customer";
 
 export default function CashierDashboardPage() {
-  const [pendingOrders, setPendingOrders] = useState<CashierOrder[]>([]);
+  const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [todayStats, setTodayStats] = useState({
     pendingCount: 0,
     todaySales: 0,
@@ -54,7 +37,7 @@ export default function CashierDashboardPage() {
         transactionsApi.getAll({ limit: 100 }),
       ]);
       
-      setPendingOrders(pendingData.orders as CashierOrder[]);
+      setPendingOrders(pendingData.orders);
       
       // Calculate today's stats
       const todaySales = transactionsData.transactions

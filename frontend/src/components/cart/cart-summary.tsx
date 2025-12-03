@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/lib/hooks/use-store";
 
 interface CartSummaryProps {
   subtotal: number;
@@ -30,6 +31,7 @@ export function CartSummary({
   isCheckoutDisabled = false,
   checkoutLabel = "Proceed to Checkout",
 }: CartSummaryProps) {
+  const { format: formatCurrency } = useCurrency();
   const calculatedTax = tax ?? subtotal * 0.1; // Default 10% tax
   const total = subtotal + calculatedTax - discount + deliveryFee;
 
@@ -45,18 +47,18 @@ export function CartSummary({
       <div className="mt-6 space-y-4 border-b border-gray-100 pb-6">
         <div className="flex justify-between text-gray-600">
           <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
+          <span>{formatCurrency(subtotal)}</span>
         </div>
 
         <div className="flex justify-between text-gray-600">
           <span>Tax (10%)</span>
-          <span>${calculatedTax.toFixed(2)}</span>
+          <span>{formatCurrency(calculatedTax)}</span>
         </div>
 
         {discount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Discount</span>
-            <span>-${discount.toFixed(2)}</span>
+            <span>-{formatCurrency(discount)}</span>
           </div>
         )}
 
@@ -65,14 +67,14 @@ export function CartSummary({
           {deliveryFee === 0 ? (
             <span className="text-green-600">Free</span>
           ) : (
-            <span>${deliveryFee.toFixed(2)}</span>
+            <span>{formatCurrency(deliveryFee)}</span>
           )}
         </div>
       </div>
 
       <div className="mt-6 flex justify-between text-lg font-bold text-gray-900">
         <span>Total</span>
-        <span>${total.toFixed(2)}</span>
+        <span>{formatCurrency(total)}</span>
       </div>
 
       {onCheckout ? (

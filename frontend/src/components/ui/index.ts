@@ -1,6 +1,12 @@
-// UI Components barrel export
+/**
+ * UI Components barrel export.
+ * All reusable UI components are exported from here.
+ */
 export { Button, buttonVariants, type ButtonProps } from "./button";
 export { Input, type InputProps } from "./input";
+export { Select } from "./select";
+export { Modal } from "./modal";
+export { ToastContainer } from "./toast";
 export {
   Card,
   CardHeader,
@@ -21,3 +27,4 @@ export {
   ProductGridSkeleton,
   CartItemSkeleton,
 } from "./skeleton";
+export { StoreStatusIndicator } from "./StoreStatusIndicator";

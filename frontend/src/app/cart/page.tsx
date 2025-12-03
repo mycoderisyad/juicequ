@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ArrowRight, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
+import { useCurrency } from "@/lib/hooks/use-store";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, total } = useCartStore();
   const { t } = useTranslation();
+  const { format: formatCurrency } = useCurrency();
   const cartTotal = total();
   const tax = cartTotal * 0.1; // 10% tax
   const finalTotal = cartTotal + tax;
@@ -51,7 +53,7 @@ export default function CartPage() {
                       <div className="flex flex-1 flex-col justify-between sm:flex-row sm:items-center">
                         <div>
                           <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
-                          <p className="text-green-600 font-medium">${item.price.toFixed(2)}</p>
+                          <p className="text-green-600 font-medium">{formatCurrency(item.price)}</p>
                         </div>
 
                         <div className="mt-4 flex items-center gap-6 sm:mt-0">
@@ -92,11 +94,11 @@ export default function CartPage() {
                   <div className="mt-6 space-y-4 border-b border-gray-100 pb-6">
                     <div className="flex justify-between text-gray-600">
                       <span>{t("cart.summary.subtotal")}</span>
-                      <span>${cartTotal.toFixed(2)}</span>
+                      <span>{formatCurrency(cartTotal)}</span>
                     </div>
                     <div className="flex justify-between text-gray-600">
                       <span>{t("cart.summary.tax")}</span>
-                      <span>${tax.toFixed(2)}</span>
+                      <span>{formatCurrency(tax)}</span>
                     </div>
                     <div className="flex justify-between text-gray-600">
                       <span>{t("cart.summary.deliveryFee")}</span>
@@ -106,7 +108,7 @@ export default function CartPage() {
 
                   <div className="mt-6 flex justify-between text-lg font-bold text-gray-900">
                     <span>{t("cart.summary.total")}</span>
-                    <span>${finalTotal.toFixed(2)}</span>
+                    <span>{formatCurrency(finalTotal)}</span>
                   </div>
 
                   <Button className="mt-8 w-full rounded-full bg-green-600 py-6 text-lg hover:bg-green-700">

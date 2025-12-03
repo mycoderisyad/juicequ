@@ -1,7 +1,7 @@
 """
-JuiceQu API - Main FastAPI Application Entry Point
+JuiceQu API - Main FastAPI Application Entry Point.
 """
-
+import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -14,16 +14,24 @@ from app.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.db.session import get_db
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO if settings.app_env == "production" else logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan events."""
     # Startup
-    print(f"Starting {settings.app_name} v{settings.app_version}")
-    print(f"Environment: {settings.app_env}")
+    logger.info("Starting %s v%s", settings.app_name, settings.app_version)
+    logger.info("Environment: %s", settings.app_env)
     yield
     # Shutdown
-    print("Shutting down...")
+    logger.info("Shutting down...")
+
 
 
 app = FastAPI(

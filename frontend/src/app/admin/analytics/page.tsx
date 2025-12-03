@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { analyticsApi } from "@/lib/api/admin";
+import { useCurrency } from "@/lib/hooks/use-store";
 
 interface DashboardData {
   users: { total: number; active: number };
@@ -78,6 +79,7 @@ function StatCard({
 }
 
 export default function AdminAnalyticsPage() {
+  const { format } = useCurrency();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [sales, setSales] = useState<SalesData | null>(null);
   const [products, setProducts] = useState<ProductAnalytics | null>(null);
@@ -154,8 +156,8 @@ export default function AdminAnalyticsPage() {
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Revenue"
-          value={`$${(dashboard?.revenue.total || 0).toLocaleString()}`}
-          subValue={`$${(dashboard?.revenue.today || 0).toFixed(2)} today`}
+          value={format(dashboard?.revenue.total || 0)}
+          subValue={`${format(dashboard?.revenue.today || 0)} today`}
           icon={DollarSign}
           color="bg-green-600"
           trend={12}
@@ -197,7 +199,7 @@ export default function AdminAnalyticsPage() {
               <div>
                 <p className="text-sm text-gray-500">Total Revenue</p>
                 <p className="text-xl font-bold text-gray-900">
-                  ${(sales?.summary.total_revenue || 0).toLocaleString()}
+                  {format(sales?.summary.total_revenue || 0)}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-green-600" />
@@ -215,7 +217,7 @@ export default function AdminAnalyticsPage() {
               <div>
                 <p className="text-sm text-gray-500">Average Transaction</p>
                 <p className="text-xl font-bold text-gray-900">
-                  ${(sales?.summary.average_transaction || 0).toFixed(2)}
+                  {format(sales?.summary.average_transaction || 0)}
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-600" />
@@ -246,7 +248,7 @@ export default function AdminAnalyticsPage() {
                     </div>
                   </div>
                   <p className="font-semibold text-green-600">
-                    ${product.revenue.toFixed(2)}
+                    {format(product.revenue)}
                   </p>
                 </div>
               ))}
@@ -270,7 +272,7 @@ export default function AdminAnalyticsPage() {
                   <div
                     className="w-full bg-green-500 rounded-t-lg transition-all hover:bg-green-600"
                     style={{ height: `${Math.max(height, 5)}%` }}
-                    title={`$${day.revenue.toFixed(2)}`}
+                    title={format(day.revenue)}
                   />
                   <span className="text-xs text-gray-500">
                     {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}

@@ -9,6 +9,7 @@ import { Plus, Minus, ShoppingCart, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore } from "@/lib/store";
+import { useCurrency } from "@/lib/hooks/use-store";
 
 export interface Product {
   id: string;
@@ -47,6 +48,7 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
   const [quantity, setQuantity] = React.useState(1);
   const [isFavorite, setIsFavorite] = React.useState(false);
   const addItem = useCartStore((state) => state.addItem);
+  const { format: formatCurrency } = useCurrency();
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -189,7 +191,7 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
             )}
           </div>
           <span className="shrink-0 text-lg font-bold text-green-600">
-            ${displayPrice.toFixed(2)}
+            {formatCurrency(displayPrice)}
           </span>
         </div>
 

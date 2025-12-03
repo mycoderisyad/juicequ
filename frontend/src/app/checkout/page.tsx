@@ -11,6 +11,7 @@ import { CartSummary } from "@/components/cart";
 import { ArrowLeft, CreditCard, Banknote, Smartphone, ShoppingBag, CheckCircle } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/hooks/use-store";
 
 type PaymentMethod = "cash" | "qris" | "transfer";
 
@@ -18,6 +19,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, total, clearCart } = useCartStore();
   const { isAuthenticated, user } = useAuthStore();
+  const { format: formatCurrency } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +172,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       <p className="font-semibold text-gray-900">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {formatCurrency(item.price * item.quantity)}
                       </p>
                     </div>
                   ))}

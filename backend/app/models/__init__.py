@@ -6,6 +6,7 @@ from app.models.product import Product, ProductCategory, ProductSize
 from app.models.order import Order, OrderItem, OrderStatus, PaymentMethod
 from app.models.cart import Cart, CartItem
 from app.models.ai_interaction import AIInteraction, InteractionType, InteractionStatus
+from app.models.settings import StoreSetting, DEFAULT_SETTINGS
 
 __all__ = [
     # User
@@ -27,4 +28,7 @@ __all__ = [
     "AIInteraction",
     "InteractionType",
     "InteractionStatus",
+    # Settings
+    "StoreSetting",
+    "DEFAULT_SETTINGS",
 ]

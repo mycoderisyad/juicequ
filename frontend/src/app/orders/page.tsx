@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Package, Clock, CheckCircle, XCircle, ChefHat, ArrowRight } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/hooks/use-store";
 
 interface OrderItem {
   product_id: string;
@@ -68,6 +69,7 @@ const statusConfig: Record<string, { color: "default" | "secondary" | "success" 
 export default function OrdersPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
+  const { format } = useCurrency();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -189,7 +191,7 @@ export default function OrdersPage() {
                       <div className="flex items-center gap-4">
                         <div className="text-right">
                           <p className="text-2xl font-bold text-gray-900">
-                            ${order.total.toFixed(2)}
+                            {format(order.total)}
                           </p>
                           {order.payment_method && (
                             <p className="text-sm capitalize text-gray-500">
