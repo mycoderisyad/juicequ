@@ -54,15 +54,23 @@ export function CartItem({
       )}
     >
       {/* Image */}
-      <div
-        className={cn(
-          "flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl",
-          item.color || "bg-gray-100"
-        )}
-        aria-hidden="true"
-      >
-        <div className="h-16 w-16 rounded-full bg-white/30 shadow-inner" />
-      </div>
+      {item.image ? (
+        <img
+          src={item.image}
+          alt={item.name}
+          className="h-24 w-24 shrink-0 rounded-2xl object-cover"
+        />
+      ) : (
+        <div
+          className={cn(
+            "flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl",
+            item.color || "bg-gray-100"
+          )}
+          aria-hidden="true"
+        >
+          <div className="h-16 w-16 rounded-full bg-white/30 shadow-inner" />
+        </div>
+      )}
 
       {/* Details */}
       <div className="flex flex-1 flex-col justify-between sm:flex-row sm:items-center">

@@ -17,6 +17,16 @@ export default function CartPage() {
   const tax = cartTotal * 0.1; // 10% tax
   const finalTotal = cartTotal + tax;
 
+  // Helper to get image URL from item (check image, then color if it's a URL)
+  const getItemImage = (item: { image?: string; color?: string }) => {
+    if (item.image) return item.image;
+    // Check if color is actually an image URL (not a CSS class)
+    if (item.color && (item.color.startsWith('http') || item.color.startsWith('/'))) {
+      return item.color;
+    }
+    return null;
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
@@ -45,10 +55,21 @@ export default function CartPage() {
                 <div className="space-y-4">
                   {items.map((item) => (
                     <div key={item.id} className="flex items-center gap-4 rounded-3xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6">
-                      {/* Image Placeholder */}
-                      <div className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl ${item.color || 'bg-gray-100'}`}>
-                        <div className="h-16 w-16 rounded-full bg-white/30 shadow-inner"></div>
-                      </div>
+                      {/* Product Image */}
+                      {(() => {
+                        const imageUrl = getItemImage(item);
+                        return imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={item.name}
+                            className="h-24 w-24 shrink-0 rounded-2xl object-cover"
+                          />
+                        ) : (
+                          <div className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl ${item.color || 'bg-gray-100'}`}>
+                            <div className="h-16 w-16 rounded-full bg-white/30 shadow-inner"></div>
+                          </div>
+                        );
+                      })()}
 
                       <div className="flex flex-1 flex-col justify-between sm:flex-row sm:items-center">
                         <div>

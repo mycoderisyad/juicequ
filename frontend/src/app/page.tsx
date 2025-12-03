@@ -176,7 +176,7 @@ export default function HomePage() {
       {/* Main Content */}
       <main id="main-content" className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden min-h-[90vh] flex items-center">
+        <section className="relative overflow-hidden min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh] flex items-center">
           {/* Loading State */}
           {isLoadingBestsellers && (
             <div className="absolute inset-0 z-0 bg-gradient-to-r from-green-50 to-green-100 animate-pulse" />
@@ -209,30 +209,30 @@ export default function HomePage() {
             </div>
           )}
 
-          <div className="container relative z-10 mx-auto px-4 py-20">
-            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+          <div className="container relative z-10 mx-auto px-4 py-10 sm:py-20">
+            <div className="grid gap-8 lg:gap-12 lg:grid-cols-2 lg:items-center">
               {/* Left Content */}
               <div className="relative z-10 max-w-2xl">
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-2 text-sm font-medium text-orange-800">
+                <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-orange-800">
                   <span>{t("home.hero.badge")}</span>
                   <span role="img" aria-label="juice">🍹</span>
                 </div>
                 
-                <h1 className="text-5xl font-bold leading-tight tracking-tight text-gray-900 sm:text-7xl">
+                <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold leading-tight tracking-tight text-gray-900">
                   {t("home.hero.title1")} <br />
                   {t("home.hero.title2")} <br />
                   {t("home.hero.title3")}
                 </h1>
                 
-                <p className="mt-6 text-lg text-gray-600 max-w-md">
+                <p className="mt-4 sm:mt-6 text-sm sm:text-lg text-gray-600 max-w-md">
                   {t("home.hero.subtitle")}
                 </p>
                 
-                <div className="mt-10 flex flex-wrap items-center gap-4">
+                <div className="mt-6 sm:mt-10 flex flex-wrap items-center gap-4">
                   <Link href="/menu">
                     <Button 
                       size="xl" 
-                      className={`${currentProduct?.button_bg || 'bg-green-600'} ${currentProduct?.button_hover || 'hover:bg-green-700'} text-white shadow-lg ${currentProduct?.shadow_color || 'shadow-green-600/20'} h-14 px-8 rounded-full transition-all duration-500 ease-out`}
+                      className={`${currentProduct?.button_bg || 'bg-green-600'} ${currentProduct?.button_hover || 'hover:bg-green-700'} text-white shadow-lg ${currentProduct?.shadow_color || 'shadow-green-600/20'} h-12 sm:h-14 px-6 sm:px-8 rounded-full transition-all duration-500 ease-out text-sm sm:text-base`}
                     >
                       {t("home.hero.orderNow")}
                     </Button>
@@ -241,9 +241,9 @@ export default function HomePage() {
               </div>
 
               {/* Right Content - Bottle + Details Card */}
-              <div className="relative flex items-center justify-center lg:justify-end">
-                {/* Product Bottle Image */}
-                <div className="relative h-[400px] w-[200px] lg:h-[500px] lg:w-[250px] mr-4">
+              <div className="relative flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-4">
+                {/* Product Bottle Image - Hidden on very small screens, shown from sm up */}
+                <div className="relative h-[250px] w-[140px] sm:h-[350px] sm:w-[180px] lg:h-[500px] lg:w-[250px] hidden sm:block">
                   {bestsellerProducts.map((product, index) => (
                     <div
                       key={product.id}
@@ -258,7 +258,7 @@ export default function HomePage() {
                         alt={product.name}
                         fill
                         className="object-contain drop-shadow-2xl"
-                        sizes="(max-width: 1024px) 200px, 250px"
+                        sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 250px"
                         priority={index === 0}
                       />
                     </div>
@@ -267,33 +267,33 @@ export default function HomePage() {
 
                 {/* Floating Details Card - Only show when product is loaded */}
                 {currentProduct && (
-                <div className="relative z-20 w-56 lg:w-64 rounded-3xl bg-white/95 backdrop-blur-sm p-5 shadow-2xl">
-                  <div className="mb-3">
-                    <h3 className="text-sm font-medium text-gray-500">Details</h3>
+                <div className="relative z-20 w-full max-w-[280px] sm:w-48 lg:w-64 rounded-2xl sm:rounded-3xl bg-white/95 backdrop-blur-sm p-4 sm:p-5 shadow-xl sm:shadow-2xl">
+                  <div className="mb-2 sm:mb-3">
+                    <h3 className="text-xs sm:text-sm font-medium text-gray-500">Details</h3>
                     <div className="mt-1 flex items-baseline gap-2">
                       <span 
-                        className={`text-2xl lg:text-3xl font-bold transition-all duration-500 ease-out ${currentProduct.accent_color}`}
+                        className={`text-xl sm:text-2xl lg:text-3xl font-bold transition-all duration-500 ease-out ${currentProduct.accent_color}`}
                       >
                         {format(parseFloat(currentProduct.price))}
                       </span>
                     </div>
-                    <p className="text-sm font-medium text-gray-900 transition-all duration-300">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 transition-all duration-300 truncate">
                       {currentProduct.name}
                     </p>
                   </div>
                   
-                  <div className="mb-3 flex gap-1">
+                  <div className="mb-2 sm:mb-3 flex gap-0.5 sm:gap-1">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <Star 
                         key={i} 
-                        className={`h-4 w-4 fill-current transition-colors duration-500 ${
+                        className={`h-3 w-3 sm:h-4 sm:w-4 fill-current transition-colors duration-500 ${
                           i <= currentProduct.rating ? 'text-orange-400' : 'text-gray-200'
                         }`} 
                       />
                     ))}
                   </div>
 
-                  <p className="text-xs text-gray-500 mb-4 line-clamp-2">
+                  <p className="text-[10px] sm:text-xs text-gray-500 mb-3 sm:mb-4 line-clamp-2">
                     {currentProduct.description}
                   </p>
 
@@ -302,31 +302,31 @@ export default function HomePage() {
                     <button 
                       onClick={goToPrev}
                       disabled={isTransitioning}
-                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
+                      className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
                         isTransitioning 
                           ? 'border-gray-100 text-gray-300 cursor-not-allowed' 
                           : 'border-gray-200 text-gray-400 hover:border-gray-900 hover:text-gray-900'
                       }`}
                       aria-label={t("common.previous")}
                     >
-                      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                      <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                     </button>
                     <button 
                       onClick={goToNext}
                       disabled={isTransitioning}
-                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
+                      className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
                         isTransitioning 
                           ? 'border-gray-100 text-gray-300 cursor-not-allowed' 
                           : 'border-gray-200 text-gray-400 hover:border-gray-900 hover:text-gray-900'
                       }`}
                       aria-label={t("common.next")}
                     >
-                      <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                      <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                     </button>
                   </div>
 
                   {/* Dots Indicator */}
-                  <div className="mt-4 flex justify-center gap-2">
+                  <div className="mt-3 sm:mt-4 flex justify-center gap-1.5 sm:gap-2">
                     {bestsellerProducts.map((_, index) => (
                       <button
                         key={index}
@@ -337,10 +337,10 @@ export default function HomePage() {
                             setTimeout(() => setIsTransitioning(false), 500);
                           }
                         }}
-                        className={`h-2 rounded-full transition-all duration-300 ${
+                        className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
                           index === currentIndex 
-                            ? `w-6 ${currentProduct.color}` 
-                            : 'w-2 bg-gray-200 hover:bg-gray-300'
+                            ? `w-4 sm:w-6 ${currentProduct.color}` 
+                            : 'w-1.5 sm:w-2 bg-gray-200 hover:bg-gray-300'
                         }`}
                         aria-label={`Go to product ${index + 1}`}
                         aria-current={index === currentIndex ? 'true' : 'false'}
