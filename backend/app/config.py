@@ -26,23 +26,23 @@ class Settings(BaseSettings):
     app_env: Literal["development", "staging", "production"] = "development"
     debug: bool = True
 
-    # Database (supports both SQLite and PostgreSQL)
-    database_url: str = "sqlite:///./juicequ.db"
+    # Database
+    database_url: str = ""
 
     # Security
-    secret_key: str = "your-super-secret-key-change-in-production-min-32-chars"
+    secret_key: str = ""
 
     # JWT Authentication
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
 
     # CORS
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = ""
 
     # Kolosal AI
     kolosal_api_key: str = ""
-    kolosal_api_base: str = "https://api.kolosal.ai/v1"
-    kolosal_model: str = "qwen-3-30b"
+    kolosal_api_base: str = ""
+    kolosal_model: str = ""
 
     # Google Cloud
     gcp_project_id: str = ""
@@ -64,7 +64,9 @@ class Settings(BaseSettings):
     @field_validator("secret_key")
     @classmethod
     def validate_secret_key(cls, v: str) -> str:
-        """Validate secret key length."""
+        """Validate secret key is set and has minimum length."""
+        if not v:
+            raise ValueError("SECRET_KEY environment variable must be set")
         if len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters")
         return v

@@ -115,6 +115,26 @@ class ServiceUnavailableException(HTTPException):
         )
 
 
+class ExternalServiceException(HTTPException):
+    """Exception for external service errors (AI, Speech-to-Text, etc.)."""
+    
+    def __init__(self, service_name: str = "External service", detail: str | None = None):
+        super().__init__(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=detail or f"{service_name} is currently unavailable",
+        )
+
+
+class RateLimitException(HTTPException):
+    """Exception for rate limit exceeded."""
+    
+    def __init__(self, detail: str = "Rate limit exceeded. Please try again later."):
+        super().__init__(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=detail,
+        )
+
+
 # Exception handlers for FastAPI
 async def juice_qu_exception_handler(request: Any, exc: JuiceQuException) -> HTTPException:
     """Handler for JuiceQu custom exceptions."""
