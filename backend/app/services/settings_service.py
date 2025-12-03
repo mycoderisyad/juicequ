@@ -85,6 +85,8 @@ class SettingsService:
             "store_longitude": settings.get("store_longitude", 0.0),
             "store_city": settings.get("store_city", ""),
             "store_province": settings.get("store_province", ""),
+            "store_district": settings.get("store_district", ""),
+            "store_village": settings.get("store_village", ""),
             "store_postal_code": settings.get("store_postal_code", ""),
             "currency_code": settings.get("currency_code", "IDR"),
             "currency_symbol": settings.get("currency_symbol", "Rp"),

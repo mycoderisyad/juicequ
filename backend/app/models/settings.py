@@ -66,9 +66,11 @@ DEFAULT_SETTINGS = [
     # Location
     {"key": "store_latitude", "value": "-6.2088", "value_type": "float", "category": "store", "description": "Store latitude for map"},
     {"key": "store_longitude", "value": "106.8456", "value_type": "float", "category": "store", "description": "Store longitude for map"},
-    {"key": "store_city", "value": "Jakarta", "value_type": "string", "category": "store", "description": "Store city"},
+    {"key": "store_city", "value": "Jakarta Pusat", "value_type": "string", "category": "store", "description": "Store city/regency"},
     {"key": "store_province", "value": "DKI Jakarta", "value_type": "string", "category": "store", "description": "Store province"},
-    {"key": "store_postal_code", "value": "10220", "value_type": "string", "category": "store", "description": "Store postal code"},
+    {"key": "store_district", "value": "Menteng", "value_type": "string", "category": "store", "description": "Store district (kecamatan)"},
+    {"key": "store_village", "value": "Menteng", "value_type": "string", "category": "store", "description": "Store village (kelurahan/desa)"},
+    {"key": "store_postal_code", "value": "10310", "value_type": "string", "category": "store", "description": "Store postal code"},
     
     # Currency & Regional
     {"key": "currency_code", "value": "IDR", "value_type": "string", "category": "store", "description": "Currency code (IDR, USD, etc)"},
