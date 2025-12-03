@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     # ExchangeRate API (optional - can be set in admin panel)
     exchangerate_api_key: str = ""
 
+    # Upload storage (development: local filesystem, production: cloud storage)
+    upload_storage_type: Literal["local", "gcs", "s3"] = "local"
+    upload_base_path: str = ""  # For local storage, path to frontend/public/images/products
+    gcs_bucket_name: str = ""  # For Google Cloud Storage
+    s3_bucket_name: str = ""  # For AWS S3
+
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""

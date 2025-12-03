@@ -111,14 +111,14 @@ export function CategoryBrowse() {
         </div>
         {/* Category Cards */}
         <nav aria-label={t("home.browseCategories.title")}>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto" role="list">
+          <ul className="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto" role="list">
             {categories.map((category) => {
               const lowerCategory = category.toLowerCase();
               const data = categoryData[lowerCategory] || defaultCategoryStyle;
               const categoryLabel = getCategoryLabel(category);
               
               return (
-                <li key={category}>
+                <li key={category} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] min-w-60 max-w-[300px]">
                   <Link
                     href={`/menu?category=${lowerCategory}`}
                     aria-label={`${t("home.browseCategories.browseCategory")} ${categoryLabel}`}
