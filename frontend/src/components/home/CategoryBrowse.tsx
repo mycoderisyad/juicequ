@@ -76,13 +76,13 @@ export function CategoryBrowse() {
         </div>
         {/* Category Cards */}
         <nav aria-label={t("home.browseCategories.title")}>
-          <ul className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 max-w-6xl mx-auto" role="list">
+          <ul className="flex flex-wrap justify-center gap-3 sm:gap-4 lg:gap-6 max-w-6xl mx-auto" role="list">
             {categories.map((category, index) => {
               const colors = getCategoryColor(index);
               const categoryIcon = category.icon || defaultEmoji;
               
               return (
-                <li key={category.id}>
+                <li key={category.id} className="w-[calc(50%-6px)] sm:w-[calc(50%-8px)] lg:w-[calc(25%-18px)]">
                   <Link
                     href={`/menu?category=${category.id}`}
                     aria-label={`${t("home.browseCategories.browseCategory")} ${category.name}`}

@@ -8,7 +8,6 @@ import { Footer } from "@/components/layout/Footer";
 import { CategoryBrowse } from "@/components/home/CategoryBrowse";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import { CustomerReviews } from "@/components/home/CustomerReviews";
-import { WhyChooseUs } from "@/components/home/WhyChooseUs";
 import { CTABanner } from "@/components/home/CTABanner";
 import { StoreInfoSection } from "@/components/home/StoreInfoSection";
 import { useCurrency } from "@/lib/hooks/use-store";
@@ -152,7 +151,7 @@ export default function HomePage() {
       {/* Main Content */}
       <main id="main-content" className="flex-1">
         {/* Hero Section - Redesigned with smooth animations */}
-        <section className="relative min-h-[calc(100svh-100px)] sm:min-h-[calc(100vh-80px)] flex flex-col items-center justify-center sm:justify-start sm:pt-8 lg:pt-12 pb-2 sm:pb-8 bg-linear-to-b from-gray-50/50 to-white overflow-hidden">
+        <section className="relative min-h-[calc(100svh-100px)] sm:min-h-[calc(100vh-80px)] flex flex-col items-center justify-center sm:justify-start pt-16 sm:pt-20 lg:pt-24 pb-2 sm:pb-8 bg-linear-to-b from-gray-50/50 to-white overflow-hidden">
           
           {/* Background Decorative Blobs - Color follows product */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -337,17 +336,14 @@ export default function HomePage() {
         {/* Browse Categories Section */}
         <CategoryBrowse />
 
-        {/* Why Choose Us */}
-        <WhyChooseUs />
-
         {/* Customer Reviews */}
         <CustomerReviews />
 
-        {/* CTA Banner */}
-        <CTABanner />
-
         {/* Store Info with Map */}
         <StoreInfoSection />
+
+        {/* CTA Banner */}
+        <CTABanner />
       </main>
       
       <Footer />
