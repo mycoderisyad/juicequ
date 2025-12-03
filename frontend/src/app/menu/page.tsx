@@ -11,6 +11,7 @@ import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
 import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
 import Link from "next/link";
+import Image from "next/image";
 import { useCurrency } from "@/lib/hooks/use-store";
 
 interface DisplayProduct {
@@ -21,6 +22,7 @@ interface DisplayProduct {
   calories: number;
   category: string;
   color: string;
+  thumbnail_image?: string;
 }
 
 function getInitialCategory(searchParams: URLSearchParams): string {
@@ -43,6 +45,7 @@ function transformProduct(product: ApiProduct): DisplayProduct {
     calories: product.calories || 0,
     category: product.category_id || product.category || "uncategorized",
     color: product.image_color || product.image_url || "bg-green-500",
+    thumbnail_image: product.thumbnail_image || product.bottle_image || product.hero_image,
   };
 }
 
@@ -270,15 +273,29 @@ function MenuContent() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredItems.map((item) => (
                 <Link href={`/products/${item.id}`} key={item.id} className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
-                  {/* Image Placeholder */}
+                  {/* Product Image */}
                   <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl bg-gray-50">
-                    <div className={`absolute inset-0 ${item.color} opacity-20 transition-opacity group-hover:opacity-30`}></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className={`h-32 w-32 rounded-full ${item.color} opacity-80 shadow-lg transition-transform duration-500 group-hover:scale-110`}></div>
-                    </div>
+                    {item.thumbnail_image ? (
+                      <>
+                        <Image
+                          src={item.thumbnail_image}
+                          alt={item.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className={`absolute inset-0 ${item.color} opacity-20 transition-opacity group-hover:opacity-30`}></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className={`h-32 w-32 rounded-full ${item.color} opacity-80 shadow-lg transition-transform duration-500 group-hover:scale-110`}></div>
+                        </div>
+                      </>
+                    )}
                     <button 
                       onClick={(e) => e.preventDefault()}
-                      className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-gray-900 backdrop-blur-sm transition-colors hover:bg-red-50 hover:text-red-500"
+                      className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-gray-900 backdrop-blur-sm transition-colors hover:bg-red-50 hover:text-red-500"
                     >
                       <span className="sr-only">{t("menu.addToFavorites")}</span>
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -286,7 +303,7 @@ function MenuContent() {
                       </svg>
                     </button>
                     {/* Category Badge */}
-                    <span className="absolute left-3 top-3 rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-gray-700 backdrop-blur-sm">
+                    <span className="absolute left-3 top-3 z-10 rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-gray-700 backdrop-blur-sm">
                       {item.category}
                     </span>
                   </div>

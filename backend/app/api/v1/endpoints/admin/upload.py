@@ -1,6 +1,7 @@
 """
 Upload API for product images.
 Auto-converts images to WebP format for optimization.
+Supports local storage (development) and cloud storage (production).
 """
 import os
 import uuid
@@ -14,6 +15,7 @@ from app.db.session import get_db
 from app.core.permissions import require_roles
 from app.models.user import User, UserRole
 from app.models.product import Product
+from app.config import settings
 
 router = APIRouter()
 
@@ -21,10 +23,22 @@ router = APIRouter()
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
-# Upload directory (relative to frontend public folder)
-UPLOAD_BASE_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "frontend", "public", "images", "products")
-)
+
+def get_upload_base_dir() -> str:
+    """
+    Get the base directory for uploads.
+    - If UPLOAD_BASE_PATH is set in config/env, use that
+    - Otherwise, calculate relative path from this file to frontend/public/images/products
+    """
+    if settings.upload_base_path:
+        return os.path.abspath(settings.upload_base_path)
+    
+    # Default: calculate path relative to this file
+    # Path from: backend/app/api/v1/endpoints/admin/upload.py
+    # Go up 6 levels to reach juicequ/, then into frontend/public/images/products
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "..", "frontend", "public", "images", "products")
+    )
 
 
 def get_file_extension(filename: str) -> str:
@@ -34,9 +48,10 @@ def get_file_extension(filename: str) -> str:
 
 def ensure_upload_dirs():
     """Ensure upload directories exist."""
+    base_dir = get_upload_base_dir()
     dirs = ["hero", "bottles", "thumbnails", "catalog"]
     for d in dirs:
-        path = os.path.join(UPLOAD_BASE_DIR, d)
+        path = os.path.join(base_dir, d)
         os.makedirs(path, exist_ok=True)
 
 
@@ -70,8 +85,10 @@ def save_image(image_data: bytes, folder: str, filename: str) -> str:
     """Save image to disk and return relative URL path."""
     ensure_upload_dirs()
     
+    base_dir = get_upload_base_dir()
+    
     # Full path
-    file_path = os.path.join(UPLOAD_BASE_DIR, folder, filename)
+    file_path = os.path.join(base_dir, folder, filename)
     
     # Write file
     with open(file_path, "wb") as f:

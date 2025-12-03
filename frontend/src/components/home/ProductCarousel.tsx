@@ -12,6 +12,8 @@ interface Product {
   name: string;
   price: string;
   color: string;
+  thumbnail_image?: string;
+  bottle_image?: string;
 }
 
 interface ProductCarouselProps {
@@ -78,9 +80,17 @@ export function ProductCarousel({ products, speed = 30 }: ProductCarouselProps) 
                 onClick={() => handleProductClick(product.id)}
               >
                 <div className="mb-6 flex h-48 items-center justify-center">
-                  <div 
-                    className={`h-40 w-20 rounded-full ${product.color} opacity-80 shadow-lg transition-transform duration-300 group-hover:scale-110`}
-                  />
+                  {(product.thumbnail_image || product.bottle_image) ? (
+                    <img
+                      src={product.thumbnail_image || product.bottle_image}
+                      alt={product.name}
+                      className="h-40 w-auto object-contain transition-transform duration-300 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div 
+                      className={`h-40 w-20 rounded-full ${product.color} opacity-80 shadow-lg transition-transform duration-300 group-hover:scale-110`}
+                    />
+                  )}
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">{product.name}</h3>
                 <div className="mt-2 flex items-center justify-between">

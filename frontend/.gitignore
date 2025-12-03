@@ -39,3 +39,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Uploaded product images (keep only fallback images)
+# Keep: berry-blast, green-goddess, tropical-paradise (for fallback)
+# Ignore all other uploaded images
+/public/images/products/hero/*
+!/public/images/products/hero/.gitkeep
+!/public/images/products/hero/berry-blast.webp
+!/public/images/products/hero/green-goddess.webp
+!/public/images/products/hero/tropical-paradise.webp
+
+/public/images/products/bottles/*
+!/public/images/products/bottles/.gitkeep
+!/public/images/products/bottles/berry-blast.webp
+!/public/images/products/bottles/green-goddess.webp
+!/public/images/products/bottles/tropical-paradise.webp
+
+/public/images/products/thumbnails/*
+!/public/images/products/thumbnails/.gitkeep
+
+/public/images/products/catalog/*
+!/public/images/products/catalog/.gitkeep

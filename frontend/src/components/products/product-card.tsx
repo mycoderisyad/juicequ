@@ -21,6 +21,9 @@ export interface Product {
   category_name?: string;
   image_url?: string;
   image_color?: string;
+  thumbnail_image?: string;
+  hero_image?: string;
+  bottle_image?: string;
   is_available: boolean;
   stock_quantity?: number;
   is_featured?: boolean;
@@ -92,6 +95,7 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
 
   const imageColor = product.image_color || "bg-gray-200";
   const displayPrice = product.base_price;
+  const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
 
   return (
     <Link
@@ -104,33 +108,38 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
     >
       {/* Image Area */}
       <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl bg-gray-50">
-        {/* Background color overlay */}
-        <div
-          className={cn(
-            "absolute inset-0 opacity-20 transition-opacity group-hover:opacity-30",
-            imageColor
-          )}
-          aria-hidden="true"
-        />
-        
-        {/* Product visual */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          {product.image_url ? (
+        {productImage ? (
+          <>
+            {/* Product image from database */}
             <img
-              src={product.image_url}
+              src={productImage}
               alt={product.name}
-              className="h-32 w-32 rounded-full object-cover shadow-lg transition-transform duration-500 group-hover:scale-110"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
-          ) : (
+          </>
+        ) : (
+          <>
+            {/* Background color overlay */}
             <div
               className={cn(
-                "h-32 w-32 rounded-full opacity-80 shadow-lg transition-transform duration-500 group-hover:scale-110",
+                "absolute inset-0 opacity-20 transition-opacity group-hover:opacity-30",
                 imageColor
               )}
               aria-hidden="true"
             />
-          )}
-        </div>
+            
+            {/* Product visual placeholder */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div
+                className={cn(
+                  "h-32 w-32 rounded-full opacity-80 shadow-lg transition-transform duration-500 group-hover:scale-110",
+                  imageColor
+                )}
+                aria-hidden="true"
+              />
+            </div>
+          </>
+        )}
 
         {/* Favorite button */}
         <button

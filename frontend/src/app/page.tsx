@@ -88,11 +88,13 @@ export default function HomePage() {
   const { format } = useCurrency();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [carouselProducts, setCarouselProducts] = useState<Array<{id: string; name: string; price: string; color: string}>>([]);
-  const [bestsellerProducts, setBestsellerProducts] = useState<BestsellerProduct[]>(fallbackBestsellerProducts);
+  const [carouselProducts, setCarouselProducts] = useState<Array<{id: string; name: string; price: string; color: string; thumbnail_image?: string; bottle_image?: string}>>([]);
+  const [bestsellerProducts, setBestsellerProducts] = useState<BestsellerProduct[]>([]);
   const [isLoadingBestsellers, setIsLoadingBestsellers] = useState(true);
 
-  const currentProduct = bestsellerProducts[currentIndex];
+  // Get current product safely - only show when we have products
+  const safeCurrentIndex = bestsellerProducts.length > 0 ? currentIndex % bestsellerProducts.length : 0;
+  const currentProduct = bestsellerProducts.length > 0 ? bestsellerProducts[safeCurrentIndex] : null;
 
   // Fetch bestseller products for hero
   useEffect(() => {
@@ -102,10 +104,15 @@ export default function HomePage() {
         const response = await productsApi.getBestsellers(3);
         if (response.items && response.items.length > 0) {
           setBestsellerProducts(response.items);
+          setCurrentIndex(0); // Reset index when products change
+        } else {
+          // Use fallback if no items returned
+          setBestsellerProducts(fallbackBestsellerProducts);
         }
       } catch (err) {
         console.error("Failed to fetch bestsellers, using fallback:", err);
-        // Keep fallback products
+        // Use fallback on error
+        setBestsellerProducts(fallbackBestsellerProducts);
       } finally {
         setIsLoadingBestsellers(false);
       }
@@ -124,6 +131,8 @@ export default function HomePage() {
             name: p.name,
             price: String(p.base_price || p.price || 0),
             color: p.image_color || p.image_url || "bg-green-500",
+            thumbnail_image: p.thumbnail_image,
+            bottle_image: p.bottle_image,
           }));
           setCarouselProducts(transformed);
         }
@@ -135,18 +144,18 @@ export default function HomePage() {
   }, []);
 
   const goToNext = useCallback(() => {
-    if (isTransitioning) return;
+    if (isTransitioning || bestsellerProducts.length === 0) return;
     setIsTransitioning(true);
     setCurrentIndex((prev) => (prev + 1) % bestsellerProducts.length);
     setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning]);
+  }, [isTransitioning, bestsellerProducts.length]);
 
   const goToPrev = useCallback(() => {
-    if (isTransitioning) return;
+    if (isTransitioning || bestsellerProducts.length === 0) return;
     setIsTransitioning(true);
     setCurrentIndex((prev) => (prev - 1 + bestsellerProducts.length) % bestsellerProducts.length);
     setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning]);
+  }, [isTransitioning, bestsellerProducts.length]);
 
   // Auto-rotate every 4 seconds
   useEffect(() => {
@@ -168,30 +177,37 @@ export default function HomePage() {
       <main id="main-content" className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden min-h-[90vh] flex items-center">
+          {/* Loading State */}
+          {isLoadingBestsellers && (
+            <div className="absolute inset-0 z-0 bg-gradient-to-r from-green-50 to-green-100 animate-pulse" />
+          )}
+          
           {/* Background Product Image - Full Size */}
-          <div className="absolute inset-0 z-0">
-            {bestsellerProducts.map((product, index) => (
-              <div
-                key={product.id}
-                className={`absolute inset-0 transition-all duration-700 ease-out ${
-                  index === currentIndex 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-105 pointer-events-none'
-                }`}
-              >
-                <Image
-                  src={product.hero_image}
-                  alt={product.name}
-                  fill
-                  className="object-cover object-center"
-                  sizes="100vw"
-                  priority={index === 0}
-                />
-                {/* Gradient overlay for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent lg:via-white/70"></div>
-              </div>
-            ))}
-          </div>
+          {!isLoadingBestsellers && bestsellerProducts.length > 0 && (
+            <div className="absolute inset-0 z-0">
+              {bestsellerProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  className={`absolute inset-0 transition-all duration-700 ease-out ${
+                    index === currentIndex 
+                      ? 'opacity-100 scale-100' 
+                      : 'opacity-0 scale-105 pointer-events-none'
+                  }`}
+                >
+                  <Image
+                    src={product.hero_image}
+                    alt={product.name}
+                    fill
+                    className="object-cover object-center"
+                    sizes="100vw"
+                    priority={index === 0}
+                  />
+                  {/* Gradient overlay for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent lg:via-white/70"></div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="container relative z-10 mx-auto px-4 py-20">
             <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
@@ -216,7 +232,7 @@ export default function HomePage() {
                   <Link href="/menu">
                     <Button 
                       size="xl" 
-                      className={`${currentProduct.button_bg} ${currentProduct.button_hover} text-white shadow-lg ${currentProduct.shadow_color} h-14 px-8 rounded-full transition-all duration-500 ease-out`}
+                      className={`${currentProduct?.button_bg || 'bg-green-600'} ${currentProduct?.button_hover || 'hover:bg-green-700'} text-white shadow-lg ${currentProduct?.shadow_color || 'shadow-green-600/20'} h-14 px-8 rounded-full transition-all duration-500 ease-out`}
                     >
                       {t("home.hero.orderNow")}
                     </Button>
@@ -249,7 +265,8 @@ export default function HomePage() {
                   ))}
                 </div>
 
-                {/* Floating Details Card */}
+                {/* Floating Details Card - Only show when product is loaded */}
+                {currentProduct && (
                 <div className="relative z-20 w-56 lg:w-64 rounded-3xl bg-white/95 backdrop-blur-sm p-5 shadow-2xl">
                   <div className="mb-3">
                     <h3 className="text-sm font-medium text-gray-500">Details</h3>
@@ -331,6 +348,7 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
+                )}
               </div>
             </div>
           </div>

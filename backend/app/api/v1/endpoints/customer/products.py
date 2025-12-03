@@ -38,6 +38,10 @@ def product_to_response(product) -> dict:
         "image": product.image_url,
         "image_url": product.image_url,
         "image_color": product.image_url,  # For frontend compatibility
+        # Product images
+        "thumbnail_image": product.thumbnail_image,
+        "hero_image": product.hero_image,
+        "bottle_image": product.bottle_image,
         "is_available": product.is_available,
         "stock": product.stock_quantity,
         "stock_quantity": product.stock_quantity,

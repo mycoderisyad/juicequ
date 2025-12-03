@@ -21,6 +21,9 @@ interface DisplayProduct {
   category: string;
   color: string;
   ingredients?: string[];
+  thumbnail_image?: string;
+  hero_image?: string;
+  bottle_image?: string;
   nutrition?: {
     calories: number;
     protein: number;
@@ -41,6 +44,9 @@ function transformProduct(product: ApiProduct): DisplayProduct {
     category: product.category_id || product.category || "",
     color: product.image_color || product.image_url || "bg-green-500",
     ingredients: product.ingredients,
+    thumbnail_image: product.thumbnail_image,
+    hero_image: product.hero_image,
+    bottle_image: product.bottle_image,
     nutrition: product.nutrition,
   };
 }
@@ -157,10 +163,20 @@ export default function ProductPage() {
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-20">
             {/* Product Image */}
             <div className="relative aspect-square overflow-hidden rounded-[3rem] bg-gray-50">
-               <div className={`absolute inset-0 ${product.color} opacity-20`}></div>
-               <div className="absolute inset-0 flex items-center justify-center">
-                 <div className={`h-64 w-64 rounded-full ${product.color} opacity-80 shadow-2xl shadow-${product.color}/50`}></div>
-               </div>
+              {(product.thumbnail_image || product.bottle_image || product.hero_image) ? (
+                <img
+                  src={product.thumbnail_image || product.bottle_image || product.hero_image}
+                  alt={product.name}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <>
+                  <div className={`absolute inset-0 ${product.color} opacity-20`}></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className={`h-64 w-64 rounded-full ${product.color} opacity-80 shadow-2xl`}></div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Product Details */}
