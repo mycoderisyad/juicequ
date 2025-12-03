@@ -28,7 +28,8 @@ export function ProductCarousel({ products, speed = 30 }: ProductCarouselProps) 
   const [isPaused, setIsPaused] = useState(false);
   
   // Duplicate products for seamless infinite scroll
-  const duplicatedProducts = [...products, ...products];
+  const shouldDuplicate = products.length >= 4;
+  const displayProducts = shouldDuplicate ? [...products, ...products] : products;
 
   const handleProductClick = (productId: string | number) => {
     router.push(`/products/${productId}`);
@@ -49,7 +50,7 @@ export function ProductCarousel({ products, speed = 30 }: ProductCarouselProps) 
           className="group flex items-center gap-2 text-green-600 font-semibold hover:text-green-700 transition-colors"
         >
           {t("home.featuredProducts.viewAll")}
-          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="h-5 w-5 transition-transform" />
         </Link>
       </div>
 
@@ -66,11 +67,11 @@ export function ProductCarousel({ products, speed = 30 }: ProductCarouselProps) 
         <div 
           className="flex gap-6 w-max"
           style={{
-            animation: `scroll ${speed}s linear infinite`,
+            animation: shouldDuplicate ? `scroll ${speed}s linear infinite` : undefined,
             animationPlayState: isPaused ? 'paused' : 'running',
           }}
         >
-          {duplicatedProducts.map((product, index) => (
+          {displayProducts.map((product, index) => (
             <div
               key={`${product.id}-${index}`}
               className="w-72 shrink-0"

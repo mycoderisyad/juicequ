@@ -45,10 +45,12 @@ async def get_store_location(
         "address": store["store_address"],
         "city": store["store_city"],
         "province": store["store_province"],
+        "district": store["store_district"],
+        "village": store["store_village"],
         "postal_code": store["store_postal_code"],
         "latitude": store["store_latitude"],
         "longitude": store["store_longitude"],
-        "full_address": f"{store['store_address']}, {store['store_city']}, {store['store_province']} {store['store_postal_code']}",
+        "full_address": f"{store['store_address']}, {store['store_village']}, {store['store_district']}, {store['store_city']}, {store['store_province']} {store['store_postal_code']}",
     }
 
 
