@@ -48,6 +48,7 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<LeafletMarker | null>(null);
+  const isMapInitializing = useRef(false);
 
   const update = <K extends keyof StoreSettings>(key: K, value: StoreSettings[K]) => {
     onChange({ ...settings, [key]: value });
@@ -139,17 +140,36 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
       document.head.appendChild(link);
     }
 
+    let isMounted = true;
+
     const initMap = async () => {
-      if (typeof window === "undefined" || !mapContainerRef.current || mapInstanceRef.current) {
+      if (typeof window === "undefined" || !mapContainerRef.current || isMapInitializing.current) {
         return;
       }
       
-      if ((mapContainerRef.current as HTMLElement & { _leaflet_id?: number })._leaflet_id) {
+      // Check if map already exists
+      if (mapInstanceRef.current) {
         return;
       }
 
+      // Check if container already has a map (from previous render)
+      const container = mapContainerRef.current as HTMLElement & { _leaflet_id?: number };
+      if (container._leaflet_id) {
+        // Container was used before, clear it
+        container._leaflet_id = undefined;
+        container.innerHTML = "";
+      }
+
+      isMapInitializing.current = true;
+
       const L = await import("leaflet");
       
+      // Check if still mounted after async import
+      if (!isMounted || !mapContainerRef.current) {
+        isMapInitializing.current = false;
+        return;
+      }
+
       delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -160,38 +180,47 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
       const lat = settings.store_latitude || -6.2088;
       const lng = settings.store_longitude || 106.8456;
       
-      const map = L.map(mapContainerRef.current).setView([lat, lng], 15);
-      
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }).addTo(map);
+      try {
+        const map = L.map(mapContainerRef.current).setView([lat, lng], 15);
+        
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
 
-      const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-      
-      marker.on("dragend", () => {
-        const pos = marker.getLatLng();
-        update("store_latitude", Math.round(pos.lat * 1000000) / 1000000);
-        update("store_longitude", Math.round(pos.lng * 1000000) / 1000000);
-      });
+        const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        
+        marker.on("dragend", () => {
+          const pos = marker.getLatLng();
+          update("store_latitude", Math.round(pos.lat * 1000000) / 1000000);
+          update("store_longitude", Math.round(pos.lng * 1000000) / 1000000);
+        });
 
-      map.on("click", (e: LeafletMouseEvent) => {
-        marker.setLatLng(e.latlng);
-        update("store_latitude", Math.round(e.latlng.lat * 1000000) / 1000000);
-        update("store_longitude", Math.round(e.latlng.lng * 1000000) / 1000000);
-      });
+        map.on("click", (e: LeafletMouseEvent) => {
+          marker.setLatLng(e.latlng);
+          update("store_latitude", Math.round(e.latlng.lat * 1000000) / 1000000);
+          update("store_longitude", Math.round(e.latlng.lng * 1000000) / 1000000);
+        });
 
-      mapInstanceRef.current = map;
-      markerRef.current = marker;
+        mapInstanceRef.current = map;
+        markerRef.current = marker;
+      } catch (error) {
+        // Map initialization failed, likely due to container already being initialized
+        console.warn("Map initialization error:", error);
+      } finally {
+        isMapInitializing.current = false;
+      }
     };
 
     initMap();
 
     return () => {
+      isMounted = false;
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
         markerRef.current = null;
       }
+      isMapInitializing.current = false;
     };
   }, []);
 
