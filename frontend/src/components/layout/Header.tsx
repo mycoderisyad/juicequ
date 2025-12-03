@@ -15,7 +15,9 @@ import {
   X,
   Settings,
   ClipboardList,
-  ChevronDown
+  ChevronDown,
+  LayoutDashboard,
+  Store
 } from "lucide-react";
 import { useAuthStore, useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
@@ -131,12 +133,49 @@ export function Header() {
                 <div className="absolute right-0 top-full mt-2 w-56 rounded-xl bg-white shadow-lg border border-gray-100 py-2 z-50">
                   {/* User Info */}
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">{user.full_name}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-900">{user.full_name}</p>
+                      {user.role && user.role !== 'customer' && (
+                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                          user.role === 'admin' 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {user.role}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500 truncate">{user.email}</p>
                   </div>
 
                   {/* Menu Items */}
                   <div className="py-1">
+                    {/* Admin Panel - Only for Admin */}
+                    {user.role === 'admin' && (
+                      <Link 
+                        href="/admin" 
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
+                      >
+                        <LayoutDashboard className="h-4 w-4 text-green-600" />
+                        Admin Panel
+                      </Link>
+                    )}
+                    {/* Cashier Panel - For Admin and Cashier */}
+                    {(user.role === 'admin' || user.role === 'cashier') && (
+                      <Link 
+                        href="/cashier" 
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      >
+                        <Store className="h-4 w-4 text-blue-600" />
+                        Cashier Panel
+                      </Link>
+                    )}
+                    {/* Divider if has panel access */}
+                    {(user.role === 'admin' || user.role === 'cashier') && (
+                      <div className="my-1 border-t border-gray-100" />
+                    )}
                     <Link 
                       href="/profile" 
                       onClick={() => setProfileDropdownOpen(false)}
@@ -248,6 +287,31 @@ export function Header() {
                       <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
                   </Link>
+                  
+                  {/* Panel Links for Mobile */}
+                  {(user.role === 'admin' || user.role === 'cashier') && (
+                    <div className="border-t border-gray-100 pt-2 mt-2 space-y-1">
+                      {user.role === 'admin' && (
+                        <Link 
+                          href="/admin" 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-green-700 bg-green-50 hover:bg-green-100 transition-all"
+                        >
+                          <LayoutDashboard className="h-5 w-5" />
+                          Admin Panel
+                        </Link>
+                      )}
+                      <Link 
+                        href="/cashier" 
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-all"
+                      >
+                        <Store className="h-5 w-5" />
+                        Cashier Panel
+                      </Link>
+                    </div>
+                  )}
+                  
                   <button 
                     onClick={() => {
                       logout();
