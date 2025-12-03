@@ -12,6 +12,7 @@ import { PromoBanner } from "@/components/home/PromoBanner";
 import { CustomerReviews } from "@/components/home/CustomerReviews";
 import { WhyChooseUs } from "@/components/home/WhyChooseUs";
 import { CTABanner } from "@/components/home/CTABanner";
+import { StoreInfoSection } from "@/components/home/StoreInfoSection";
 import { useTranslation } from "@/lib/i18n";
 import { 
   ChevronLeft, 
@@ -93,7 +94,7 @@ export default function HomePage() {
           const transformed = response.items.map((p: ApiProduct) => ({
             id: String(p.id),
             name: p.name,
-            price: (p.base_price || p.price || 0).toLocaleString('id-ID'),
+            price: String(p.base_price || p.price || 0),
             color: p.image_color || p.image_url || "bg-green-500",
           }));
           setCarouselProducts(transformed);
@@ -330,6 +331,9 @@ export default function HomePage() {
 
         {/* CTA Banner */}
         <CTABanner />
+
+        {/* Store Info with Map */}
+        <StoreInfoSection />
       </main>
       
       <Footer />

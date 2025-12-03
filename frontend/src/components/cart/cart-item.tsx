@@ -8,7 +8,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CartItemData {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   quantity: number;
@@ -19,9 +19,10 @@ interface CartItemData {
 
 interface CartItemProps {
   item: CartItemData;
-  onUpdateQuantity: (id: number, quantity: number) => void;
-  onRemove: (id: number) => void;
+  onUpdateQuantity: (id: string | number, quantity: number) => void;
+  onRemove: (id: string | number) => void;
   className?: string;
+  formatCurrency?: (value: number) => string;
 }
 
 export function CartItem({
@@ -29,6 +30,7 @@ export function CartItem({
   onUpdateQuantity,
   onRemove,
   className,
+  formatCurrency = (value: number) => `$${value.toFixed(2)}`,
 }: CartItemProps) {
   const handleIncrement = () => {
     onUpdateQuantity(item.id, item.quantity + 1);
@@ -69,7 +71,7 @@ export function CartItem({
             {item.name}
           </h3>
           <p className="font-medium text-green-600">
-            ${item.price.toFixed(2)}
+            {formatCurrency(item.price)}
           </p>
           {item.size && (
             <p className="text-sm capitalize text-gray-500">{item.size}</p>
@@ -106,8 +108,8 @@ export function CartItem({
           </div>
 
           {/* Subtotal */}
-          <span className="hidden min-w-[80px] text-right font-semibold text-gray-900 sm:block">
-            ${itemTotal.toFixed(2)}
+          <span className="hidden min-w-20 text-right font-semibold text-gray-900 sm:block">
+            {formatCurrency(itemTotal)}
           </span>
 
           {/* Remove button */}

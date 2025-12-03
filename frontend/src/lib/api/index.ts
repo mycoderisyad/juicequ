@@ -8,6 +8,7 @@ export { default as customerApi, productsApi, cartApi, ordersApi, profileApi } f
 export { default as cashierApi, cashierOrdersApi, transactionsApi, reportsApi } from "./cashier";
 export { default as adminApi, usersApi, adminProductsApi, categoriesApi, analyticsApi, settingsApi } from "./admin";
 export { default as aiApi } from "./ai";
+export { default as storeApi } from "./store";
 
 // Re-export types
 export type { LoginRequest, RegisterRequest, AuthResponse, User } from "./auth";
@@ -35,3 +36,12 @@ export type {
   AIInteraction,
   AIInteractionListResponse,
 } from "./ai";
+export type {
+  StoreInfo,
+  StoreLocation,
+  StoreHours,
+  CurrencyInfo,
+  SocialLinks,
+  PaymentMethod,
+  PaymentInfo,
+} from "./store";

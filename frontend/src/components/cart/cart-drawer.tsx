@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store";
 import { CartItem } from "./cart-item";
+import { useCurrency } from "@/lib/hooks/use-store";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface CartDrawerProps {
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { items, removeItem, updateQuantity, total } = useCartStore();
+  const { format } = useCurrency();
   const cartTotal = total();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -111,6 +113,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   item={item}
                   onUpdateQuantity={updateQuantity}
                   onRemove={removeItem}
+                  formatCurrency={format}
                 />
               ))}
             </div>
@@ -123,7 +126,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <div className="mb-4 flex items-center justify-between">
               <span className="text-gray-600">Subtotal</span>
               <span className="text-xl font-bold text-gray-900">
-                ${cartTotal.toFixed(2)}
+                {format(cartTotal)}
               </span>
             </div>
             <p className="mb-4 text-xs text-gray-500">

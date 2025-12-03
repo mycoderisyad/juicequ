@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/hooks/use-store";
 
 interface OrderItem {
   id: string;
@@ -70,6 +71,7 @@ export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
+  const { format } = useCurrency();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -237,7 +239,7 @@ export default function OrderDetailPage() {
                           <div>
                             <p className="font-medium text-gray-900">{itemName}</p>
                             <p className="text-sm text-gray-500">
-                              ${itemPrice.toFixed(2)} × {item.quantity}
+                              {format(itemPrice)} × {item.quantity}
                               {item.size && ` · ${item.size}`}
                             </p>
                             {item.notes && (
@@ -246,7 +248,7 @@ export default function OrderDetailPage() {
                           </div>
                         </div>
                         <p className="font-semibold text-gray-900">
-                          ${itemSubtotal.toFixed(2)}
+                          {format(itemSubtotal)}
                         </p>
                       </div>
                     );
@@ -284,21 +286,21 @@ export default function OrderDetailPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between text-gray-600">
                       <span>Subtotal</span>
-                      <span>${order.subtotal.toFixed(2)}</span>
+                      <span>{format(order.subtotal)}</span>
                     </div>
                     {order.discount && order.discount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Discount</span>
-                        <span>-${order.discount.toFixed(2)}</span>
+                        <span>-{format(order.discount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-gray-600">
                       <span>Tax</span>
-                      <span>${order.tax.toFixed(2)}</span>
+                      <span>{format(order.tax)}</span>
                     </div>
                     <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-100">
                       <span>Total</span>
-                      <span>${order.total.toFixed(2)}</span>
+                      <span>{format(order.total)}</span>
                     </div>
                   </div>
                 </div>

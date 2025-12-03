@@ -55,6 +55,7 @@ export interface Cart {
 
 export interface Order {
   id: string;
+  order_number?: string;
   items: CartItem[];
   subtotal: number;
   tax?: number;

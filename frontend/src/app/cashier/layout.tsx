@@ -1,6 +1,8 @@
 /**
  * Cashier Dashboard Layout.
  */
+"use client";
+
 import { ReactNode } from "react";
 import Link from "next/link";
 import { 
@@ -8,18 +10,23 @@ import {
   CreditCard, 
   BarChart3, 
   LogOut,
-  Home 
+  Home,
+  Settings
 } from "lucide-react";
+import { useStore } from "@/lib/hooks/use-store";
+import { StoreStatusIndicator } from "@/components/ui/StoreStatusIndicator";
 
 interface CashierLayoutProps {
   children: ReactNode;
 }
 
 export default function CashierLayout({ children }: CashierLayoutProps) {
+  const { hours, isStoreOpen } = useStore();
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-sm">
+      <aside className="w-64 bg-white shadow-sm flex flex-col">
         <div className="flex h-16 items-center gap-2 border-b px-6">
           <span className="text-2xl">🍹</span>
           <span className="text-lg font-bold text-gray-900">JuiceQu</span>
@@ -28,7 +35,18 @@ export default function CashierLayout({ children }: CashierLayoutProps) {
           </span>
         </div>
         
-        <nav className="p-4">
+        {/* Store Status */}
+        <div className="border-b px-4 py-3">
+          <StoreStatusIndicator 
+            isOpen={isStoreOpen}
+            openingTime={hours?.opening_time}
+            closingTime={hours?.closing_time}
+            showHours={true}
+            size="sm"
+          />
+        </div>
+        
+        <nav className="flex-1 p-4">
           <ul className="space-y-1">
             <li>
               <Link
@@ -67,17 +85,17 @@ export default function CashierLayout({ children }: CashierLayoutProps) {
               </Link>
             </li>
           </ul>
-          
-          <div className="mt-8 border-t pt-4">
-            <Link
-              href="/"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-            >
-              <LogOut className="h-5 w-5" />
-              Keluar
-            </Link>
-          </div>
         </nav>
+        
+        <div className="border-t p-4">
+          <Link
+            href="/"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            <LogOut className="h-5 w-5" />
+            Keluar
+          </Link>
+        </div>
       </aside>
       
       {/* Main Content */}

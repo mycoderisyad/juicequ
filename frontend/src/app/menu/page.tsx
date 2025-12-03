@@ -11,6 +11,7 @@ import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
 import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
 import Link from "next/link";
+import { useCurrency } from "@/lib/hooks/use-store";
 
 interface DisplayProduct {
   id: string;
@@ -91,6 +92,7 @@ function MenuLoadingSkeleton() {
 function MenuContent() {
   const addItem = useCartStore((state) => state.addItem);
   const { t } = useTranslation();
+  const { format: formatCurrency } = useCurrency();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>(() => getInitialCategory(searchParams));
@@ -296,7 +298,7 @@ function MenuContent() {
                         <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
                         <p className="text-sm text-gray-500">{item.calories} {t("common.cal")}</p>
                       </div>
-                      <span className="text-lg font-bold text-green-600">Rp {parseInt(item.price).toLocaleString('id-ID')}</span>
+                      <span className="text-lg font-bold text-green-600">{formatCurrency(parseInt(item.price))}</span>
                     </div>
                     
                     <p className="mb-4 line-clamp-2 text-sm text-gray-600">
@@ -334,10 +336,10 @@ function MenuContent() {
                       <button
                         onClick={(e) => handleAddToCart(e, item)}
                         className="flex h-10 items-center justify-center gap-2 rounded-full bg-green-600 px-4 text-sm text-white font-medium transition-all hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                        aria-label={`${t("menu.addToCartFor")} ${item.name}, Rp ${(parseFloat(item.price) * getQuantity(item.id)).toLocaleString('id-ID')}`}
+                        aria-label={`${t("menu.addToCartFor")} ${item.name}, ${formatCurrency(parseFloat(item.price) * getQuantity(item.id))}`}
                       >
                         <ShoppingCart className="h-4 w-4" aria-hidden="true" />
-                        <span aria-hidden="true">Rp {(parseFloat(item.price) * getQuantity(item.id)).toLocaleString('id-ID')}</span>
+                        <span aria-hidden="true">{formatCurrency(parseFloat(item.price) * getQuantity(item.id))}</span>
                       </button>
                     </div>
                   </div>
