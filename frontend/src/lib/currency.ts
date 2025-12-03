@@ -1,12 +1,20 @@
 /**
  * Currency utility functions.
  * Format prices consistently using store currency settings.
+ * Uses real exchange rates from ExchangeRate API.
  */
 
 export interface CurrencySettings {
   code: string;
   symbol: string;
   locale: string;
+}
+
+export interface ExchangeRates {
+  base: string;
+  rates: Record<string, number>;
+  lastUpdate: string;
+  isFallback: boolean;
 }
 
 // Default currency settings (Indonesia)
@@ -18,6 +26,8 @@ const DEFAULT_CURRENCY: CurrencySettings = {
 
 // In-memory cache for currency settings
 let cachedCurrency: CurrencySettings | null = null;
+let cachedRates: ExchangeRates | null = null;
+let baseCurrency: string = "USD";
 
 /**
  * Set currency settings (should be called once app loads store settings).
@@ -34,8 +44,59 @@ export function getCurrencySettings(): CurrencySettings {
 }
 
 /**
+ * Set exchange rates (called from currency store).
+ */
+export function setExchangeRates(rates: ExchangeRates | null, base: string = "USD") {
+  cachedRates = rates;
+  baseCurrency = base;
+}
+
+/**
+ * Get exchange rate between two currencies.
+ */
+export function getExchangeRate(from: string, to: string): number {
+  if (from === to) return 1;
+  
+  if (!cachedRates) return 1;
+  
+  const { rates, base } = cachedRates;
+  
+  // If converting from base currency
+  if (from === base && rates[to]) {
+    return rates[to];
+  }
+  
+  // If converting to base currency
+  if (to === base && rates[from]) {
+    return 1 / rates[from];
+  }
+  
+  // Cross rate calculation
+  if (rates[from] && rates[to]) {
+    return rates[to] / rates[from];
+  }
+  
+  return 1;
+}
+
+/**
+ * Convert amount from one currency to another.
+ */
+export function convertCurrency(
+  amount: number,
+  from: string,
+  to?: string
+): number {
+  const toCurrency = to || getCurrencySettings().code;
+  if (from === toCurrency) return amount;
+  
+  const rate = getExchangeRate(from, toCurrency);
+  return amount * rate;
+}
+
+/**
  * Format a number as currency using Intl.NumberFormat.
- * @param amount - The amount to format
+ * @param amount - The amount to format (in display currency)
  * @param options - Optional override settings
  */
 export function formatCurrency(
@@ -55,6 +116,21 @@ export function formatCurrency(
     // Fallback if locale/currency is invalid
     return `${settings.symbol} ${amount.toLocaleString()}`;
   }
+}
+
+/**
+ * Format price with automatic conversion from base currency.
+ * @param amount - The amount in base currency (usually USD)
+ * @param fromCurrency - The source currency (default: base currency)
+ */
+export function formatPriceWithConversion(
+  amount: number,
+  fromCurrency?: string
+): string {
+  const from = fromCurrency || baseCurrency;
+  const to = getCurrencySettings().code;
+  const convertedAmount = convertCurrency(amount, from, to);
+  return formatCurrency(convertedAmount);
 }
 
 /**
@@ -124,11 +200,15 @@ export function formatPriceCompact(
 const currencyUtils = {
   formatCurrency,
   formatCurrencyPrecise,
+  formatPriceWithConversion,
   formatNumber,
   formatPriceCompact,
   parseCurrency,
   setCurrencySettings,
   getCurrencySettings,
+  setExchangeRates,
+  getExchangeRate,
+  convertCurrency,
 };
 
 export default currencyUtils;

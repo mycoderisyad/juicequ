@@ -15,7 +15,7 @@
 
 ## Demo
 
-- **Live URL**: [https://juicequ.web.app](https://juicequ.web.app) <!-- TODO: Update after deploy -->
+- **Live URL**: [https://juicequ.app](https://juicequ.app) <!-- TODO: Update after deploy -->
 - **Video Demo**: [YouTube Link](https://youtube.com/...) <!-- TODO: Add video link -->
 
 ---

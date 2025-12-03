@@ -3,7 +3,7 @@
  * Order processing, transactions, reports.
  */
 import apiClient from "./config";
-import type { Order, CartItem } from "./customer";
+import type { Order, CartItem, Product } from "./customer";
 
 // Types
 export interface Transaction {
@@ -68,6 +68,43 @@ export interface SalesSummary {
   };
 }
 
+export interface WalkInOrderItem {
+  product_id: string;
+  quantity: number;
+  size: "small" | "medium" | "large";
+  notes?: string;
+}
+
+export interface CreateWalkInOrderRequest {
+  items: WalkInOrderItem[];
+  customer_name?: string;
+  customer_phone?: string;
+  payment_method: "cash" | "qris" | "transfer";
+  notes?: string;
+}
+
+// Products API (for POS)
+export const posProductsApi = {
+  /**
+   * Get all products for POS.
+   */
+  getAll: async (params?: {
+    category?: string;
+    search?: string;
+  }): Promise<{ items: Product[]; total: number }> => {
+    const response = await apiClient.get("/customer/products", { params });
+    return response.data;
+  },
+
+  /**
+   * Get product categories.
+   */
+  getCategories: async (): Promise<{ categories: Array<{ id: string; name: string; icon: string }> }> => {
+    const response = await apiClient.get("/customer/products/categories");
+    return response.data;
+  },
+};
+
 // Orders API (Cashier)
 export const cashierOrdersApi = {
   /**
@@ -117,6 +154,14 @@ export const cashierOrdersApi = {
    */
   complete: async (orderId: string): Promise<{ order: Order; message: string }> => {
     const response = await apiClient.post(`/cashier/orders/${orderId}/complete`);
+    return response.data;
+  },
+
+  /**
+   * Create walk-in order (POS).
+   */
+  createWalkIn: async (data: CreateWalkInOrderRequest): Promise<{ order: Order; message: string; success: boolean }> => {
+    const response = await apiClient.post("/cashier/orders/walk-in", data);
     return response.data;
   },
 };
@@ -219,6 +264,7 @@ const cashierApi = {
   orders: cashierOrdersApi,
   transactions: transactionsApi,
   reports: reportsApi,
+  pos: posProductsApi,
 };
 
 export default cashierApi;

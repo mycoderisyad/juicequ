@@ -30,6 +30,32 @@ export interface Product {
     carbs: number;
     fat: number;
   };
+  // Hero images
+  hero_image?: string;
+  bottle_image?: string;
+  thumbnail_image?: string;
+}
+
+export interface BestsellerProduct {
+  id: string;
+  name: string;
+  price: string;
+  description: string;
+  rating: number;
+  order_count: number;
+  // Hero styling
+  color: string;
+  gradient_from: string;
+  gradient_to: string;
+  button_bg: string;
+  button_hover: string;
+  shadow_color: string;
+  accent_color: string;
+  bg_accent: string;
+  // Images
+  hero_image: string;
+  bottle_image: string;
+  thumbnail_image: string;
 }
 
 export interface Category {
@@ -94,6 +120,14 @@ export const productsApi = {
    */
   getById: async (id: string | number): Promise<Product> => {
     const response = await apiClient.get(`/customer/products/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Get bestseller products for hero section.
+   */
+  getBestsellers: async (limit: number = 3): Promise<{ items: BestsellerProduct[]; total: number }> => {
+    const response = await apiClient.get("/customer/products/bestsellers", { params: { limit } });
     return response.data;
   },
 };

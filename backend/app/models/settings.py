@@ -104,4 +104,12 @@ DEFAULT_SETTINGS = [
     {"key": "social_facebook", "value": "https://facebook.com/juicequ", "value_type": "string", "category": "social", "description": "Facebook URL"},
     {"key": "social_twitter", "value": "https://twitter.com/juicequ", "value_type": "string", "category": "social", "description": "Twitter URL"},
     {"key": "social_whatsapp", "value": "+6281234567890", "value_type": "string", "category": "social", "description": "WhatsApp number"},
+    
+    # API Keys
+    {"key": "exchangerate_api_key", "value": "", "value_type": "string", "category": "api_keys", "description": "ExchangeRate API Key from exchangerate-api.com"},
+    
+    # Exchange Rates (cached)
+    {"key": "exchange_rates", "value": "{}", "value_type": "json", "category": "currency", "description": "Cached exchange rates"},
+    {"key": "exchange_rates_updated", "value": "", "value_type": "string", "category": "currency", "description": "Last update time for exchange rates"},
+    {"key": "base_currency", "value": "USD", "value_type": "string", "category": "currency", "description": "Base currency for price storage"},
 ]

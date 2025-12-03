@@ -3,7 +3,7 @@ Cashier Orders API.
 Process and manage incoming orders.
 """
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
@@ -16,9 +16,26 @@ from app.core.exceptions import NotFoundException, BadRequestException
 from app.models.user import User, UserRole
 from app.models.order import Order, OrderStatus as DbOrderStatus
 from app.services.order_service import OrderService
-from app.schemas.order import OrderStatusUpdate
+from app.schemas.order import OrderStatusUpdate, OrderCreate, OrderItemCreate, ProductSize, PaymentMethod
 
 router = APIRouter()
+
+
+class WalkInOrderItemRequest(BaseModel):
+    """Request for a single item in walk-in order."""
+    product_id: str = Field(..., description="Product ID")
+    quantity: int = Field(1, ge=1, le=99, description="Quantity")
+    size: str = Field("medium", description="Product size: small, medium, large")
+    notes: Optional[str] = Field(None, max_length=200, description="Item notes")
+
+
+class CreateWalkInOrderRequest(BaseModel):
+    """Request to create a walk-in order (direct purchase at store)."""
+    items: list[WalkInOrderItemRequest] = Field(..., min_length=1, description="Order items")
+    customer_name: Optional[str] = Field(None, max_length=100, description="Customer name (optional)")
+    customer_phone: Optional[str] = Field(None, max_length=20, description="Customer phone (optional)")
+    payment_method: str = Field("cash", description="Payment method: cash, qris, transfer")
+    notes: Optional[str] = Field(None, max_length=500, description="Order notes")
 
 
 class UpdateOrderStatusRequest(BaseModel):
@@ -218,3 +235,73 @@ async def complete_order(
         "order": order_to_dict(updated_order),
         "success": True,
     }
+
+
+@router.post(
+    "/walk-in",
+    summary="Create walk-in order",
+    description="Create an order for customers who purchase directly at the store.",
+)
+async def create_walkin_order(
+    request: CreateWalkInOrderRequest,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: User = Depends(require_roles(UserRole.KASIR, UserRole.ADMIN)),
+):
+    """Create a walk-in order for direct store purchases."""
+    try:
+        # Convert request items to OrderItemCreate format
+        order_items = []
+        for item in request.items:
+            # Map size string to enum
+            size_map = {
+                "small": ProductSize.SMALL,
+                "medium": ProductSize.MEDIUM,
+                "large": ProductSize.LARGE,
+            }
+            size_enum = size_map.get(item.size.lower(), ProductSize.MEDIUM)
+            
+            order_items.append(OrderItemCreate(
+                product_id=item.product_id,
+                quantity=item.quantity,
+                size=size_enum,
+                notes=item.notes,
+            ))
+        
+        # Map payment method
+        payment_map = {
+            "cash": PaymentMethod.CASH,
+            "qris": PaymentMethod.QRIS,
+            "transfer": PaymentMethod.TRANSFER,
+        }
+        payment_method = payment_map.get(request.payment_method.lower(), PaymentMethod.CASH)
+        
+        # Create order data
+        order_data = OrderCreate(
+            items=order_items,
+            customer_notes=request.notes,
+            payment_method=payment_method,
+            guest_name=request.customer_name,
+            guest_phone=request.customer_phone,
+        )
+        
+        # Create the order (without user - it's a guest/walk-in order)
+        order = OrderService.create_order(db, order_data, user=None)
+        
+        # For walk-in orders, we can mark as paid immediately since payment is at counter
+        # Update status to PAID
+        updated_order = OrderService.update_status(
+            db,
+            order.id,
+            OrderStatusUpdate(
+                status=DbOrderStatus.PAID,
+                internal_notes=f"Walk-in order created by {current_user.nama}"
+            )
+        )
+        
+        return {
+            "message": "Walk-in order created successfully",
+            "order": order_to_dict(updated_order),
+            "success": True,
+        }
+    except ValueError as e:
+        raise BadRequestException(str(e))

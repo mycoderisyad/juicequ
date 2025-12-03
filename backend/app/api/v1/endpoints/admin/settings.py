@@ -75,6 +75,11 @@ class SocialSettingsUpdate(BaseModel):
     social_whatsapp: str | None = None
 
 
+class ApiKeysSettingsUpdate(BaseModel):
+    """API keys settings update request."""
+    exchangerate_api_key: str | None = Field(None, min_length=1)
+
+
 def _update_settings(db: Session, updates: BaseModel) -> int:
     """Helper to update settings from a pydantic model."""
     update_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
@@ -100,6 +105,8 @@ async def get_all_settings(
         "payments": SettingsService.get_payment_settings(db),
         "notifications": SettingsService.get_notification_settings(db),
         "social": SettingsService.get_social_settings(db),
+        "api_keys": SettingsService.get_api_keys_settings(db),
+        "currency": SettingsService.get_currency_settings(db),
     }
 
 
@@ -123,6 +130,8 @@ async def get_settings_by_category(
         "payments": SettingsService.get_payment_settings,
         "notifications": SettingsService.get_notification_settings,
         "social": SettingsService.get_social_settings,
+        "api_keys": SettingsService.get_api_keys_settings,
+        "currency": SettingsService.get_currency_settings,
     }
     
     if category not in category_map:

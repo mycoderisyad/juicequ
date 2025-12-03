@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { 
   Plus, 
   Edit2, 
@@ -9,11 +9,13 @@ import {
   AlertCircle,
   X,
   Check,
-  Loader2
+  Loader2,
+  Upload,
+  Image as ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { categoriesApi } from "@/lib/api/admin";
+import { categoriesApi, uploadApi } from "@/lib/api/admin";
 
 interface Category {
   id: string;
@@ -21,6 +23,229 @@ interface Category {
   icon?: string;
   description?: string;
   product_count?: number;
+}
+
+// Extended emoji options organized by category
+const EMOJI_ICONS = {
+  fruits: ["🍎", "🍊", "🍋", "🍇", "🍓", "🫐", "🍑", "🍒", "🍍", "🥭", "🍌", "🥝", "🍈", "🍐", "🍉", "🥥"],
+  vegetables: ["🥕", "🥬", "🥒", "🥦", "🥑", "🍅", "🌽", "🥗", "🥜", "🫛", "🧄", "🧅", "🌶️", "🫑"],
+  drinks: ["🍹", "🥤", "🧃", "🍵", "☕", "🥛", "🧋", "🍺", "🍷", "🥂", "🍾", "🫖", "🧉"],
+  food: ["🥣", "🍲", "🥗", "🍜", "🍝", "🍱", "🍛", "🥡", "🍚", "🥧", "🍰", "🧁", "🍩", "🍪"],
+  health: ["💉", "💊", "🩺", "❤️", "💪", "🏃", "🧘", "⚡", "✨", "🌟", "💫", "🔥", "💧", "🌿"],
+  nature: ["🌱", "🌿", "🍃", "🌾", "🌻", "🌺", "🌸", "🌼", "🪴", "🌵", "🎋", "🍀", "☘️"],
+  other: ["⭐", "🎯", "🏆", "👑", "💎", "🎁", "🛒", "📦", "🏷️", "💰", "🔖", "📌", "🎨", "🌈"]
+};
+
+// Flatten all emojis for quick access
+const ALL_EMOJIS = Object.values(EMOJI_ICONS).flat();
+
+// Icon Picker Component
+function IconPicker({
+  selectedIcon,
+  onSelectIcon,
+  onUploadIcon,
+  isUploading,
+}: {
+  selectedIcon: string;
+  onSelectIcon: (icon: string) => void;
+  onUploadIcon: (file: File) => Promise<void>;
+  isUploading: boolean;
+}) {
+  const [activeTab, setActiveTab] = useState<"emoji" | "upload">("emoji");
+  const [activeCategory, setActiveCategory] = useState<keyof typeof EMOJI_ICONS>("fruits");
+  const [customIconPreview, setCustomIconPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if selected icon is a URL (custom uploaded icon)
+  const isCustomIcon = selectedIcon?.startsWith("http") || selectedIcon?.startsWith("/");
+
+  useEffect(() => {
+    if (isCustomIcon) {
+      setCustomIconPreview(selectedIcon);
+      setActiveTab("upload");
+    }
+  }, [selectedIcon, isCustomIcon]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/svg+xml"];
+    if (!validTypes.includes(file.type)) {
+      alert("Invalid file type. Please use PNG, JPG, GIF, WebP, or SVG.");
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("File too large. Maximum 2MB.");
+      return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCustomIconPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload
+    await onUploadIcon(file);
+  };
+
+  const categoryLabels: Record<keyof typeof EMOJI_ICONS, string> = {
+    fruits: "🍎 Fruits",
+    vegetables: "🥕 Vegetables",
+    drinks: "🍹 Drinks",
+    food: "🍲 Food",
+    health: "💪 Health",
+    nature: "🌿 Nature",
+    other: "⭐ Other"
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Tab Selector */}
+      <div className="flex rounded-lg bg-gray-100 p-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab("emoji")}
+          className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
+            activeTab === "emoji"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          😀 Emoji Icons
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("upload")}
+          className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
+            activeTab === "upload"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          <Upload className="inline h-4 w-4 mr-1" />
+          Custom Icon
+        </button>
+      </div>
+
+      {activeTab === "emoji" ? (
+        <div className="space-y-3">
+          {/* Category Pills */}
+          <div className="flex flex-wrap gap-1">
+            {(Object.keys(EMOJI_ICONS) as Array<keyof typeof EMOJI_ICONS>).map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveCategory(cat)}
+                className={`rounded-full px-2 py-1 text-xs font-medium transition-colors ${
+                  activeCategory === cat
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {categoryLabels[cat]}
+              </button>
+            ))}
+          </div>
+
+          {/* Emoji Grid */}
+          <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-200 p-2">
+            <div className="grid grid-cols-8 gap-1">
+              {EMOJI_ICONS[activeCategory].map((icon) => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={() => onSelectIcon(icon)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg text-xl transition-all hover:scale-110 ${
+                    selectedIcon === icon && !isCustomIcon
+                      ? "bg-green-100 ring-2 ring-green-500"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  {icon}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Selected Preview */}
+          {selectedIcon && !isCustomIcon && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>Selected:</span>
+              <span className="text-2xl">{selectedIcon}</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {/* Upload Area */}
+          <div
+            className={`relative rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
+              customIconPreview ? "border-green-300 bg-green-50/50" : "border-gray-300 hover:border-gray-400"
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
+              onChange={handleFileChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={isUploading}
+            />
+
+            {isUploading ? (
+              <div className="flex flex-col items-center">
+                <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+                <p className="mt-2 text-sm text-green-600">Uploading...</p>
+              </div>
+            ) : customIconPreview ? (
+              <div className="flex flex-col items-center">
+                <img
+                  src={customIconPreview}
+                  alt="Custom icon"
+                  className="h-16 w-16 object-contain rounded-lg"
+                />
+                <p className="mt-2 text-sm text-gray-600">Click to change</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <div className="rounded-full bg-gray-100 p-3">
+                  <ImageIcon className="h-6 w-6 text-gray-400" />
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  <span className="font-medium text-green-600">Click to upload</span> or drag and drop
+                </p>
+                <p className="mt-1 text-xs text-gray-500">PNG, JPG, GIF, WebP, SVG (max 2MB)</p>
+                <p className="mt-1 text-xs text-gray-400">Recommended: 64x64 or 128x128 pixels</p>
+              </div>
+            )}
+          </div>
+
+          {/* Clear Custom Icon */}
+          {customIconPreview && (
+            <button
+              type="button"
+              onClick={() => {
+                setCustomIconPreview(null);
+                onSelectIcon("🍹");
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                }
+              }}
+              className="text-sm text-red-600 hover:text-red-700"
+            >
+              Remove custom icon & use emoji instead
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Category Form Modal
@@ -43,6 +268,7 @@ function CategoryModal({
     icon: "🍹",
     description: "",
   });
+  const [isUploadingIcon, setIsUploadingIcon] = useState(false);
 
   useEffect(() => {
     if (category) {
@@ -67,13 +293,24 @@ function CategoryModal({
     onSave(formData);
   };
 
-  if (!isOpen) return null;
+  const handleIconUpload = async (file: File) => {
+    try {
+      setIsUploadingIcon(true);
+      const result = await uploadApi.uploadImage(file, "catalog");
+      setFormData({ ...formData, icon: result.url });
+    } catch (error) {
+      console.error("Failed to upload icon:", error);
+      alert("Failed to upload icon. Please try again.");
+    } finally {
+      setIsUploadingIcon(false);
+    }
+  };
 
-  const iconOptions = ["🍹", "🥤", "🍊", "🥣", "💉", "🍓", "🥝", "🍌", "🥕", "🍇"];
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900">
             {category ? "Edit Category" : "Add New Category"}
@@ -112,25 +349,15 @@ function CategoryModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Icon
             </label>
-            <div className="flex flex-wrap gap-2">
-              {iconOptions.map((icon) => (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, icon })}
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg border-2 text-xl transition-colors ${
-                    formData.icon === icon
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  {icon}
-                </button>
-              ))}
-            </div>
+            <IconPicker
+              selectedIcon={formData.icon}
+              onSelectIcon={(icon) => setFormData({ ...formData, icon })}
+              onUploadIcon={handleIconUpload}
+              isUploading={isUploadingIcon}
+            />
           </div>
 
           <div>
@@ -150,7 +377,7 @@ function CategoryModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-green-600 hover:bg-green-700">
+            <Button type="submit" disabled={isLoading || isUploadingIcon} className="bg-green-600 hover:bg-green-700">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -365,38 +592,49 @@ export default function AdminCategoriesPage() {
           </div>
         ) : (
           <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="flex items-center justify-between rounded-xl border border-gray-200 p-4 hover:border-green-200 hover:bg-green-50/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-2xl">
-                    {category.icon || "🍹"}
+            {categories.map((category) => {
+              const isCustomIcon = category.icon?.startsWith("http") || category.icon?.startsWith("/");
+              return (
+                <div
+                  key={category.id}
+                  className="flex items-center justify-between rounded-xl border border-gray-200 p-4 hover:border-green-200 hover:bg-green-50/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-2xl overflow-hidden">
+                      {isCustomIcon ? (
+                        <img 
+                          src={category.icon} 
+                          alt={category.name} 
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        category.icon || "🍹"
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{category.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {category.product_count || 0} products
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">{category.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {category.product_count || 0} products
-                    </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleEditCategory(category)}
+                      className="rounded-lg p-2 text-gray-500 hover:bg-white hover:text-gray-900"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(category)}
+                      className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleEditCategory(category)}
-                    className="rounded-lg p-2 text-gray-500 hover:bg-white hover:text-gray-900"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(category)}
-                    className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

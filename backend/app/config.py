@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     # ChromaDB (for RAG)
     chroma_persist_directory: str = "./chroma_data"
 
+    # ExchangeRate API (optional - can be set in admin panel)
+    exchangerate_api_key: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""

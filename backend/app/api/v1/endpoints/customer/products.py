@@ -146,6 +146,80 @@ async def get_popular_products(
 
 
 @router.get(
+    "/bestsellers",
+    summary="Get bestseller products for hero section",
+    description="Retrieve top 3 bestseller products with hero images for homepage display.",
+)
+async def get_bestseller_products(
+    db: Annotated[Session, Depends(get_db)],
+    limit: int = Query(3, ge=1, le=5, description="Number of bestsellers"),
+):
+    """
+    Get bestseller products with hero images.
+    Returns products sorted by order_count (most sold first).
+    Includes hero_image and bottle_image for homepage hero section.
+    """
+    products = ProductService.get_bestsellers_for_hero(db, limit=limit)
+    
+    # Build response with hero-specific data
+    items = []
+    colors = [
+        {"bg": "bg-red-500", "gradient_from": "from-red-400", "gradient_to": "to-red-600", 
+         "button_bg": "bg-red-600", "button_hover": "hover:bg-red-700", 
+         "shadow_color": "shadow-red-600/20", "accent": "text-red-600", "bg_accent": "bg-red-50/50"},
+        {"bg": "bg-green-500", "gradient_from": "from-green-400", "gradient_to": "to-green-600",
+         "button_bg": "bg-green-600", "button_hover": "hover:bg-green-700",
+         "shadow_color": "shadow-green-600/20", "accent": "text-green-600", "bg_accent": "bg-green-50/50"},
+        {"bg": "bg-yellow-500", "gradient_from": "from-yellow-400", "gradient_to": "to-orange-500",
+         "button_bg": "bg-orange-500", "button_hover": "hover:bg-orange-600",
+         "shadow_color": "shadow-orange-500/20", "accent": "text-orange-500", "bg_accent": "bg-orange-50/50"},
+        {"bg": "bg-purple-500", "gradient_from": "from-purple-400", "gradient_to": "to-purple-600",
+         "button_bg": "bg-purple-600", "button_hover": "hover:bg-purple-700",
+         "shadow_color": "shadow-purple-600/20", "accent": "text-purple-600", "bg_accent": "bg-purple-50/50"},
+        {"bg": "bg-blue-500", "gradient_from": "from-blue-400", "gradient_to": "to-blue-600",
+         "button_bg": "bg-blue-600", "button_hover": "hover:bg-blue-700",
+         "shadow_color": "shadow-blue-600/20", "accent": "text-blue-600", "bg_accent": "bg-blue-50/50"},
+    ]
+    
+    for i, product in enumerate(products):
+        color = colors[i % len(colors)]
+        # Extract color from image_url if it's a tailwind class
+        if product.image_url and product.image_url.startswith("bg-"):
+            # Try to find matching color
+            for c in colors:
+                if c["bg"].split("-")[1] in product.image_url:
+                    color = c
+                    break
+        
+        items.append({
+            "id": str(product.id),
+            "name": product.name,
+            "price": str(product.base_price),
+            "description": product.description,
+            "rating": product.average_rating or 5,
+            "order_count": product.order_count or 0,
+            # Hero styling
+            "color": color["bg"],
+            "gradient_from": color["gradient_from"],
+            "gradient_to": color["gradient_to"],
+            "button_bg": color["button_bg"],
+            "button_hover": color["button_hover"],
+            "shadow_color": color["shadow_color"],
+            "accent_color": color["accent"],
+            "bg_accent": color["bg_accent"],
+            # Images
+            "hero_image": product.hero_image or f"/images/products/hero/{product.name.lower().replace(' ', '-')}.webp",
+            "bottle_image": product.bottle_image or f"/images/products/bottles/{product.name.lower().replace(' ', '-')}.webp",
+            "thumbnail_image": product.thumbnail_image or product.image_url,
+        })
+    
+    return {
+        "items": items,
+        "total": len(items),
+    }
+
+
+@router.get(
     "/{product_id}",
     summary="Get product details",
     description="Retrieve detailed information about a specific product.",
