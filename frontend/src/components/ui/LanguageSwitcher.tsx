@@ -3,9 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { localeNames, localeFlags, type Locale } from "@/locales";
-import { ChevronDown, Globe } from "lucide-react";
+import { ChevronDown, Globe, Check } from "lucide-react";
 
-export function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  variant?: "default" | "minimal";
+}
+
+export function LanguageSwitcher({ variant = "default" }: LanguageSwitcherProps) {
   const { locale, setLocale, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -33,6 +37,64 @@ export function LanguageSwitcher() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
+  // Minimal variant - just text with dropdown
+  if (variant === "minimal") {
+    return (
+      <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-green-600 transition-colors"
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          aria-label={t("nav.selectLanguage")}
+          id="language-switcher-button"
+        >
+          <Globe className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>{locale.toUpperCase()}</span>
+          <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+        </button>
+
+        {isOpen && (
+          <>
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setIsOpen(false)}
+              aria-hidden="true"
+            />
+            <ul 
+              className="absolute right-0 bottom-full z-50 mb-2 min-w-[140px] overflow-hidden rounded-lg border border-gray-100 bg-white shadow-lg py-1"
+              role="listbox"
+              aria-labelledby="language-switcher-button"
+              aria-activedescendant={`lang-${locale}`}
+            >
+              {languages.map((lang) => (
+                <li key={lang} role="option" aria-selected={locale === lang} id={`lang-${lang}`}>
+                  <button
+                    onClick={() => {
+                      setLocale(lang);
+                      setIsOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-50 ${
+                      locale === lang ? "text-green-600 font-medium" : "text-gray-700"
+                    }`}
+                    lang={lang}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span aria-hidden="true">{localeFlags[lang]}</span>
+                      <span>{locale === lang ? localeNames[lang] : lang.toUpperCase()}</span>
+                    </div>
+                    {locale === lang && <Check className="h-4 w-4" />}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Default variant
   return (
     <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
       <button
@@ -79,7 +141,7 @@ export function LanguageSwitcher() {
                   <span className="text-lg" aria-hidden="true">{localeFlags[lang]}</span>
                   <span className="font-medium">{localeNames[lang]}</span>
                   {locale === lang && (
-                    <span className="ml-auto text-green-600" aria-hidden="true">✓</span>
+                    <Check className="ml-auto h-4 w-4 text-green-600" />
                   )}
                 </button>
               </li>

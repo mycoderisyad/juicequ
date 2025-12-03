@@ -35,28 +35,38 @@ export function CurrencySwitcher({ className = "", variant = "default" }: Curren
       <div ref={dropdownRef} className={`relative ${className}`}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-green-600 transition-colors"
           aria-label="Select currency"
         >
-          <span className="font-medium">{displayCurrency.code}</span>
+          <span>{displayCurrency.code}</span>
           <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full mt-1 z-50 w-32 rounded-lg bg-white shadow-lg ring-1 ring-black/5 py-1">
-            {availableCurrencies.map((currency) => (
-              <button
-                key={currency.code}
-                onClick={() => handleSelect(currency)}
-                className={`w-full px-3 py-1.5 text-left text-sm hover:bg-gray-50 flex items-center justify-between ${
-                  currency.code === displayCurrency.code ? "text-green-600 font-medium" : "text-gray-700"
-                }`}
-              >
-                <span>{currency.code}</span>
-                {currency.code === displayCurrency.code && <Check className="h-3 w-3" />}
-              </button>
-            ))}
-          </div>
+          <>
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setIsOpen(false)}
+              aria-hidden="true"
+            />
+            <div className="absolute right-0 bottom-full mb-2 z-50 w-36 rounded-lg bg-white shadow-lg ring-1 ring-black/5 py-1">
+              {availableCurrencies.map((currency) => (
+                <button
+                  key={currency.code}
+                  onClick={() => handleSelect(currency)}
+                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center justify-between ${
+                    currency.code === displayCurrency.code ? "text-green-600 font-medium" : "text-gray-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{currency.symbol}</span>
+                    <span>{currency.code}</span>
+                  </div>
+                  {currency.code === displayCurrency.code && <Check className="h-4 w-4" />}
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </div>
     );
