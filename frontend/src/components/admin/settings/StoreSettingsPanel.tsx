@@ -140,42 +140,48 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
     }
 
     const initMap = async () => {
-      if (typeof window !== "undefined" && mapContainerRef.current && !mapInstanceRef.current) {
-        const L = await import("leaflet");
-        
-        delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-          iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-        });
-
-        const lat = settings.store_latitude || -6.2088;
-        const lng = settings.store_longitude || 106.8456;
-        
-        const map = L.map(mapContainerRef.current).setView([lat, lng], 15);
-        
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(map);
-
-        const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-        
-        marker.on("dragend", () => {
-          const pos = marker.getLatLng();
-          update("store_latitude", Math.round(pos.lat * 1000000) / 1000000);
-          update("store_longitude", Math.round(pos.lng * 1000000) / 1000000);
-        });
-
-        map.on("click", (e: LeafletMouseEvent) => {
-          marker.setLatLng(e.latlng);
-          update("store_latitude", Math.round(e.latlng.lat * 1000000) / 1000000);
-          update("store_longitude", Math.round(e.latlng.lng * 1000000) / 1000000);
-        });
-
-        mapInstanceRef.current = map;
-        markerRef.current = marker;
+      if (typeof window === "undefined" || !mapContainerRef.current || mapInstanceRef.current) {
+        return;
       }
+      
+      if ((mapContainerRef.current as HTMLElement & { _leaflet_id?: number })._leaflet_id) {
+        return;
+      }
+
+      const L = await import("leaflet");
+      
+      delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+
+      const lat = settings.store_latitude || -6.2088;
+      const lng = settings.store_longitude || 106.8456;
+      
+      const map = L.map(mapContainerRef.current).setView([lat, lng], 15);
+      
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+
+      const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+      
+      marker.on("dragend", () => {
+        const pos = marker.getLatLng();
+        update("store_latitude", Math.round(pos.lat * 1000000) / 1000000);
+        update("store_longitude", Math.round(pos.lng * 1000000) / 1000000);
+      });
+
+      map.on("click", (e: LeafletMouseEvent) => {
+        marker.setLatLng(e.latlng);
+        update("store_latitude", Math.round(e.latlng.lat * 1000000) / 1000000);
+        update("store_longitude", Math.round(e.latlng.lng * 1000000) / 1000000);
+      });
+
+      mapInstanceRef.current = map;
+      markerRef.current = marker;
     };
 
     initMap();
