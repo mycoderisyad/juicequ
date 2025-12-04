@@ -1,5 +1,10 @@
 /**
  * Base API client for JuiceQu frontend
+ * 
+ * Security features:
+ * - Supports both Bearer token and HttpOnly cookie authentication
+ * - CSRF token handling for cookie-based auth
+ * - Automatic token refresh
  */
 import axios, {
   AxiosError,
@@ -10,6 +15,26 @@ import axios, {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// CSRF token management
+const CSRF_COOKIE_NAME = "csrf_token";
+const CSRF_HEADER_NAME = "X-CSRF-Token";
+
+/**
+ * Get CSRF token from cookies
+ */
+function getCsrfToken(): string | null {
+  if (typeof document === "undefined") return null;
+  
+  const cookies = document.cookie.split(";");
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split("=");
+    if (name === CSRF_COOKIE_NAME) {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
+}
+
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
@@ -17,15 +42,27 @@ const apiClient: AxiosInstance = axios.create({
     "Content-Type": "application/json",
   },
   timeout: 30000,
+  withCredentials: true, // Enable cookies for HttpOnly token support
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and CSRF token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Add Bearer token from localStorage (for backward compatibility)
     const token = localStorage.getItem("access_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add CSRF token for state-changing requests (POST, PUT, DELETE, PATCH)
+    const method = config.method?.toUpperCase();
+    if (method && !["GET", "HEAD", "OPTIONS"].includes(method)) {
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        config.headers[CSRF_HEADER_NAME] = csrfToken;
+      }
+    }
+    
     return config;
   },
   (error: AxiosError) => {
@@ -51,11 +88,16 @@ apiClient.interceptors.response.use(
           throw new Error("No refresh token");
         }
 
-        const response = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, {
-          refresh_token: refreshToken,
-        });
+        const response = await axios.post(
+          `${API_BASE_URL}/api/v1/auth/refresh`,
+          { refresh_token: refreshToken },
+          { withCredentials: true } // Include cookies
+        );
 
         const { access_token, refresh_token } = response.data;
+        
+        // Store tokens in localStorage for backward compatibility
+        // (HttpOnly cookies are also set by the backend)
         localStorage.setItem("access_token", access_token);
         localStorage.setItem("refresh_token", refresh_token);
 
@@ -68,6 +110,15 @@ apiClient.interceptors.response.use(
         localStorage.removeItem("refresh_token");
         window.location.href = "/login";
         return Promise.reject(refreshError);
+      }
+    }
+    
+    // Handle 403 Forbidden - could be CSRF error
+    if (error.response?.status === 403) {
+      const detail = (error.response.data as ApiError)?.detail || "";
+      if (detail.includes("CSRF")) {
+        // CSRF token issue - page might need refresh
+        console.error("CSRF token error. Please refresh the page.");
       }
     }
 
@@ -108,4 +159,13 @@ export function getErrorMessage(error: unknown): string {
     return error.message;
   }
   return "An unexpected error occurred";
+}
+
+/**
+ * Clear all authentication data (for logout)
+ */
+export function clearAuthData(): void {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  // Note: HttpOnly cookies are cleared by the backend on /auth/logout
 }

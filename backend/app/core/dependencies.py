@@ -1,9 +1,9 @@
 """
 FastAPI dependencies for authentication and authorization.
 """
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import Depends, Header
+from fastapi import Cookie, Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -16,13 +16,40 @@ from app.db.session import get_db
 security = HTTPBearer(auto_error=False)
 
 
-async def get_current_user_id(
+async def get_token_from_request(
+    request: Request,
     credentials: Annotated[
         HTTPAuthorizationCredentials | None, Depends(security)
-    ],
+    ] = None,
+    access_token: Annotated[Optional[str], Cookie()] = None,
+) -> str | None:
+    """
+    Extract JWT token from multiple sources with priority:
+    1. Authorization header (Bearer token)
+    2. HttpOnly cookie (access_token)
+    
+    This supports both traditional Bearer token auth and secure cookie auth.
+    """
+    # Priority 1: Authorization header
+    if credentials is not None:
+        return credentials.credentials
+    
+    # Priority 2: HttpOnly cookie
+    if access_token is not None:
+        return access_token
+    
+    return None
+
+
+async def get_current_user_id(
+    token: Annotated[str | None, Depends(get_token_from_request)],
 ) -> str:
     """
     Dependency to get the current user ID from JWT token.
+    
+    Supports tokens from:
+    - Authorization header (Bearer token)
+    - HttpOnly cookie
     
     Raises:
         CredentialsException: If token is missing or invalid
@@ -30,10 +57,10 @@ async def get_current_user_id(
     Returns:
         User ID from the token
     """
-    if credentials is None:
+    if token is None:
         raise CredentialsException(detail="Not authenticated")
     
-    user_id = verify_token(credentials.credentials)
+    user_id = verify_token(token)
     if user_id is None:
         raise CredentialsException(detail="Invalid or expired token")
     
@@ -67,19 +94,17 @@ async def get_current_user(
 
 
 async def get_optional_user(
-    credentials: Annotated[
-        HTTPAuthorizationCredentials | None, Depends(security)
-    ],
+    token: Annotated[str | None, Depends(get_token_from_request)],
     db: Annotated[Session, Depends(get_db)],
 ):
     """
     Dependency to optionally get the current user.
     Returns None if not authenticated.
     """
-    if credentials is None:
+    if token is None:
         return None
     
-    user_id = verify_token(credentials.credentials)
+    user_id = verify_token(token)
     if user_id is None:
         return None
     

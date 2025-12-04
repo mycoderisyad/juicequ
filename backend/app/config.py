@@ -3,11 +3,16 @@ Application configuration using pydantic-settings.
 All sensitive values are loaded from environment variables.
 """
 
+import logging
+import os
+import secrets
 from functools import lru_cache
 from typing import Literal
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -80,14 +85,57 @@ class Settings(BaseSettings):
         """Get max upload size in bytes."""
         return self.upload_max_size_mb * 1024 * 1024
 
-    @field_validator("secret_key")
+    @field_validator("secret_key", mode="before")
     @classmethod
     def validate_secret_key(cls, v: str) -> str:
-        """Validate secret key is set and has minimum length."""
+        """Validate secret key is set and secure."""
+        # Get app_env from environment since we can't access other fields in validator
+        app_env = os.getenv("APP_ENV", "development").lower()
+        
         if not v:
-            raise ValueError("SECRET_KEY environment variable must be set")
+            # In production, require explicit secret key
+            if app_env == "production":
+                raise ValueError("SECRET_KEY environment variable must be set in production")
+            else:
+                # Auto-generate for development only
+                generated_key = secrets.token_urlsafe(32)
+                logger.warning(
+                    "⚠️ Using auto-generated SECRET_KEY - NOT FOR PRODUCTION! "
+                    "Set SECRET_KEY environment variable for production deployments."
+                )
+                return generated_key
+        
         if len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters")
+        
+        # Check for common weak/placeholder keys
+        weak_keys = [
+            "your-super-secret-key",
+            "change-me",
+            "changeme",
+            "secret",
+            "password",
+            "your-secret-key",
+            "secret-key",
+            "secretkey",
+            "my-secret-key",
+            "mysecretkey",
+            "replace-this",
+            "placeholder",
+            "example-key",
+        ]
+        if v.lower() in weak_keys or v.lower().startswith("your-"):
+            if app_env == "production":
+                raise ValueError(
+                    "SECRET_KEY is too weak. Use a cryptographically random key. "
+                    "Generate one with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                )
+            else:
+                logger.warning(
+                    "⚠️ SECRET_KEY appears to be a placeholder. "
+                    "Please set a strong secret key for production."
+                )
+        
         return v
 
 

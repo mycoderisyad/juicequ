@@ -25,6 +25,22 @@ class ChatRequest(BaseModel):
     conversation_history: Optional[List[ChatMessageHistory]] = Field(None, description="Previous conversation messages")
 
 
+class FeaturedProduct(BaseModel):
+    """Schema for featured product in chat response (for bestsellers, recommendations, etc)."""
+    id: str = Field(..., description="Product ID")
+    name: str = Field(..., description="Product name")
+    description: Optional[str] = Field(None, description="Product description")
+    price: float = Field(..., description="Base price")
+    image_url: Optional[str] = Field(None, description="Product image URL")
+    thumbnail_url: Optional[str] = Field(None, description="Thumbnail image URL")
+    category: Optional[str] = Field(None, description="Category name")
+    calories: Optional[int] = Field(None, description="Calories")
+    is_bestseller: bool = Field(False, description="Whether this is a bestseller")
+    order_count: int = Field(0, description="Total order count")
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ChatOrderItem(BaseModel):
     """Schema for an order item in chat response."""
     product_id: str = Field(..., description="Product ID")
@@ -48,13 +64,14 @@ class ChatOrderData(BaseModel):
 
 class ChatResponse(BaseModel):
     """Schema for chat response."""
-    response: str = Field(..., description="AI response message")
+    response: str = Field(..., description="AI response message (plain text, no HTML)")
     session_id: str = Field(..., description="Session ID for continuing conversation")
     context_used: Optional[List[Dict[str, Any]]] = Field(None, description="Context chunks used for response")
     response_time_ms: int = Field(..., description="Response time in milliseconds")
-    intent: Optional[str] = Field(None, description="Detected intent (order/inquiry/greeting)")
+    intent: Optional[str] = Field(None, description="Detected intent (order/inquiry/greeting/recommendation)")
     order_data: Optional[ChatOrderData] = Field(None, description="Order data if intent is order")
     show_checkout: bool = Field(False, description="Whether to show checkout button")
+    featured_products: Optional[List[FeaturedProduct]] = Field(None, description="Featured products to display (bestsellers, recommendations, etc)")
 
 
 # =============================================================================

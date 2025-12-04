@@ -93,6 +93,26 @@ async def chat_with_ai(
                 notes=result["order_data"].get("notes"),
             )
         
+        # Build featured products response if present
+        featured_products = None
+        if result.get("featured_products"):
+            from app.schemas.ai import FeaturedProduct
+            featured_products = [
+                FeaturedProduct(
+                    id=p["id"],
+                    name=p["name"],
+                    description=p.get("description"),
+                    price=p["price"],
+                    image_url=p.get("image_url"),
+                    thumbnail_url=p.get("thumbnail_url"),
+                    category=p.get("category"),
+                    calories=p.get("calories"),
+                    is_bestseller=p.get("is_bestseller", False),
+                    order_count=p.get("order_count", 0),
+                )
+                for p in result["featured_products"]
+            ]
+        
         return ChatResponse(
             response=result["response"],
             session_id=result["session_id"],
@@ -101,6 +121,7 @@ async def chat_with_ai(
             intent=result.get("intent"),
             order_data=order_data,
             show_checkout=result.get("show_checkout", False),
+            featured_products=featured_products,
         )
     except ExternalServiceException:
         raise

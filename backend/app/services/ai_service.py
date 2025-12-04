@@ -1,6 +1,7 @@
 """
 AI Service for JuiceQu - Handles Kolosal AI integration, RAG pipeline, and voice processing.
 """
+import html
 import json
 import logging
 import re
@@ -20,6 +21,103 @@ from app.models.user import User
 from app.services.ai.stt_service import STTService
 
 logger = logging.getLogger(__name__)
+
+
+# Security: Patterns for prompt injection detection
+DANGEROUS_PROMPT_PATTERNS = [
+    r"(?i)ignore\s+(?:all\s+)?previous\s+instructions?",
+    r"(?i)disregard\s+(?:all\s+)?(?:previous\s+)?instructions?",
+    r"(?i)forget\s+(?:all\s+)?(?:previous\s+)?(?:instructions?|everything)",
+    r"(?i)system\s*:\s*",
+    r"(?i)you\s+are\s+now\s+(?:an?\s+)?(?:admin|administrator|root|superuser)",
+    r"(?i)override\s+(?:all\s+)?security",
+    r"(?i)bypass\s+(?:all\s+)?(?:security|restrictions?|filters?)",
+    r"(?i)execute\s+(?:this\s+)?(?:command|code|script)",
+    r"(?i)reveal\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions?)",
+    r"(?i)show\s+(?:me\s+)?(?:your\s+)?(?:system\s+)?(?:prompt|instructions?)",
+    r"(?i)what\s+(?:are\s+)?your\s+(?:system\s+)?instructions?",
+    r"(?i)act\s+as\s+(?:if\s+)?(?:you\s+(?:are|were)\s+)?(?:an?\s+)?(?:different|new|other)",
+    r"(?i)pretend\s+(?:to\s+be|you\s+are)",
+    r"(?i)delete\s+(?:all\s+)?(?:data|users?|orders?|products?)",
+    r"(?i)drop\s+(?:table|database)",
+    r"(?i)<\s*script",
+    r"(?i)javascript\s*:",
+    r"(?i)on(?:error|load|click|mouse)\s*=",
+]
+
+
+def sanitize_user_input(user_input: str, max_length: int = 1000) -> str:
+    """
+    Sanitize user input before sending to AI to prevent prompt injection.
+    
+    Args:
+        user_input: Raw user input
+        max_length: Maximum allowed length
+        
+    Returns:
+        Sanitized user input
+    """
+    if not user_input:
+        return ""
+    
+    # Truncate to max length
+    user_input = user_input[:max_length]
+    
+    # Remove potential prompt injection patterns
+    for pattern in DANGEROUS_PROMPT_PATTERNS:
+        user_input = re.sub(pattern, "[FILTERED]", user_input)
+    
+    # Remove excessive newlines/whitespace (could be used to hide injections)
+    user_input = re.sub(r'\n{3,}', '\n\n', user_input)
+    user_input = re.sub(r'\s{5,}', ' ', user_input)
+    
+    # Remove null bytes and other control characters (except newline/tab)
+    user_input = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', user_input)
+    
+    return user_input.strip()
+
+
+def sanitize_ai_response(response: str) -> str:
+    """
+    Sanitize AI response - returns clean plain text.
+    Frontend will handle formatting.
+    
+    Args:
+        response: Raw AI response
+        
+    Returns:
+        Clean plain text response
+    """
+    if not response:
+        return ""
+    
+    # Remove any HTML tags that might have been included
+    sanitized = re.sub(r'<[^>]+>', '', response)
+    
+    # Remove excessive whitespace
+    sanitized = re.sub(r'\n{3,}', '\n\n', sanitized)
+    sanitized = re.sub(r' {2,}', ' ', sanitized)
+    
+    # Remove any potentially dangerous patterns
+    dangerous_patterns = [
+        r'<\s*script',
+        r'javascript\s*:',
+        r'on\w+\s*=',
+        r'<\s*iframe',
+        r'<\s*object',
+        r'<\s*embed',
+        r'<\s*link',
+        r'<\s*style',
+        r'<\s*meta',
+        r'<\s*base',
+        r'data\s*:',
+        r'vbscript\s*:',
+    ]
+    
+    for pattern in dangerous_patterns:
+        sanitized = re.sub(pattern, '', sanitized, flags=re.IGNORECASE)
+    
+    return sanitized
 
 
 class AIService:
@@ -64,13 +162,16 @@ class AIService:
         if not session_id:
             session_id = str(uuid.uuid4())
 
+        # Security: Sanitize user input to prevent prompt injection
+        sanitized_input = sanitize_user_input(user_input)
+        
         # Create interaction record
         interaction = AIInteraction(
             session_id=session_id,
             user_id=user_id,
             interaction_type=InteractionType.CHAT,
             status=InteractionStatus.ACTIVE,
-            user_input=user_input,
+            user_input=sanitized_input,  # Store sanitized input
             user_input_type="text",
         )
         self.db.add(interaction)
@@ -93,16 +194,21 @@ class AIService:
             # Build messages with conversation history
             messages = [{"role": "system", "content": system_prompt}]
             
-            # Add conversation history if provided
+            # Add conversation history if provided (also sanitize historical messages)
             if conversation_history:
                 for msg in conversation_history[-10:]:  # Keep last 10 messages for context
+                    role = msg.get("role", "user")
+                    content = msg.get("content", "")
+                    # Sanitize user messages from history
+                    if role == "user":
+                        content = sanitize_user_input(content)
                     messages.append({
-                        "role": msg.get("role", "user"),
-                        "content": msg.get("content", "")
+                        "role": role,
+                        "content": content
                     })
             
-            # Add current user message
-            messages.append({"role": "user", "content": user_input})
+            # Add current user message (already sanitized)
+            messages.append({"role": "user", "content": sanitized_input})
 
             # Call Kolosal AI
             start_time = time.time()
@@ -111,8 +217,19 @@ class AIService:
 
             response_content = ai_response.get("content", "")
             
+            # Check if fallback response already includes featured_products
+            fallback_featured = ai_response.get("featured_products")
+            fallback_intent = ai_response.get("intent")
+            
             # Parse the response to detect order intent and extract order data
             intent, order_data, clean_response = self._parse_order_response(response_content, all_products, locale)
+            
+            # Use fallback intent if available
+            if fallback_intent:
+                intent = fallback_intent
+            
+            # Security: Sanitize AI response to prevent XSS
+            clean_response = sanitize_ai_response(clean_response)
 
             # Update interaction record
             interaction.ai_response = clean_response
@@ -125,6 +242,15 @@ class AIService:
 
             self.db.commit()
 
+            # Check for product recommendation/listing intent
+            featured_products = fallback_featured
+            if not featured_products and self._should_show_products(sanitized_input, clean_response, locale):
+                featured_products = self._get_featured_products_for_response(sanitized_input, locale)
+                if featured_products:
+                    intent = "recommendation"
+                    # Clean response - remove any HTML tags that might have been added
+                    clean_response = self._generate_clean_text_response(sanitized_input, featured_products, locale)
+
             return {
                 "response": clean_response,
                 "session_id": session_id,
@@ -133,6 +259,7 @@ class AIService:
                 "intent": intent,
                 "order_data": order_data,
                 "show_checkout": order_data is not None and len(order_data.get("items", [])) > 0,
+                "featured_products": featured_products,
             }
 
         except Exception as e:
@@ -377,6 +504,136 @@ Remember: Always respond in English and be very friendly!"""
                 })
         
         return order_items
+
+    def _should_show_products(self, user_input: str, ai_response: str, locale: str) -> bool:
+        """
+        Check if we should display featured products based on user query.
+        """
+        user_lower = user_input.lower()
+        
+        # Keywords that indicate user wants to see products
+        product_keywords_id = [
+            "bestseller", "best seller", "terlaris", "paling laris", "populer", "popular",
+            "rekomendasi", "rekomendasikan", "sarankan", "menu", "produk", "pilihan",
+            "apa yang ada", "apa saja", "lihat", "tampilkan", "favorit", "favorite",
+            "top", "terbaik", "enak", "sehat", "segar", "rendah gula", "rendah kalori"
+        ]
+        product_keywords_en = [
+            "bestseller", "best seller", "popular", "recommendation", "recommend",
+            "suggest", "menu", "products", "options", "what do you have", "show me",
+            "favorite", "top", "best", "delicious", "healthy", "fresh", "low sugar", "low calorie"
+        ]
+        
+        keywords = product_keywords_id if locale == "id" else product_keywords_en
+        
+        return any(keyword in user_lower for keyword in keywords)
+
+    def _get_featured_products_for_response(
+        self, user_input: str, locale: str, limit: int = 4
+    ) -> Optional[List[Dict[str, Any]]]:
+        """
+        Get featured products based on user query.
+        """
+        user_lower = user_input.lower()
+        
+        # Determine which products to show
+        products = []
+        
+        # Check for bestseller/popular request
+        bestseller_keywords = ["bestseller", "best seller", "terlaris", "paling laris", "populer", "popular", "top", "favorit", "favorite"]
+        if any(kw in user_lower for kw in bestseller_keywords):
+            products = (
+                self.db.query(Product)
+                .filter(Product.is_available == True)
+                .order_by(Product.order_count.desc())
+                .limit(limit)
+                .all()
+            )
+        
+        # Check for healthy options
+        healthy_keywords = ["sehat", "healthy", "rendah gula", "low sugar", "rendah kalori", "low calorie", "diet"]
+        if any(kw in user_lower for kw in healthy_keywords):
+            products = (
+                self.db.query(Product)
+                .filter(Product.is_available == True, Product.calories < 200)
+                .order_by(Product.calories.asc())
+                .limit(limit)
+                .all()
+            )
+        
+        # Default: get popular products
+        if not products:
+            products = (
+                self.db.query(Product)
+                .filter(Product.is_available == True)
+                .order_by(Product.order_count.desc(), Product.average_rating.desc())
+                .limit(limit)
+                .all()
+            )
+        
+        if not products:
+            return None
+        
+        # Build featured products list
+        featured = []
+        for p in products:
+            # Get valid image URL (filter out CSS classes like 'bg-rose-500')
+            image_url = None
+            thumbnail_url = p.thumbnail_image
+            
+            # Check if image_url is a valid path/URL (not a CSS class)
+            if p.hero_image and (p.hero_image.startswith('/') or p.hero_image.startswith('http')):
+                image_url = p.hero_image
+            elif p.thumbnail_image and (p.thumbnail_image.startswith('/') or p.thumbnail_image.startswith('http')):
+                image_url = p.thumbnail_image
+            elif p.image_url and (p.image_url.startswith('/') or p.image_url.startswith('http')):
+                image_url = p.image_url
+            
+            featured.append({
+                "id": p.id,
+                "name": p.name,
+                "description": p.description,
+                "price": float(p.base_price),
+                "image_url": image_url,
+                "thumbnail_url": thumbnail_url if thumbnail_url and (thumbnail_url.startswith('/') or thumbnail_url.startswith('http')) else None,
+                "category": p.category.name if p.category else None,
+                "calories": p.calories,
+                "is_bestseller": (p.order_count or 0) > 10,  # Considered bestseller if > 10 orders
+                "order_count": p.order_count or 0,
+            })
+        
+        return featured
+
+    def _generate_clean_text_response(
+        self, user_input: str, products: List[Dict[str, Any]], locale: str
+    ) -> str:
+        """
+        Generate clean text response for product recommendations.
+        Products will be displayed separately as cards in frontend.
+        """
+        user_lower = user_input.lower()
+        
+        # Bestseller response
+        bestseller_keywords = ["bestseller", "best seller", "terlaris", "paling laris", "populer", "popular", "top", "favorit", "favorite"]
+        if any(kw in user_lower for kw in bestseller_keywords):
+            if locale == "id":
+                return f"Berikut {len(products)} produk terlaris kami! Klik salah satu untuk melihat detail atau langsung tambahkan ke pesanan. 🧃"
+            else:
+                return f"Here are our top {len(products)} bestsellers! Click any to see details or add directly to your order. 🧃"
+        
+        # Healthy options response  
+        healthy_keywords = ["sehat", "healthy", "rendah gula", "low sugar", "rendah kalori", "low calorie", "diet"]
+        if any(kw in user_lower for kw in healthy_keywords):
+            if locale == "id":
+                return f"Ini {len(products)} pilihan sehat untuk Anda! Semua rendah kalori dan dibuat dari bahan-bahan segar. 🥗"
+            else:
+                return f"Here are {len(products)} healthy choices for you! All low-calorie and made with fresh ingredients. 🥗"
+        
+        # Default recommendation response
+        if locale == "id":
+            return f"Ini {len(products)} rekomendasi untuk Anda! Tertarik dengan yang mana? Anda bisa langsung pesan dengan bilang, misalnya: 'Beli [nama produk] 1' 😊"
+        else:
+            return f"Here are {len(products)} recommendations for you! Which one interests you? You can order directly by saying, for example: 'Buy [product name] 1' 😊"
 
     async def process_voice(
         self,
@@ -752,27 +1009,32 @@ Remember: Always respond in English and be very friendly!"""
                     }
                 }
         
+        # Check for product listing requests (bestseller, recommendations, etc)
+        product_listing_keywords = ["bestseller", "best seller", "terlaris", "paling laris", "populer", "popular", 
+                                   "rekomendasi", "recommend", "saran", "menu", "pilihan", "sehat", "healthy"]
+        if any(keyword in user_message for keyword in product_listing_keywords):
+            featured_products = self._get_featured_products_for_response(user_message, locale)
+            if featured_products:
+                clean_response = self._generate_clean_text_response(user_message, featured_products, locale)
+                return {
+                    "content": clean_response,
+                    "intent": "recommendation",
+                    "featured_products": featured_products,
+                }
+        
         # Language-specific fallback responses
         if locale == "en":
             if any(word in user_message for word in ["halo", "hai", "hi", "hello"]):
                 return {"content": "Hello! Welcome to JuiceQu! How can I help you today? You can ask me about our products or place an order directly by saying something like 'I want to buy Berry Blast'!"}
-            elif any(word in user_message for word in ["rekomendasi", "recommend", "suggestion"]):
-                return {"content": "For recommendations, we suggest trying Berry Blast or Tropical Paradise! Both are very popular and refreshing. Would you like to order one?"}
             elif any(word in user_message for word in ["harga", "price", "cost", "how much"]):
                 return {"content": "Our juice prices start from Rp 15,000. Please check our menu to see all options and complete pricing! You can also order directly through this chat."}
-            elif any(word in user_message for word in ["sehat", "health", "healthy", "diet"]):
-                return {"content": "All our products are made from fresh fruits without preservatives! For low sugar options, try Green Detox or Fresh Citrus. Want me to add one to your order?"}
             else:
                 return {"content": "Thank you for contacting JuiceQu! I can help you browse our menu and place orders. Just tell me what you'd like to buy, for example: 'I want 2 Acai Mango'!"}
         else:
             if any(word in user_message for word in ["halo", "hai", "hi", "hello"]):
                 return {"content": "Halo! Selamat datang di JuiceQu! Ada yang bisa saya bantu? Anda bisa bertanya tentang produk kami atau langsung pesan dengan bilang 'Saya mau beli Berry Blast'!"}
-            elif any(word in user_message for word in ["rekomendasi", "recommend", "saran"]):
-                return {"content": "Untuk rekomendasi, kami sarankan mencoba Berry Blast atau Tropical Paradise! Keduanya sangat populer dan menyegarkan. Mau pesan yang mana?"}
             elif any(word in user_message for word in ["harga", "price", "berapa"]):
                 return {"content": "Harga jus kami mulai dari Rp 15.000. Silakan cek menu kami untuk melihat semua pilihan! Anda juga bisa pesan langsung lewat chat ini."}
-            elif any(word in user_message for word in ["sehat", "health", "diet"]):
-                return {"content": "Semua produk kami dibuat dari buah-buahan segar tanpa pengawet! Untuk pilihan rendah gula, coba Green Detox atau Fresh Citrus. Mau saya tambahkan ke pesanan?"}
             else:
                 return {"content": "Terima kasih sudah menghubungi JuiceQu! Saya bisa membantu Anda melihat menu dan memesan. Cukup bilang apa yang mau dibeli, contoh: 'Beli Acai Mango 2'!"}
 
