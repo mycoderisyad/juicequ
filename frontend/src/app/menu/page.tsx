@@ -13,6 +13,7 @@ import { productsApi, type Product as ApiProduct, type Category } from "@/lib/ap
 import Link from "next/link";
 import Image from "next/image";
 import { useCurrency } from "@/lib/hooks/use-store";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface DisplayProduct {
   id: string;
@@ -484,14 +485,17 @@ function MenuContent() {
                 <Link href={`/products/${item.id}`} key={item.id} className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
                   {/* Product Image */}
                   <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl bg-gray-50">
-                    {item.thumbnail_image ? (
+                    {item.thumbnail_image && !item.thumbnail_image.startsWith('bg-') ? (
                       <>
-                        <Image
-                          src={item.thumbnail_image}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={getImageUrl(item.thumbnail_image)}
                           alt={item.name}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => {
+                            // Hide image on error, fallback will show
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
                         />
                       </>
                     ) : (

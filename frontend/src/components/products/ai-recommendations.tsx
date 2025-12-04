@@ -5,7 +5,7 @@ import { Sparkles, ChevronRight, Loader2 } from "lucide-react";
 import aiApi, { ProductRecommendation } from "@/lib/api/ai";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface AIRecommendationsProps {
   preferences?: string;
@@ -83,11 +83,10 @@ export function AIRecommendations({
           >
             {product.image_url && (
               <div className="relative mb-3 aspect-square overflow-hidden rounded-lg">
-                <Image
-                  src={product.image_url}
+                <img
+                  src={getImageUrl(product.image_url)}
                   alt={product.name}
-                  fill
-                  className="object-cover transition-transform group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 />
               </div>
             )}

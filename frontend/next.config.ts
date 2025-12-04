@@ -14,26 +14,22 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
         pathname: '/**',
       },
-      // Add your production storage domain here
-      // Example for AWS S3:
+      // Local development - backend API
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8000',
+        pathname: '/uploads/**',
+      },
+      // Production VPS - add your domain here
       // {
       //   protocol: 'https',
-      //   hostname: '*.s3.amazonaws.com',
-      //   pathname: '/**',
-      // },
-      // Example for Google Cloud Storage:
-      // {
-      //   protocol: 'https',
-      //   hostname: 'storage.googleapis.com',
-      //   pathname: '/**',
-      // },
-      // Example for Cloudinary:
-      // {
-      //   protocol: 'https',
-      //   hostname: 'res.cloudinary.com',
-      //   pathname: '/**',
+      //   hostname: 'api.yourdomain.com',
+      //   pathname: '/uploads/**',
       // },
     ],
+    // Handle image errors gracefully
+    unoptimized: process.env.NODE_ENV === 'development',
   },
 };
 

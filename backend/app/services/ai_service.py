@@ -35,7 +35,9 @@ class AIService:
             },
             timeout=30.0,
         )
-        self.chroma_client = None
+        # Initialize RAG service for semantic search
+        from app.services.ai.rag_service import RAGService
+        self.rag_service = RAGService(db)
         self.stt_service = STTService(settings.gcp_speech_credentials if settings.gcp_speech_credentials else None)
 
     async def chat(
@@ -648,14 +650,7 @@ Remember: Always respond in English and be very friendly!"""
         """
         Retrieve relevant context from ChromaDB based on query.
         """
-        products = self._get_all_products()[:limit]
-        return [
-            {
-                "text": f"{p.name}: {p.description or 'No description'}. Price: Rp {p.base_price:,.0f}",
-                "metadata": {"product_id": p.id, "name": p.name},
-            }
-            for p in products
-        ]
+        return await self.rag_service.retrieve_context(query, limit)
 
     def _build_system_prompt(self, user_context: str, context_text: str, locale: str = "id") -> str:
         """Build system prompt for AI with context (legacy, for non-ordering interactions)."""
@@ -844,3 +839,4 @@ Remember: Always respond in English and be very friendly!"""
         """Close HTTP client and STT service."""
         await self.kolosal_client.aclose()
         await self.stt_service.close()
+        await self.rag_service.close()

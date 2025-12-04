@@ -12,6 +12,7 @@ import { ArrowLeft, CreditCard, Banknote, Smartphone, ShoppingBag, CheckCircle }
 import { useCartStore, useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { useCurrency } from "@/lib/hooks/use-store";
+import { getImageUrl } from "@/lib/image-utils";
 
 type PaymentMethod = "cash" | "qris" | "transfer";
 
@@ -42,10 +43,10 @@ export default function CheckoutPage() {
 
   // Helper to get image URL from item (check image, then color if it's a URL)
   const getItemImage = (item: { image?: string; color?: string }) => {
-    if (item.image) return item.image;
+    if (item.image) return getImageUrl(item.image);
     // Check if color is actually an image URL (not a CSS class)
     if (item.color && (item.color.startsWith('http') || item.color.startsWith('/'))) {
-      return item.color;
+      return getImageUrl(item.color);
     }
     return null;
   };

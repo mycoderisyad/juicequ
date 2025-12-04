@@ -6,6 +6,7 @@
 import * as React from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface CartItemData {
   id: string | number;
@@ -56,7 +57,7 @@ export function CartItem({
       {/* Image */}
       {item.image ? (
         <img
-          src={item.image}
+          src={getImageUrl(item.image)}
           alt={item.name}
           className="h-24 w-24 shrink-0 rounded-2xl object-cover"
         />

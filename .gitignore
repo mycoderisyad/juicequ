@@ -1,9 +1,3 @@
-# ============================================
-# JuiceQu - Git Ignore
-# ============================================
-# PENTING: Jangan hapus file ini!
-# Mencegah penalti hackathon (-10 poin untuk repo bloat)
-# ============================================
 
 # Dependencies (WAJIB - mencegah -10 poin penalti)
 node_modules/
@@ -21,7 +15,7 @@ pip-delete-this-directory.txt
 *.egg-info/
 *.egg
 
-# Environment variables (WAJIB - mencegah -20 poin penalti)
+# Environment variables
 .env
 .env.local
 .env.development.local

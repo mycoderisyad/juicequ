@@ -30,10 +30,16 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/juicequ
       - SECRET_KEY=your-secret-key-here
       - CORS_ORIGINS=http://localhost:3000
+      # Local storage configuration
+      - UPLOAD_BASE_PATH=/app/uploads
+      - UPLOAD_MAX_SIZE_MB=10
+      - UPLOAD_ALLOWED_EXTENSIONS=jpg,jpeg,png,webp,gif
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      # Persistent volume for uploaded files (local storage on VPS)
+      - uploads_data:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -47,6 +53,8 @@ services:
     container_name: juicequ-frontend
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      # Local storage - no cloud storage URL needed
+      - NEXT_PUBLIC_STORAGE_URL=http://localhost:8000
     ports:
       - "3000:3000"
     volumes:
@@ -59,3 +67,5 @@ services:
 
 volumes:
   postgres_data:
+  # Persistent volume for uploaded images - stored on VPS
+  uploads_data:
