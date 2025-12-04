@@ -31,14 +31,28 @@ export interface ChatOrderData {
   notes?: string;
 }
 
+export interface FeaturedProduct {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  image_url?: string;
+  thumbnail_url?: string;
+  category?: string;
+  calories?: number;
+  is_bestseller: boolean;
+  order_count: number;
+}
+
 export interface ChatResponse {
   response: string;
   session_id: string;
   context_used?: Array<{ text: string; metadata: Record<string, unknown> }>;
   response_time_ms: number;
-  intent?: "order" | "inquiry" | "greeting";
+  intent?: "order" | "inquiry" | "greeting" | "recommendation";
   order_data?: ChatOrderData;
   show_checkout: boolean;
+  featured_products?: FeaturedProduct[];
 }
 
 export interface VoiceResponse {

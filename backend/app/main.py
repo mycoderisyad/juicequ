@@ -2,11 +2,12 @@
 JuiceQu API - Main FastAPI Application Entry Point.
 """
 import logging
+import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
@@ -22,6 +23,12 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+# CSRF Token configuration
+CSRF_TOKEN_NAME = "X-CSRF-Token"
+CSRF_COOKIE_NAME = "csrf_token"
+CSRF_SAFE_METHODS = {"GET", "HEAD", "OPTIONS", "TRACE"}
 
 
 def setup_uploads_directory() -> Path:
@@ -74,14 +81,99 @@ app.add_middleware(
     exclude_paths=["/health", "/docs", "/openapi.json", "/redoc", "/"],
 )
 
-# CORS Middleware
+# CORS Middleware - More restrictive configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=settings.cors_origins_list,  # Must be explicitly set in env
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # Explicit methods
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        CSRF_TOKEN_NAME,  # Allow CSRF token header
+    ],
+    expose_headers=[
+        "X-RateLimit-Limit",
+        "X-RateLimit-Remaining",
+        "X-RateLimit-Reset",
+    ],
+    max_age=600,  # Cache preflight for 10 minutes
 )
+
+
+@app.middleware("http")
+async def csrf_middleware(request: Request, call_next) -> Response:
+    """
+    CSRF protection middleware.
+    
+    - Sets CSRF cookie on first request
+    - Validates CSRF token header for state-changing requests
+    - Skips validation for safe methods (GET, HEAD, OPTIONS, TRACE)
+    """
+    response = await call_next(request)
+    
+    # Generate and set CSRF token cookie if not present
+    if CSRF_COOKIE_NAME not in request.cookies:
+        csrf_token = secrets.token_urlsafe(32)
+        is_production = settings.app_env == "production"
+        response.set_cookie(
+            key=CSRF_COOKIE_NAME,
+            value=csrf_token,
+            httponly=False,  # Must be readable by JavaScript to send in header
+            secure=is_production,
+            samesite="lax",
+            max_age=3600 * 24,  # 24 hours
+            path="/",
+        )
+    
+    return response
+
+
+@app.middleware("http")
+async def validate_csrf_token(request: Request, call_next) -> Response:
+    """
+    Validate CSRF token for state-changing requests.
+    """
+    # Skip CSRF validation for safe methods
+    if request.method in CSRF_SAFE_METHODS:
+        return await call_next(request)
+    
+    # Skip CSRF for API endpoints that use Bearer auth (stateless)
+    # CSRF is mainly needed for cookie-based auth
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        return await call_next(request)
+    
+    # Skip for paths that don't need CSRF (webhooks, health checks)
+    skip_paths = ["/health", "/docs", "/openapi.json", "/redoc"]
+    if any(request.url.path.startswith(path) for path in skip_paths):
+        return await call_next(request)
+    
+    # Validate CSRF token for cookie-based auth
+    csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+    csrf_header = request.headers.get(CSRF_TOKEN_NAME)
+    
+    # If using cookie-based auth (access_token cookie present), require CSRF
+    if "access_token" in request.cookies:
+        if not csrf_cookie or not csrf_header:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "CSRF token missing"}
+            )
+        
+        if not secrets.compare_digest(csrf_cookie, csrf_header):
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "CSRF token invalid"}
+            )
+    
+    return await call_next(request)
+
 
 # Include API router
 app.include_router(api_router, prefix="/api/v1")

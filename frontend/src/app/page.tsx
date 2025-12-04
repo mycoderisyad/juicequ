@@ -244,11 +244,11 @@ export default function HomePage() {
           {/* Product Name & Price (Below Products) */}
           <div className="text-center z-20 mb-3 sm:mb-4 mt-3 sm:mt-4 px-4">
                <h2 
-                 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-emerald-950 tracking-tight transition-all duration-500 ease-in-out"
+                 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold tracking-tight transition-all duration-500 ease-in-out text-emerald-600"
                >
                   {currentProduct?.name || 'Green Glow'}
                </h2>
-               <p className={`text-lg sm:text-xl font-bold mt-1 sm:mt-2 transition-all duration-500 ease-in-out ${currentProduct?.accent_color || 'text-emerald-600'}`}>
+               <p className="text-lg sm:text-xl font-bold mt-1 sm:mt-2 transition-all duration-500 ease-in-out text-stone-800">
                   {currentProduct ? format(parseFloat(currentProduct.price)) : '$6.50'}
                </p>
           </div>
@@ -275,15 +275,7 @@ export default function HomePage() {
           {/* Buy Button */}
           <Link href="/menu" className="z-20 mb-6 sm:mb-6">
             <button 
-              className={`inline-flex items-center justify-center rounded-full shadow-lg px-8 h-12 font-semibold text-sm transition-all duration-300 ease-out ${
-                currentProduct?.bg_accent || 'bg-green-50'
-              } ${
-                currentProduct?.color?.replace('bg-', 'hover:bg-')?.replace('-500', '-100') || 'hover:bg-green-100'
-              } ${
-                currentProduct?.accent_color || 'text-green-600'
-              } ${
-                currentProduct?.color?.replace('bg-', 'ring-') || 'ring-green-500'
-              } ring-2`}
+              className="inline-flex items-center justify-center rounded-full shadow-lg px-8 h-12 font-semibold text-sm transition-colors duration-300 ease-out text-white bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30"
             >
                {t("home.hero.orderNow")}
             </button>

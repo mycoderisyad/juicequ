@@ -3,9 +3,10 @@ Authentication API endpoints.
 """
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.core.dependencies import CurrentUser, get_current_user
 from app.core.exceptions import (
     BadRequestException,
@@ -24,6 +25,39 @@ from app.schemas.user import UserProfileResponse, UserUpdatePassword
 from app.services.auth_service import AuthService
 
 router = APIRouter()
+
+
+def set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+    """Set secure HttpOnly cookies for authentication tokens."""
+    is_production = settings.app_env == "production"
+    
+    # Access token cookie - shorter lifetime
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,  # Prevent JavaScript access (XSS protection)
+        secure=is_production,  # HTTPS only in production
+        samesite="lax",  # CSRF protection
+        max_age=settings.access_token_expire_minutes * 60,
+        path="/",
+    )
+    
+    # Refresh token cookie - longer lifetime
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days * 24 * 60 * 60,
+        path="/api/v1/auth",  # Restrict to auth endpoints only
+    )
+
+
+def clear_auth_cookies(response: Response) -> None:
+    """Clear authentication cookies on logout."""
+    response.delete_cookie(key="access_token", path="/")
+    response.delete_cookie(key="refresh_token", path="/api/v1/auth")
 
 
 @router.post(
@@ -52,16 +86,24 @@ async def register(
     "/login",
     response_model=Token,
     summary="User login",
-    description="Authenticate user and return access and refresh tokens.",
+    description="Authenticate user and return access and refresh tokens. Tokens are also set as HttpOnly cookies.",
 )
 async def login(
     data: LoginRequest,
+    response: Response,
     db: Annotated[Session, Depends(get_db)],
 ):
     """Authenticate user and return tokens."""
     try:
         service = AuthService(db)
-        return service.login(data)
+        tokens = service.login(data)
+        
+        # Set HttpOnly cookies for enhanced security
+        set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
+        
+        # Also return tokens in response body for backward compatibility
+        # (allows clients to choose storage method)
+        return tokens
     except Exception as e:
         raise CredentialsException(detail=str(e))
 
@@ -74,12 +116,18 @@ async def login(
 )
 async def refresh_token(
     data: RefreshTokenRequest,
+    response: Response,
     db: Annotated[Session, Depends(get_db)],
 ):
     """Refresh access token."""
     try:
         service = AuthService(db)
-        return service.refresh_token(data.refresh_token)
+        tokens = service.refresh_token(data.refresh_token)
+        
+        # Update HttpOnly cookies
+        set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
+        
+        return tokens
     except Exception as e:
         raise CredentialsException(detail=str(e))
 
@@ -125,16 +173,17 @@ async def change_password(
     "/logout",
     response_model=MessageResponse,
     summary="User logout",
-    description="Logout user (client should discard tokens).",
+    description="Logout user and clear authentication cookies.",
 )
 async def logout(
+    response: Response,
     current_user: CurrentUser,
 ):
     """
     Logout user.
     
-    Note: Since we use JWT, actual token invalidation requires
-    a token blacklist which can be implemented later.
-    For now, client should discard the tokens.
+    Clears HttpOnly cookies. For full token invalidation,
+    a token blacklist can be implemented later.
     """
+    clear_auth_cookies(response)
     return MessageResponse(message="Logged out successfully")

@@ -7,7 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Sparkles, User, Bot, Mic, MicOff, Loader2, AlertCircle, ShoppingCart } from "lucide-react";
-import aiApi, { ChatResponse, ChatOrderData, ChatMessageHistory } from "@/lib/api/ai";
+import aiApi, { ChatResponse, ChatOrderData, ChatMessageHistory, FeaturedProduct } from "@/lib/api/ai";
 import { useAuthStore } from "@/store/auth-store";
 import { useTranslation } from "@/lib/i18n";
 import { useCartStore } from "@/store/cart-store";
@@ -21,22 +21,23 @@ interface Message {
   responseTimeMs?: number;
   orderData?: ChatOrderData;
   showCheckout?: boolean;
+  featuredProducts?: FeaturedProduct[];
 }
 
 const SUGGESTIONS_EN = [
+  "What's your bestseller?",
+  "Show me healthy options",
   "I want to buy Berry Blast",
   "Order 2 Acai Mango",
-  "What's your bestseller?",
-  "Low sugar options",
-  "Recommend something healthy",
+  "Recommend something",
 ];
 
 const SUGGESTIONS_ID = [
+  "Apa yang paling laris?",
+  "Pilihan sehat dong",
   "Beli Berry Blast 1",
   "Pesan Acai Mango 2",
-  "Apa yang paling laris?",
-  "Jus rendah gula",
-  "Rekomendasikan yang sehat",
+  "Rekomendasikan sesuatu",
 ];
 
 function useChat(locale: string) {
@@ -113,6 +114,7 @@ function useChat(locale: string) {
         responseTimeMs: response.response_time_ms,
         orderData: response.order_data,
         showCheckout: response.show_checkout,
+        featuredProducts: response.featured_products,
       });
     } catch (err) {
       updateMessage(loadingMessageId, {
@@ -224,6 +226,104 @@ function ErrorBanner({ error, onDismiss }: { error: string; onDismiss: () => voi
       <AlertCircle className="h-4 w-4 shrink-0" />
       <p>{error}</p>
       <button onClick={onDismiss} className="ml-auto text-red-500 hover:text-red-700">×</button>
+    </div>
+  );
+}
+
+// Featured products display (for bestsellers, recommendations, etc)
+function FeaturedProductsGrid({ 
+  products, 
+  locale, 
+  onProductClick 
+}: { 
+  products: FeaturedProduct[]; 
+  locale: string;
+  onProductClick: (product: FeaturedProduct) => void;
+}) {
+  // Get backend URL for images
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+  
+  const getImageUrl = (imageUrl: string | undefined | null): string | null => {
+    if (!imageUrl) return null;
+    // If already a full URL, return as-is
+    if (imageUrl.startsWith('http')) return imageUrl;
+    // Otherwise prepend backend URL
+    return `${backendUrl}${imageUrl}`;
+  };
+
+  return (
+    <div className="mt-4 space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        {products.map((product) => {
+          const imageUrl = getImageUrl(product.image_url) || getImageUrl(product.thumbnail_url);
+          
+          return (
+            <button
+              key={product.id}
+              onClick={() => onProductClick(product)}
+              className="group relative overflow-hidden rounded-xl bg-white border border-gray-200 p-3 shadow-sm hover:shadow-md hover:border-green-300 transition-all text-left"
+            >
+              {/* Bestseller badge */}
+              {product.is_bestseller && (
+                <div className="absolute top-2 right-2 z-10">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                    🔥 {locale === "en" ? "TOP" : "LARIS"}
+                  </span>
+                </div>
+              )}
+              
+              {/* Product image */}
+              <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 mb-3">
+                {imageUrl ? (
+                  <Image
+                    src={imageUrl}
+                    alt={product.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <span className="text-4xl">🧃</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Product info */}
+              <div className="space-y-1">
+                <h4 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2 group-hover:text-green-600 transition-colors">
+                  {product.name}
+                </h4>
+                {product.category && (
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wide">
+                    {product.category}
+                  </p>
+                )}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="font-bold text-green-600 text-sm">
+                    Rp {product.price.toLocaleString("id-ID")}
+                  </span>
+                  {product.calories && (
+                    <span className="text-[10px] text-gray-400">
+                      {product.calories} kcal
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      
+      {/* Tip */}
+      <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        <Sparkles className="h-4 w-4 shrink-0" />
+        <span>
+          {locale === "en" 
+            ? "Click a product or type: 'Buy [name] 1' to order!" 
+            : "Klik produk atau ketik: 'Beli [nama] 1' untuk pesan!"}
+        </span>
+      </div>
     </div>
   );
 }
@@ -362,7 +462,17 @@ function OrderBill({ orderData, locale, onCheckout }: {
   );
 }
 
-function MessageBubble({ message, locale, onCheckout }: { message: Message; locale: string; onCheckout: (orderData: ChatOrderData) => void }) {
+function MessageBubble({ 
+  message, 
+  locale, 
+  onCheckout,
+  onProductClick
+}: { 
+  message: Message; 
+  locale: string; 
+  onCheckout: (orderData: ChatOrderData) => void;
+  onProductClick: (product: FeaturedProduct) => void;
+}) {
   const isUser = message.role === "user";
   
   return (
@@ -389,6 +499,15 @@ function MessageBubble({ message, locale, onCheckout }: { message: Message; loca
             message.content
           )}
         </div>
+        
+        {/* Featured Products Display */}
+        {message.featuredProducts && message.featuredProducts.length > 0 && (
+          <FeaturedProductsGrid 
+            products={message.featuredProducts}
+            locale={locale}
+            onProductClick={onProductClick}
+          />
+        )}
         
         {/* Order Data Display */}
         {message.orderData && message.showCheckout && message.orderData.items.length > 0 && (
@@ -521,6 +640,14 @@ export default function ChatPage() {
     router.push("/checkout");
   }, [addItem, clearCart, router]);
 
+  // Handle product click - set input to order that product
+  const handleProductClick = useCallback((product: FeaturedProduct) => {
+    const orderMessage = locale === "en" 
+      ? `Buy ${product.name} 1`
+      : `Beli ${product.name} 1`;
+    setInput(orderMessage);
+  }, [locale, setInput]);
+
   return (
     <div className="flex h-screen flex-col bg-gray-50">
       <Header />
@@ -536,6 +663,7 @@ export default function ChatPage() {
                   message={msg} 
                   locale={locale} 
                   onCheckout={handleCheckout}
+                  onProductClick={handleProductClick}
                 />
               ))}
               <div ref={messagesEndRef} />

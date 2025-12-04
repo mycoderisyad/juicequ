@@ -4,9 +4,10 @@ Auto-converts images to WebP format for optimization.
 Stores images locally on the server (VPS storage).
 """
 import os
+import re
 import uuid
 from io import BytesIO
-from typing import Annotated
+from typing import Annotated, Dict, Optional, Tuple
 
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, Form
 from sqlalchemy.orm import Session
@@ -22,6 +23,81 @@ router = APIRouter()
 # Supported input formats
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Magic numbers (file signatures) for image validation
+# This prevents attackers from uploading malicious files with fake extensions
+IMAGE_MAGIC_NUMBERS: Dict[bytes, str] = {
+    b'\x89PNG\r\n\x1a\n': 'png',
+    b'\xff\xd8\xff': 'jpg',  # JPEG (various subtypes)
+    b'GIF89a': 'gif',
+    b'GIF87a': 'gif',
+    b'RIFF': 'webp',  # WebP starts with RIFF
+    b'BM': 'bmp',
+    b'II*\x00': 'tiff',  # TIFF little-endian
+    b'MM\x00*': 'tiff',  # TIFF big-endian
+}
+
+
+def validate_image_magic_number(file_content: bytes) -> Tuple[bool, Optional[str]]:
+    """
+    Validate file content by checking magic number (file signature).
+    
+    This provides additional security beyond extension checking by verifying
+    the actual file content matches an expected image format.
+    
+    Args:
+        file_content: Raw bytes of the uploaded file
+        
+    Returns:
+        Tuple of (is_valid, detected_format)
+    """
+    for magic, format_name in IMAGE_MAGIC_NUMBERS.items():
+        if file_content.startswith(magic):
+            return True, format_name
+    
+    # Additional check for WebP (RIFF followed by WEBP)
+    if file_content[:4] == b'RIFF' and file_content[8:12] == b'WEBP':
+        return True, 'webp'
+    
+    return False, None
+
+
+def sanitize_filename(filename: str, max_length: int = 50) -> str:
+    """
+    Sanitize filename to prevent path traversal and other attacks.
+    
+    Args:
+        filename: Original filename from upload
+        max_length: Maximum allowed length for the base name
+        
+    Returns:
+        Sanitized filename safe for filesystem storage
+    """
+    if not filename:
+        return "image"
+    
+    # Remove path components (prevent directory traversal)
+    filename = os.path.basename(filename)
+    
+    # Get base name without extension
+    base_name = os.path.splitext(filename)[0]
+    
+    # Remove or replace dangerous characters
+    # Allow only alphanumeric, dash, underscore
+    base_name = re.sub(r'[^a-zA-Z0-9_-]', '-', base_name)
+    
+    # Remove consecutive dashes
+    base_name = re.sub(r'-+', '-', base_name)
+    
+    # Remove leading/trailing dashes
+    base_name = base_name.strip('-')
+    
+    # Ensure non-empty
+    if not base_name:
+        base_name = "image"
+    
+    # Truncate to max length
+    return base_name[:max_length]
 
 
 def get_upload_base_dir() -> str:
@@ -80,8 +156,17 @@ def save_image(image_data: bytes, folder: str, filename: str) -> str:
     
     base_dir = get_upload_base_dir()
     
+    # Ensure folder doesn't contain path traversal
+    folder = os.path.basename(folder)
+    
     # Full path
     file_path = os.path.join(base_dir, folder, filename)
+    
+    # Verify the resolved path is still within the upload directory (defense in depth)
+    resolved_path = os.path.realpath(file_path)
+    resolved_base = os.path.realpath(base_dir)
+    if not resolved_path.startswith(resolved_base):
+        raise HTTPException(status_code=400, detail="Invalid file path")
     
     # Write file
     with open(file_path, "wb") as f:
@@ -143,15 +228,25 @@ async def upload_image(
             detail=f"File too large. Maximum size: {MAX_FILE_SIZE / 1024 / 1024}MB"
         )
     
+    # Security: Validate magic number (file signature)
+    is_valid_image, detected_format = validate_image_magic_number(content)
+    if not is_valid_image:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid image file. File content does not match any supported image format."
+        )
+    
+    # Log format mismatch (but don't reject - common for mis-named files)
+    if detected_format and ext != detected_format and ext not in ['jpg', 'jpeg']:
+        # Note: jpg/jpeg are interchangeable
+        pass  # Could add logging here if needed
+    
     # Convert to WebP
     webp_data = convert_to_webp(content)
     
-    # Generate unique filename
+    # Generate unique filename with sanitized base name
     unique_id = str(uuid.uuid4())[:8]
-    base_name = os.path.splitext(file.filename or "image")[0]
-    # Clean filename
-    clean_name = "".join(c if c.isalnum() or c in "-_" else "-" for c in base_name)
-    clean_name = clean_name[:50]  # Limit length
+    clean_name = sanitize_filename(file.filename or "image")
     filename = f"{clean_name}-{unique_id}.webp"
     
     # Save file
@@ -230,13 +325,18 @@ async def upload_batch_images(
                 results[image_type] = {"error": "File too large"}
                 continue
             
+            # Security: Validate magic number
+            is_valid_image, _ = validate_image_magic_number(content)
+            if not is_valid_image:
+                results[image_type] = {"error": "Invalid image file content"}
+                continue
+            
             try:
                 webp_data = convert_to_webp(content)
                 
-                # Generate filename
+                # Generate filename with sanitized product name
                 unique_id = str(uuid.uuid4())[:8]
-                clean_name = "".join(c if c.isalnum() or c in "-_" else "-" for c in product.name)
-                clean_name = clean_name[:30]
+                clean_name = sanitize_filename(product.name)
                 
                 folder_map = {"hero": "hero", "bottle": "bottles", "thumbnail": "thumbnails"}
                 filename = f"{clean_name}-{image_type}-{unique_id}.webp"
