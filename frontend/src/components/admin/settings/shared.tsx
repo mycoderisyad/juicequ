@@ -24,7 +24,7 @@ export function SaveButton({ onClick, isLoading, label }: SaveButtonProps) {
     <button
       onClick={onClick}
       disabled={isLoading}
-      className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
+      className="flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
     >
       {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
       {label}
@@ -39,12 +39,12 @@ interface ToggleButtonProps {
   activeColor?: string;
 }
 
-export function ToggleButton({ label, isActive, onClick, activeColor = "bg-green-600" }: ToggleButtonProps) {
+export function ToggleButton({ label, isActive, onClick, activeColor = "bg-emerald-600" }: ToggleButtonProps) {
   return (
     <button
       onClick={onClick}
       className={`rounded-full px-4 py-2 text-sm font-medium capitalize transition-colors ${
-        isActive ? `${activeColor} text-white` : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+        isActive ? `${activeColor} text-white` : "bg-stone-100 text-stone-700 hover:bg-stone-200"
       }`}
     >
       {label}
@@ -61,12 +61,12 @@ export function InputField({ label, value, onChange, type = "text", placeholder 
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label className="mb-2 block text-sm font-medium text-stone-700">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+        className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
         placeholder={placeholder}
       />
     </div>
@@ -84,7 +84,7 @@ export function NumberField({ label, value, onChange, step, placeholder, min, ma
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label className="mb-2 block text-sm font-medium text-stone-700">{label}</label>
       <input
         type="number"
         step={step}
@@ -92,7 +92,7 @@ export function NumberField({ label, value, onChange, step, placeholder, min, ma
         max={max}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+        className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
         placeholder={placeholder}
       />
     </div>
@@ -108,11 +108,11 @@ export function TextAreaField({ label, value, onChange, placeholder, rows = 2 }:
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label className="mb-2 block text-sm font-medium text-stone-700">{label}</label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+        className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
         placeholder={placeholder}
         rows={rows}
       />
@@ -128,11 +128,11 @@ export function SelectField({ label, value, onChange, options }: {
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label className="mb-2 block text-sm font-medium text-stone-700">{label}</label>
       <select 
         value={value} 
         onChange={(e) => onChange(e.target.value)} 
-        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+        className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -145,12 +145,12 @@ export function SelectField({ label, value, onChange, options }: {
 export function TimeField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label className="mb-2 block text-sm font-medium text-stone-700">{label}</label>
       <input 
         type="time" 
         value={value} 
         onChange={(e) => onChange(e.target.value)} 
-        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" 
+        className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" 
       />
     </div>
   );
@@ -165,12 +165,12 @@ export function SwitchField({ label, checked, onChange, description }: {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <span className="font-medium text-gray-900">{label}</span>
-        {description && <p className="text-sm text-gray-500">{description}</p>}
+        <span className="font-medium text-stone-900">{label}</span>
+        {description && <p className="text-sm text-stone-500">{description}</p>}
       </div>
       <button
         onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 rounded-full transition-colors ${checked ? "bg-green-600" : "bg-gray-300"}`}
+        className={`relative h-6 w-11 rounded-full transition-colors ${checked ? "bg-emerald-600" : "bg-stone-300"}`}
         role="switch"
         aria-checked={checked}
       >

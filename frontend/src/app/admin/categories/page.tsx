@@ -11,7 +11,8 @@ import {
   Check,
   Loader2,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Package
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ const EMOJI_ICONS = {
 };
 
 // Flatten all emojis for quick access
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ALL_EMOJIS = Object.values(EMOJI_ICONS).flat();
 
 // Icon Picker Component
@@ -107,14 +109,14 @@ function IconPicker({
   return (
     <div className="space-y-3">
       {/* Tab Selector */}
-      <div className="flex rounded-lg bg-gray-100 p-1">
+      <div className="flex rounded-full bg-stone-100 p-1">
         <button
           type="button"
           onClick={() => setActiveTab("emoji")}
-          className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
+          className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors ${
             activeTab === "emoji"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
+              ? "bg-white text-stone-900 shadow-sm"
+              : "text-stone-600 hover:text-stone-900"
           }`}
         >
           😀 Emoji Icons
@@ -122,10 +124,10 @@ function IconPicker({
         <button
           type="button"
           onClick={() => setActiveTab("upload")}
-          className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
+          className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors ${
             activeTab === "upload"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
+              ? "bg-white text-stone-900 shadow-sm"
+              : "text-stone-600 hover:text-stone-900"
           }`}
         >
           <Upload className="inline h-4 w-4 mr-1" />
@@ -142,10 +144,10 @@ function IconPicker({
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`rounded-full px-2 py-1 text-xs font-medium transition-colors ${
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                   activeCategory === cat
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-stone-100 text-stone-600 hover:bg-stone-200"
                 }`}
               >
                 {categoryLabels[cat]}
@@ -154,17 +156,17 @@ function IconPicker({
           </div>
 
           {/* Emoji Grid */}
-          <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-200 p-2">
+          <div className="max-h-40 overflow-y-auto rounded-2xl border border-stone-200 p-3">
             <div className="grid grid-cols-8 gap-1">
               {EMOJI_ICONS[activeCategory].map((icon) => (
                 <button
                   key={icon}
                   type="button"
                   onClick={() => onSelectIcon(icon)}
-                  className={`flex h-9 w-9 items-center justify-center rounded-lg text-xl transition-all hover:scale-110 ${
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl text-xl transition-all hover:scale-110 ${
                     selectedIcon === icon && !isCustomIcon
-                      ? "bg-green-100 ring-2 ring-green-500"
-                      : "hover:bg-gray-100"
+                      ? "bg-emerald-100 ring-2 ring-emerald-500"
+                      : "hover:bg-stone-100"
                   }`}
                 >
                   {icon}
@@ -175,7 +177,7 @@ function IconPicker({
 
           {/* Selected Preview */}
           {selectedIcon && !isCustomIcon && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-stone-600">
               <span>Selected:</span>
               <span className="text-2xl">{selectedIcon}</span>
             </div>
@@ -185,8 +187,8 @@ function IconPicker({
         <div className="space-y-3">
           {/* Upload Area */}
           <div
-            className={`relative rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
-              customIconPreview ? "border-green-300 bg-green-50/50" : "border-gray-300 hover:border-gray-400"
+            className={`relative rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${
+              customIconPreview ? "border-emerald-300 bg-emerald-50/50" : "border-stone-300 hover:border-stone-400"
             }`}
           >
             <input
@@ -200,28 +202,28 @@ function IconPicker({
 
             {isUploading ? (
               <div className="flex flex-col items-center">
-                <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-                <p className="mt-2 text-sm text-green-600">Uploading...</p>
+                <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+                <p className="mt-2 text-sm text-emerald-600">Uploading...</p>
               </div>
             ) : customIconPreview ? (
               <div className="flex flex-col items-center">
                 <img
                   src={customIconPreview}
                   alt="Custom icon"
-                  className="h-16 w-16 object-contain rounded-lg"
+                  className="h-16 w-16 object-contain rounded-xl"
                 />
-                <p className="mt-2 text-sm text-gray-600">Click to change</p>
+                <p className="mt-2 text-sm text-stone-600">Click to change</p>
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <div className="rounded-full bg-gray-100 p-3">
-                  <ImageIcon className="h-6 w-6 text-gray-400" />
+                <div className="rounded-full bg-stone-100 p-3">
+                  <ImageIcon className="h-6 w-6 text-stone-400" />
                 </div>
-                <p className="mt-2 text-sm text-gray-600">
-                  <span className="font-medium text-green-600">Click to upload</span> or drag and drop
+                <p className="mt-2 text-sm text-stone-600">
+                  <span className="font-medium text-emerald-600">Click to upload</span> or drag and drop
                 </p>
-                <p className="mt-1 text-xs text-gray-500">PNG, JPG, GIF, WebP, SVG (max 2MB)</p>
-                <p className="mt-1 text-xs text-gray-400">Recommended: 64x64 or 128x128 pixels</p>
+                <p className="mt-1 text-xs text-stone-500">PNG, JPG, GIF, WebP, SVG (max 2MB)</p>
+                <p className="mt-1 text-xs text-stone-400">Recommended: 64x64 or 128x128 pixels</p>
               </div>
             )}
           </div>
@@ -309,47 +311,49 @@ function CategoryModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-4xl bg-white p-6 shadow-xl">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="font-serif text-xl font-bold text-stone-900">
             {category ? "Edit Category" : "Add New Category"}
           </h2>
-          <button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100">
+          <button onClick={onClose} className="rounded-full p-2 hover:bg-stone-100 text-stone-500 transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {!category && (
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-2 block text-sm font-medium text-stone-700">
                 Category ID *
               </label>
               <Input
                 value={formData.id}
                 onChange={(e) => setFormData({ ...formData, id: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
                 placeholder="e.g., smoothies"
+                className="rounded-xl border-stone-200 focus:border-emerald-500 focus:ring-emerald-500"
                 required
               />
-              <p className="mt-1 text-xs text-gray-500">Lowercase, no spaces (use dashes)</p>
+              <p className="mt-1.5 text-xs text-stone-500">Lowercase, no spaces (use dashes)</p>
             </div>
           )}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-2 block text-sm font-medium text-stone-700">
               Category Name *
             </label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g., Smoothies"
+              className="rounded-xl border-stone-200 focus:border-emerald-500 focus:ring-emerald-500"
               required
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label className="mb-2 block text-sm font-medium text-stone-700">
               Icon
             </label>
             <IconPicker
@@ -361,23 +365,23 @@ function CategoryModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-2 block text-sm font-medium text-stone-700">
               Description
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Brief description of the category..."
-              className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              className="w-full rounded-xl border border-stone-200 bg-white p-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               rows={2}
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
+            <Button type="button" variant="outline" onClick={onClose} className="rounded-full px-5">
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || isUploadingIcon} className="bg-green-600 hover:bg-green-700">
+            <Button type="submit" disabled={isLoading || isUploadingIcon} className="rounded-full bg-emerald-600 hover:bg-emerald-700 px-5">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -418,33 +422,35 @@ function DeleteModal({
   const hasProducts = productCount > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-4xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center gap-3 text-red-600">
-          <AlertCircle className="h-6 w-6" />
-          <h2 className="text-xl font-bold">Delete Category</h2>
+          <div className="rounded-full bg-red-100 p-2">
+            <AlertCircle className="h-5 w-5" />
+          </div>
+          <h2 className="font-serif text-xl font-bold">Delete Category</h2>
         </div>
         {hasProducts ? (
           <div className="mb-6">
-            <p className="mb-3 text-gray-600">
+            <p className="mb-3 text-stone-600">
               Cannot delete <strong>{categoryName}</strong> because it contains{" "}
               <strong>{productCount} product{productCount > 1 ? "s" : ""}</strong>.
             </p>
-            <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+            <p className="text-sm text-amber-700 bg-amber-50 p-4 rounded-xl">
               ⚠️ Please move or delete all products in this category first before deleting it.
             </p>
           </div>
         ) : (
-          <p className="mb-6 text-gray-600">
+          <p className="mb-6 text-stone-600">
             Are you sure you want to delete <strong>{categoryName}</strong>? This action cannot be undone.
           </p>
         )}
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} className="rounded-full px-5">
             {hasProducts ? "Close" : "Cancel"}
           </Button>
           {!hasProducts && (
-            <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
+            <Button variant="destructive" onClick={onConfirm} disabled={isLoading} className="rounded-full px-5">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -553,12 +559,12 @@ export default function AdminCategoriesPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-500">Manage product categories</p>
+          <h1 className="font-serif text-2xl font-bold text-stone-900">Categories</h1>
+          <p className="text-stone-500">Manage product categories</p>
         </div>
-        <Button onClick={handleCreateCategory} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={handleCreateCategory} className="rounded-full bg-emerald-600 hover:bg-emerald-700 px-5">
           <Plus className="mr-2 h-4 w-4" />
           Add Category
         </Button>
@@ -566,7 +572,7 @@ export default function AdminCategoriesPage() {
 
       {/* Error Banner */}
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 p-4 text-red-600">
+        <div className="mb-6 rounded-2xl bg-red-50 p-4 text-red-600">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
             {error}
@@ -575,17 +581,19 @@ export default function AdminCategoriesPage() {
       )}
 
       {/* Categories Grid */}
-      <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+      <div className="rounded-[2.5rem] bg-white shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
           </div>
         ) : categories.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Tags className="mb-4 h-16 w-16 text-gray-300" />
-            <h3 className="text-lg font-semibold text-gray-900">No categories found</h3>
-            <p className="text-gray-500">Get started by adding your first category</p>
-            <Button onClick={handleCreateCategory} className="mt-4 bg-green-600 hover:bg-green-700">
+          <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+            <div className="rounded-full bg-stone-100 p-4 mb-4">
+              <Tags className="h-10 w-10 text-stone-400" />
+            </div>
+            <h3 className="font-serif text-lg font-semibold text-stone-900">No categories found</h3>
+            <p className="text-stone-500 mt-1">Get started by adding your first category</p>
+            <Button onClick={handleCreateCategory} className="mt-6 rounded-full bg-emerald-600 hover:bg-emerald-700 px-6">
               <Plus className="mr-2 h-4 w-4" />
               Add Category
             </Button>
@@ -597,10 +605,10 @@ export default function AdminCategoriesPage() {
               return (
                 <div
                   key={category.id}
-                  className="flex items-center justify-between rounded-xl border border-gray-200 p-4 hover:border-green-200 hover:bg-green-50/50 transition-colors"
+                  className="group flex items-center justify-between rounded-2xl border border-stone-200 p-4 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-2xl overflow-hidden">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl overflow-hidden">
                       {isCustomIcon ? (
                         <img 
                           src={category.icon} 
@@ -612,22 +620,23 @@ export default function AdminCategoriesPage() {
                       )}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{category.name}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-semibold text-stone-900">{category.name}</p>
+                      <p className="text-sm text-stone-500 flex items-center gap-1.5">
+                        <Package className="h-3.5 w-3.5" />
                         {category.product_count || 0} products
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleEditCategory(category)}
-                      className="rounded-lg p-2 text-gray-500 hover:bg-white hover:text-gray-900"
+                      className="rounded-full p-2.5 text-stone-500 hover:bg-white hover:text-stone-900 transition-colors"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteClick(category)}
-                      className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                      className="rounded-full p-2.5 text-stone-500 hover:bg-red-100 hover:text-red-600 transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

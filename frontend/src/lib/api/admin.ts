@@ -588,6 +588,83 @@ export const uploadApi = {
   },
 };
 
+// Orders API
+export interface AdminOrder {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_phone?: string;
+  status: string;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  payment_method?: string;
+  items_count: number;
+  items: Array<{
+    id: string;
+    product_name: string;
+    quantity: number;
+    unit_price: number;
+    subtotal: number;
+    size: string;
+  }>;
+  customer_notes?: string;
+  internal_notes?: string;
+  created_at?: string;
+  paid_at?: string;
+  completed_at?: string;
+}
+
+export interface OrderStats {
+  by_status: Record<string, number>;
+  total: number;
+}
+
+export const adminOrdersApi = {
+  /**
+   * Get all orders.
+   */
+  getAll: async (params?: {
+    status?: string;
+    search?: string;
+    skip?: number;
+    limit?: number;
+  }): Promise<{ orders: AdminOrder[]; total: number }> => {
+    const response = await apiClient.get("/admin/orders", { params });
+    return response.data;
+  },
+
+  /**
+   * Get order by ID.
+   */
+  getById: async (orderId: string): Promise<AdminOrder> => {
+    const response = await apiClient.get(`/admin/orders/${orderId}`);
+    return response.data;
+  },
+
+  /**
+   * Get order statistics.
+   */
+  getStats: async (): Promise<OrderStats> => {
+    const response = await apiClient.get("/admin/orders/stats");
+    return response.data;
+  },
+
+  /**
+   * Update order status.
+   */
+  updateStatus: async (
+    orderId: string,
+    status: string
+  ): Promise<{ message: string; order_id: string; old_status: string; new_status: string }> => {
+    const response = await apiClient.put(`/admin/orders/${orderId}/status`, null, {
+      params: { status },
+    });
+    return response.data;
+  },
+};
+
 const adminApi = {
   users: usersApi,
   products: adminProductsApi,
@@ -595,6 +672,7 @@ const adminApi = {
   analytics: analyticsApi,
   settings: settingsApi,
   upload: uploadApi,
+  orders: adminOrdersApi,
 };
 
 export default adminApi;
