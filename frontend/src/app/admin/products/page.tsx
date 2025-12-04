@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Edit2, Trash2, Package, AlertCircle, Loader2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Package, AlertCircle, Loader2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ProductModal, DeleteModal } from "@/components/admin";
 import { adminProductsApi, categoriesApi } from "@/lib/api/admin";
@@ -170,29 +169,32 @@ function useProductModals(refetch: () => void) {
 
 function ProductsHeader({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="mb-8 flex items-center justify-between">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-        <p className="text-gray-500">Manage your product catalog</p>
+        <h1 className="text-2xl font-serif font-bold text-stone-800">Products</h1>
+        <p className="text-stone-500 text-sm">Kelola katalog produk kamu</p>
       </div>
-      <Button onClick={onCreate} className="bg-green-600 hover:bg-green-700">
-        <Plus className="mr-2 h-4 w-4" />
-        Add Product
-      </Button>
+      <button 
+        onClick={onCreate} 
+        className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
+      >
+        <Plus size={18} />
+        Tambah Produk
+      </button>
     </div>
   );
 }
 
 function ErrorBanner({ message, onDismiss }: { message: string; onDismiss?: () => void }) {
   return (
-    <div className="mb-4 rounded-lg bg-red-50 p-4 text-red-600">
+    <div className="mb-4 rounded-2xl bg-rose-50 p-4 text-rose-600 border border-rose-200">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <AlertCircle className="h-5 w-5" />
-          {message}
+          <span className="font-medium">{message}</span>
         </div>
         {onDismiss && (
-          <button onClick={onDismiss} className="text-red-400 hover:text-red-600">×</button>
+          <button onClick={onDismiss} className="text-rose-400 hover:text-rose-600 text-xl font-bold">×</button>
         )}
       </div>
     </div>
@@ -215,20 +217,21 @@ function ProductsFilter({
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-        <Input
-          placeholder="Search products..."
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+        <input
+          type="text"
+          placeholder="Cari produk..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
+          className="w-full bg-white border border-stone-200 rounded-full py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
         />
       </div>
       <select
         value={categoryFilter}
         onChange={(e) => onCategoryChange(e.target.value)}
-        className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+        className="bg-white border border-stone-200 text-stone-600 text-sm rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer"
       >
-        <option value="">All Categories</option>
+        <option value="">Semua Kategori</option>
         {categories.map((cat) => (
           <option key={cat.id} value={cat.id}>
             {cat.icon} {cat.name}
@@ -255,41 +258,56 @@ function ProductRow({
   const categoryName = categories.find((c) => c.id === (product.category || product.category_id))?.name || product.category;
 
   return (
-    <tr className="hover:bg-gray-50">
+    <tr className="hover:bg-stone-50/50 transition-colors group">
       <td className="px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className={`h-10 w-10 rounded-lg ${product.image_color || product.image || "bg-gray-200"}`} />
+        <div className="flex items-center gap-4">
+          <div className={`h-12 w-12 rounded-2xl ${product.image_color || product.image || "bg-emerald-100"} shrink-0`} />
           <div>
-            <p className="font-medium text-gray-900">{product.name}</p>
-            <p className="text-sm text-gray-500 line-clamp-1">{product.description}</p>
+            <p className="font-semibold text-stone-800">{product.name}</p>
+            <p className="text-sm text-stone-400 line-clamp-1">{product.description}</p>
           </div>
         </div>
       </td>
       <td className="px-6 py-4">
-        <Badge variant="secondary">{categoryName}</Badge>
-      </td>
-      <td className="px-6 py-4 font-medium text-gray-900">
-        Rp {(product.price || product.base_price || 0).toLocaleString("id-ID")}
+        <span className="bg-stone-100 text-stone-600 px-3 py-1 rounded-full text-xs font-medium">
+          {categoryName}
+        </span>
       </td>
       <td className="px-6 py-4">
-        <span className={`font-medium ${(product.stock ?? 0) < 10 ? "text-red-600" : "text-gray-900"}`}>
+        <span className="font-semibold text-stone-800">
+          Rp {(product.price || product.base_price || 0).toLocaleString("id-ID")}
+        </span>
+      </td>
+      <td className="px-6 py-4">
+        <span className={`font-semibold ${(product.stock ?? 0) < 10 ? "text-rose-600" : "text-stone-700"}`}>
           {product.stock ?? 0}
         </span>
       </td>
       <td className="px-6 py-4">
         <button onClick={onToggle} className="focus:outline-none">
-          <Badge variant={product.is_available ? "success" : "secondary"}>
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+            product.is_available 
+              ? "bg-emerald-50 text-emerald-600" 
+              : "bg-stone-100 text-stone-500"
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${product.is_available ? "bg-emerald-500" : "bg-stone-400"}`}></span>
             {product.is_available ? "Available" : "Unavailable"}
-          </Badge>
+          </span>
         </button>
       </td>
       <td className="px-6 py-4">
-        <div className="flex items-center justify-end gap-2">
-          <button onClick={onEdit} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900">
-            <Edit2 className="h-4 w-4" />
+        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={onEdit} 
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:bg-stone-100 hover:text-stone-700 transition-colors"
+          >
+            <Edit2 size={16} />
           </button>
-          <button onClick={onDelete} className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600">
-            <Trash2 className="h-4 w-4" />
+          <button 
+            onClick={onDelete} 
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+          >
+            <Trash2 size={16} />
           </button>
         </div>
       </td>
@@ -317,7 +335,7 @@ function ProductsTable({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     );
   }
@@ -325,42 +343,49 @@ function ProductsTable({
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Package className="mb-4 h-16 w-16 text-gray-300" />
-        <h3 className="text-lg font-semibold text-gray-900">No products found</h3>
-        <p className="text-gray-500">Get started by adding your first product</p>
-        <Button onClick={onCreate} className="mt-4 bg-green-600 hover:bg-green-700">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Product
-        </Button>
+        <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+          <Package className="h-10 w-10 text-stone-300" />
+        </div>
+        <h3 className="text-lg font-serif font-bold text-stone-800">Belum ada produk</h3>
+        <p className="text-stone-500 mb-6">Mulai dengan menambahkan produk pertama</p>
+        <button 
+          onClick={onCreate} 
+          className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
+        >
+          <Plus size={18} />
+          Tambah Produk
+        </button>
       </div>
     );
   }
 
   return (
-    <table className="w-full">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Product</th>
-          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Category</th>
-          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Price</th>
-          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Stock</th>
-          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Status</th>
-          <th className="px-6 py-4 text-right text-sm font-semibold text-gray-600">Actions</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-100">
-        {products.map((product) => (
-          <ProductRow
-            key={product.id}
-            product={product}
-            categories={categories}
-            onEdit={() => onEdit(product)}
-            onDelete={() => onDelete(product)}
-            onToggle={() => onToggle(product)}
-          />
-        ))}
-      </tbody>
-    </table>
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-stone-100">
+            <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Produk</th>
+            <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Kategori</th>
+            <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Harga</th>
+            <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Stok</th>
+            <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-4 text-right text-xs font-bold text-stone-400 uppercase tracking-wider">Aksi</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-stone-50">
+          {products.map((product) => (
+            <ProductRow
+              key={product.id}
+              product={product}
+              categories={categories}
+              onEdit={() => onEdit(product)}
+              onDelete={() => onDelete(product)}
+              onToggle={() => onToggle(product)}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -385,7 +410,7 @@ export default function AdminProductsPage() {
         onCategoryChange={productsState.setCategoryFilter}
         categories={productsState.categories}
       />
-      <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-stone-200 overflow-hidden">
         <ProductsTable
           products={productsState.products}
           categories={productsState.categories}

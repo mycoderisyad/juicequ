@@ -89,64 +89,68 @@ function UserModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-4xl bg-white p-6 shadow-xl">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">
-            {user ? "Edit User" : "Add New User"}
+          <h2 className="text-xl font-serif font-bold text-stone-800">
+            {user ? "Edit User" : "Tambah User Baru"}
           </h2>
-          <button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100">
-            <X className="h-5 w-5" />
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center hover:bg-stone-200 transition-colors">
+            <X size={18} className="text-stone-500" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Full Name *
+            <label className="mb-2 block text-sm font-medium text-stone-600">
+              Nama Lengkap *
             </label>
-            <Input
+            <input
+              type="text"
               value={formData.nama}
               onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
               placeholder="John Doe"
               required
+              className="w-full bg-stone-50 border border-stone-200 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-2 block text-sm font-medium text-stone-600">
               Email *
             </label>
-            <Input
+            <input
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="john@example.com"
               required
+              className="w-full bg-stone-50 border border-stone-200 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Password {user ? "(leave blank to keep current)" : "*"}
+            <label className="mb-2 block text-sm font-medium text-stone-600">
+              Password {user ? "(kosongkan jika tidak diubah)" : "*"}
             </label>
-            <Input
+            <input
               type="password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               placeholder="••••••••"
               required={!user}
+              className="w-full bg-stone-50 border border-stone-200 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-2 block text-sm font-medium text-stone-600">
               Role *
             </label>
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              className="w-full bg-stone-50 border border-stone-200 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer"
               required
             >
               <option value="pembeli">Customer</option>
@@ -155,36 +159,44 @@ function UserModal({
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 bg-stone-50 p-4 rounded-2xl">
             <input
               type="checkbox"
               id="is_active"
               checked={formData.is_active}
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300"
+              className="w-5 h-5 rounded-lg border-stone-300 text-emerald-500 focus:ring-emerald-500"
             />
-            <label htmlFor="is_active" className="text-sm text-gray-700">
-              Active account
+            <label htmlFor="is_active" className="text-sm text-stone-700 font-medium">
+              Akun aktif
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading} className="bg-green-600 hover:bg-green-700">
+          <div className="flex justify-end gap-3 pt-4">
+            <button 
+              type="button" 
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-full border border-stone-200 text-stone-600 font-medium hover:bg-stone-50 transition-colors"
+            >
+              Batal
+            </button>
+            <button 
+              type="submit" 
+              disabled={isLoading} 
+              className="px-5 py-2.5 rounded-full bg-stone-900 text-white font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  <Loader2 size={16} className="animate-spin" />
+                  Menyimpan...
                 </>
               ) : (
                 <>
-                  <Check className="mr-2 h-4 w-4" />
-                  {user ? "Update User" : "Create User"}
+                  <Check size={16} />
+                  {user ? "Update" : "Simpan"}
                 </>
               )}
-            </Button>
+            </button>
           </div>
         </form>
       </div>
@@ -209,32 +221,41 @@ function DeleteModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-center gap-3 text-red-600">
-          <AlertCircle className="h-6 w-6" />
-          <h2 className="text-xl font-bold">Delete User</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-4xl bg-white p-6 shadow-xl">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
+            <AlertCircle className="h-6 w-6 text-rose-600" />
+          </div>
+          <h2 className="text-xl font-serif font-bold text-stone-800">Hapus User</h2>
         </div>
-        <p className="mb-6 text-gray-600">
-          Are you sure you want to delete <strong>{userName}</strong>? This action cannot be undone.
+        <p className="mb-6 text-stone-600">
+          Yakin ingin menghapus <strong>{userName}</strong>? Aksi ini tidak dapat dibatalkan.
         </p>
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
+          <button 
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-full border border-stone-200 text-stone-600 font-medium hover:bg-stone-50 transition-colors"
+          >
+            Batal
+          </button>
+          <button 
+            onClick={onConfirm} 
+            disabled={isLoading}
+            className="px-5 py-2.5 rounded-full bg-rose-500 text-white font-medium hover:bg-rose-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Deleting...
+                <Loader2 size={16} className="animate-spin" />
+                Menghapus...
               </>
             ) : (
               <>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                <Trash2 size={16} />
+                Hapus
               </>
             )}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
@@ -247,10 +268,10 @@ const roleIcons: Record<string, React.ReactNode> = {
   pembeli: <User className="h-4 w-4" />,
 };
 
-const roleColors: Record<string, "default" | "secondary" | "success" | "warning" | "destructive" | "info"> = {
-  admin: "destructive",
-  kasir: "warning",
-  pembeli: "secondary",
+const roleColors: Record<string, string> = {
+  admin: "bg-rose-100 text-rose-600",
+  kasir: "bg-amber-100 text-amber-600",
+  pembeli: "bg-stone-100 text-stone-600",
 };
 
 export default function AdminUsersPage() {
@@ -342,23 +363,26 @@ export default function AdminUsersPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-          <p className="text-gray-500">Manage user accounts</p>
+          <h1 className="text-2xl font-serif font-bold text-stone-800">Users</h1>
+          <p className="text-stone-500 text-sm">Kelola akun pengguna</p>
         </div>
-        <Button onClick={handleCreateUser} className="bg-green-600 hover:bg-green-700">
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
+        <button 
+          onClick={handleCreateUser} 
+          className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
+        >
+          <Plus size={18} />
+          Tambah User
+        </button>
       </div>
 
       {/* Error Banner */}
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 p-4 text-red-600">
+        <div className="mb-4 rounded-2xl bg-rose-50 p-4 text-rose-600 border border-rose-200">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
-            {error}
+            <span className="font-medium">{error}</span>
           </div>
         </div>
       )}
@@ -366,20 +390,21 @@ export default function AdminUsersPage() {
       {/* Filters */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <Input
-            placeholder="Search users..."
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+          <input
+            type="text"
+            placeholder="Cari user..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="w-full bg-white border border-stone-200 rounded-full py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
           />
         </div>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="bg-white border border-stone-200 text-stone-600 text-sm rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer"
         >
-          <option value="">All Roles</option>
+          <option value="">Semua Role</option>
           <option value="admin">Admin</option>
           <option value="kasir">Cashier</option>
           <option value="pembeli">Customer</option>
@@ -387,75 +412,87 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-stone-200 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
           </div>
         ) : users.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <UsersIcon className="mb-4 h-16 w-16 text-gray-300" />
-            <h3 className="text-lg font-semibold text-gray-900">No users found</h3>
-            <p className="text-gray-500">Get started by adding your first user</p>
-            <Button onClick={handleCreateUser} className="mt-4 bg-green-600 hover:bg-green-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Add User
-            </Button>
+            <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+              <UsersIcon className="h-10 w-10 text-stone-300" />
+            </div>
+            <h3 className="text-lg font-serif font-bold text-stone-800">Belum ada user</h3>
+            <p className="text-stone-500 mb-6">Mulai dengan menambahkan user pertama</p>
+            <button 
+              onClick={handleCreateUser} 
+              className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
+            >
+              <Plus size={18} />
+              Tambah User
+            </button>
           </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">User</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Email</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Role</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Status</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-gray-600">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700 font-semibold">
-                        {(user.nama || user.full_name || user.email)[0].toUpperCase()}
-                      </div>
-                      <p className="font-medium text-gray-900">{user.nama || user.full_name}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">{user.email}</td>
-                  <td className="px-6 py-4">
-                    <Badge variant={roleColors[user.role] || "secondary"} className="gap-1">
-                      {roleIcons[user.role]}
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant={user.is_active ? "success" : "secondary"}>
-                      {user.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEditUser(user)}
-                        className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(user)}
-                        className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-stone-100">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">User</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-stone-400 uppercase tracking-wider">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-stone-50">
+                {users.map((user) => (
+                  <tr key={user.id} className="hover:bg-stone-50/50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold">
+                          {(user.nama || user.full_name || user.email)[0].toUpperCase()}
+                        </div>
+                        <p className="font-semibold text-stone-800">{user.nama || user.full_name}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-stone-600">{user.email}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${roleColors[user.role] || "bg-stone-100 text-stone-600"}`}>
+                        {roleIcons[user.role]}
+                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                        user.is_active 
+                          ? "bg-emerald-50 text-emerald-600" 
+                          : "bg-stone-100 text-stone-500"
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? "bg-emerald-500" : "bg-stone-400"}`}></span>
+                        {user.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleEditUser(user)}
+                          className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:bg-stone-100 hover:text-stone-700 transition-colors"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(user)}
+                          className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

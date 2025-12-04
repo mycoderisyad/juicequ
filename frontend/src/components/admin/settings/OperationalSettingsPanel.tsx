@@ -27,21 +27,23 @@ export function OperationalSettingsPanel({ settings, onChange, onSave, isSaving 
   };
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm">
-      <div className="mb-6 flex items-center gap-2">
-        <Clock className="h-5 w-5 text-blue-600" />
-        <h2 className="text-lg font-semibold text-gray-900">Jam Operasional</h2>
+    <div className="rounded-[2.5rem] bg-white p-6 shadow-sm">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="rounded-xl bg-blue-100 p-2">
+          <Clock className="h-5 w-5 text-blue-600" />
+        </div>
+        <h2 className="font-serif text-lg font-semibold text-stone-900">Jam Operasional</h2>
       </div>
 
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="p-4 bg-gray-50 rounded-xl">
+          <div className="p-4 bg-stone-50 rounded-2xl">
             <SwitchField label="Toko Buka" checked={settings.is_store_open ?? true} onChange={(v) => onChange({ ...settings, is_store_open: v })} />
           </div>
-          <div className="p-4 bg-gray-50 rounded-xl">
+          <div className="p-4 bg-stone-50 rounded-2xl">
             <SwitchField label="Terima Order" checked={settings.accept_orders ?? true} onChange={(v) => onChange({ ...settings, accept_orders: v })} />
           </div>
-          <div className="p-4 bg-gray-50 rounded-xl">
+          <div className="p-4 bg-stone-50 rounded-2xl">
             <SwitchField label="Delivery" checked={settings.delivery_available ?? false} onChange={(v) => onChange({ ...settings, delivery_available: v })} />
           </div>
         </div>
@@ -52,7 +54,7 @@ export function OperationalSettingsPanel({ settings, onChange, onSave, isSaving 
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">Hari Buka</label>
+          <label className="mb-3 block text-sm font-medium text-stone-700">Hari Buka</label>
           <div className="flex flex-wrap gap-2">
             {DAYS_OF_WEEK.map((day) => (
               <ToggleButton key={day} label={day.slice(0, 3)} isActive={settings.days_open?.includes(day) ?? true} onClick={() => toggleDay(day)} />
@@ -61,7 +63,7 @@ export function OperationalSettingsPanel({ settings, onChange, onSave, isSaving 
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">Tipe Order</label>
+          <label className="mb-3 block text-sm font-medium text-stone-700">Tipe Order</label>
           <div className="flex flex-wrap gap-2">
             {ORDER_TYPES.map((type) => (
               <ToggleButton key={type} label={type.replace(/_/g, " ")} isActive={settings.order_types?.includes(type) ?? true} onClick={() => toggleOrderType(type)} activeColor="bg-blue-600" />

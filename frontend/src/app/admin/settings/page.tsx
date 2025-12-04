@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Loader2, AlertCircle, Check } from "lucide-react";
+import { Loader2, AlertCircle, Check, Settings } from "lucide-react";
 import { 
   StoreSettingsPanel, 
   OperationalSettingsPanel, 
@@ -260,28 +260,37 @@ export default function AdminSettingsPage() {
   if (settings.isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     );
   }
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500">Manage your store configuration</p>
+      <div className="mb-8 flex items-center gap-4">
+        <div className="rounded-2xl bg-emerald-100 p-3">
+          <Settings className="h-6 w-6 text-emerald-600" />
+        </div>
+        <div>
+          <h1 className="font-serif text-2xl font-bold text-stone-900">Settings</h1>
+          <p className="text-stone-500">Manage your store configuration</p>
+        </div>
       </div>
 
       {settings.error && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-600">
-          <AlertCircle className="h-5 w-5" />
+        <div className="mb-6 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-red-600">
+          <div className="rounded-full bg-red-100 p-1.5">
+            <AlertCircle className="h-4 w-4" />
+          </div>
           {settings.error}
         </div>
       )}
 
       {settings.success && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-600">
-          <Check className="h-5 w-5" />
+        <div className="mb-6 flex items-center gap-3 rounded-2xl bg-emerald-50 p-4 text-emerald-600">
+          <div className="rounded-full bg-emerald-100 p-1.5">
+            <Check className="h-4 w-4" />
+          </div>
           {settings.success}
         </div>
       )}

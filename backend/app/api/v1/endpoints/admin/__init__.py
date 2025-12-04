@@ -4,7 +4,7 @@ Handles all administrative functionality.
 """
 from fastapi import APIRouter
 
-from app.api.v1.endpoints.admin import users, products, categories, analytics, settings, upload
+from app.api.v1.endpoints.admin import users, products, categories, analytics, settings, upload, orders
 
 router = APIRouter()
 
@@ -14,3 +14,4 @@ router.include_router(categories.router, prefix="/categories", tags=["Admin - Ca
 router.include_router(analytics.router, prefix="/analytics", tags=["Admin - Analytics"])
 router.include_router(settings.router, prefix="/settings", tags=["Admin - Settings"])
 router.include_router(upload.router, prefix="/upload", tags=["Admin - Upload"])
+router.include_router(orders.router, prefix="/orders", tags=["Admin - Orders"])

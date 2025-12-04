@@ -311,10 +311,12 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
   return (
     <div className="space-y-6">
       {/* Basic Info */}
-      <div className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <Store className="h-5 w-5 text-green-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Informasi Toko</h2>
+      <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="rounded-xl bg-emerald-100 p-2">
+            <Store className="h-5 w-5 text-emerald-600" />
+          </div>
+          <h2 className="font-serif text-lg font-semibold text-stone-900">Informasi Toko</h2>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -329,21 +331,23 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
       </div>
 
       {/* Location */}
-      <div className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-red-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Lokasi</h2>
+      <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="rounded-xl bg-red-100 p-2">
+            <MapPin className="h-5 w-5 text-red-600" />
+          </div>
+          <h2 className="font-serif text-lg font-semibold text-stone-900">Lokasi</h2>
         </div>
 
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Provinsi</label>
+              <label className="mb-2 block text-sm font-medium text-stone-700">Provinsi</label>
               <select
                 value={selectedProvinceId}
                 onChange={(e) => handleProvinceChange(e.target.value)}
                 disabled={isLoadingProvinces}
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-gray-100"
+                className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-stone-100"
               >
                 <option value="">{isLoadingProvinces ? "Memuat..." : "-- Pilih Provinsi --"}</option>
                 {provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -351,12 +355,12 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Kota/Kabupaten</label>
+              <label className="mb-2 block text-sm font-medium text-stone-700">Kota/Kabupaten</label>
               <select
                 value={selectedRegencyId}
                 onChange={(e) => handleRegencyChange(e.target.value)}
                 disabled={!selectedProvinceId || isLoadingRegencies}
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-gray-100"
+                className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-stone-100"
               >
                 <option value="">{isLoadingRegencies ? "Memuat..." : !selectedProvinceId ? "Pilih provinsi dulu" : "-- Pilih Kota --"}</option>
                 {regencies.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -364,12 +368,12 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Kecamatan</label>
+              <label className="mb-2 block text-sm font-medium text-stone-700">Kecamatan</label>
               <select
                 value={selectedDistrictId}
                 onChange={(e) => handleDistrictChange(e.target.value)}
                 disabled={!selectedRegencyId || isLoadingDistricts}
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-gray-100"
+                className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-stone-100"
               >
                 <option value="">{isLoadingDistricts ? "Memuat..." : !selectedRegencyId ? "Pilih kota dulu" : "-- Pilih Kecamatan --"}</option>
                 {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -377,12 +381,12 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Kelurahan/Desa</label>
+              <label className="mb-2 block text-sm font-medium text-stone-700">Kelurahan/Desa</label>
               <select
                 value={settings.store_village || ""}
                 onChange={(e) => handleVillageChange(e.target.value)}
                 disabled={!selectedDistrictId || isLoadingVillages}
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-gray-100"
+                className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-stone-100"
               >
                 <option value="">{isLoadingVillages ? "Memuat..." : !selectedDistrictId ? "Pilih kecamatan dulu" : "-- Pilih Kelurahan --"}</option>
                 {villages.map((v) => <option key={v.id} value={v.name}>{v.name}</option>)}
@@ -395,14 +399,14 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
               <TextAreaField label="Alamat Lengkap (Jalan, No, RT/RW)" value={settings.store_address || ""} onChange={(v) => update("store_address", v)} placeholder="Jl. Sudirman No. 123, RT 01/RW 02" rows={2} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-2 block text-sm font-medium text-stone-700">
                 Kode Pos {isLoadingPostalCodes && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}
               </label>
               {postalCodes.length > 0 ? (
                 <select
                   value={settings.store_postal_code || ""}
                   onChange={(e) => update("store_postal_code", e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="">-- Pilih Kode Pos --</option>
                   {postalCodes.map((pc, idx) => <option key={idx} value={pc.code}>{pc.code} {pc.village ? `- ${pc.village}` : ""}</option>)}
@@ -413,11 +417,11 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
                   value={settings.store_postal_code || ""}
                   onChange={(e) => update("store_postal_code", e.target.value)}
                   placeholder={isLoadingPostalCodes ? "Mencari..." : "Masukkan kode pos"}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               )}
               {!isLoadingPostalCodes && postalCodes.length === 0 && settings.store_district && (
-                <p className="mt-1 text-xs text-gray-500">Kode pos tidak ditemukan. Silakan masukkan manual.</p>
+                <p className="mt-1.5 text-xs text-stone-500">Kode pos tidak ditemukan. Silakan masukkan manual.</p>
               )}
             </div>
           </div>
@@ -425,19 +429,19 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-700">Koordinat GPS</h3>
+                <h3 className="text-sm font-medium text-stone-700">Koordinat GPS</h3>
                 <button
                   onClick={handleFindLocation}
                   disabled={isGeocodingLocation || !settings.store_city}
-                  className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-full bg-blue-50 px-4 py-2 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50 transition-colors"
                 >
-                  {isGeocodingLocation ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
+                  {isGeocodingLocation ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
                   Cari Otomatis
                 </button>
               </div>
               
               {geocodingError && (
-                <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
                   <p className="text-xs text-red-600">{geocodingError}</p>
                 </div>
               )}
@@ -446,12 +450,12 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
                 <NumberField label="Latitude" value={settings.store_latitude || 0} onChange={(v) => update("store_latitude", v)} step={0.000001} placeholder="-6.2088" />
                 <NumberField label="Longitude" value={settings.store_longitude || 0} onChange={(v) => update("store_longitude", v)} step={0.000001} placeholder="106.8456" />
               </div>
-              <div className="p-3 bg-blue-50 rounded-xl">
-                <p className="text-xs text-blue-700">
-                  <Navigation className="inline h-3 w-3 mr-1" />
+              <div className="p-4 bg-blue-50 rounded-2xl">
+                <p className="text-xs text-blue-700 flex items-center gap-1.5">
+                  <Navigation className="h-3.5 w-3.5" />
                   <strong>Cara menggunakan:</strong>
                 </p>
-                <ol className="text-xs text-blue-600 mt-1 space-y-1 list-decimal list-inside">
+                <ol className="text-xs text-blue-600 mt-2 space-y-1 list-decimal list-inside">
                   <li>Isi data wilayah di atas, lalu klik &quot;Cari Otomatis&quot;</li>
                   <li>Peta akan bergerak ke lokasi perkiraan</li>
                   <li>Klik pada peta atau drag marker untuk posisi tepat</li>
@@ -459,7 +463,7 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
               </div>
             </div>
 
-            <div className="rounded-xl overflow-hidden border border-gray-200">
+            <div className="rounded-2xl overflow-hidden border border-stone-200">
               <div ref={mapContainerRef} className="h-[300px] w-full" style={{ minHeight: "300px" }} />
             </div>
           </div>
@@ -467,10 +471,12 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
       </div>
 
       {/* Currency */}
-      <div className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <Globe className="h-5 w-5 text-blue-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Mata Uang & Regional</h2>
+      <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="rounded-xl bg-blue-100 p-2">
+            <Globe className="h-5 w-5 text-blue-600" />
+          </div>
+          <h2 className="font-serif text-lg font-semibold text-stone-900">Mata Uang & Regional</h2>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -479,9 +485,9 @@ export function StoreSettingsPanel({ settings, onChange, onSave, isSaving }: Sto
           <InputField label="Locale" value={settings.currency_locale || "id-ID"} onChange={(v) => update("currency_locale", v)} placeholder="id-ID" />
         </div>
 
-        <div className="mt-4 p-4 bg-gray-50 rounded-xl">
-          <p className="text-sm text-gray-600">
-            Preview: <span className="font-semibold">
+        <div className="mt-4 p-4 bg-stone-50 rounded-2xl">
+          <p className="text-sm text-stone-600">
+            Preview: <span className="font-semibold text-stone-900">
               {new Intl.NumberFormat(settings.currency_locale || "id-ID", { style: "currency", currency: settings.currency_code || "IDR" }).format(150000)}
             </span>
           </p>
