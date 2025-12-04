@@ -48,11 +48,11 @@
 |-------|------------|
 | Frontend | Next.js 14, TypeScript, Tailwind CSS |
 | Backend | Python 3.11+, FastAPI, SQLAlchemy |
-| Database | Google Cloud SQL (PostgreSQL) |
+| Database | PostgreSQL (local atau Cloud SQL) |
 | AI/LLM | Kolosal AI API, ChromaDB |
-| Voice | Google Cloud Speech-to-Text |
-| Storage | Google Cloud Storage |
-| Deploy | Google Cloud Run |
+| Voice | Google Cloud Speech-to-Text (optional) |
+| Storage | **Local VPS Storage** (hemat biaya) |
+| Deploy | VPS / Docker / Cloud Run |
 
 ---
 
@@ -89,8 +89,8 @@ juicequ/
 - Python 3.11+
 - Node.js 18+
 - PostgreSQL 14+ (atau Docker)
-- Google Cloud account (untuk STT & Storage)
 - Kolosal AI API key
+- (Optional) Google Cloud account untuk Speech-to-Text
 
 ### Step 1: Clone Repository
 ```bash
@@ -175,15 +175,21 @@ KOLOSAL_API_KEY=your-kolosal-api-key
 KOLOSAL_API_URL=https://api.kolosal.ai/v1
 KOLOSAL_MODEL=qwen-3-30b
 
-# Google Cloud
-GOOGLE_CLOUD_PROJECT=your-gcp-project
-GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
-GCS_BUCKET_NAME=juicequ-assets
+# Local Storage (VPS-based, hemat biaya!)
+UPLOAD_BASE_PATH=./uploads
+UPLOAD_MAX_SIZE_MB=10
+UPLOAD_ALLOWED_EXTENSIONS=jpg,jpeg,png,webp,gif
+
+# Google Cloud (Optional, hanya untuk Speech-to-Text)
+# GOOGLE_CLOUD_PROJECT=your-gcp-project
+# GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
 ```
 
 ### Frontend (`frontend/.env.local`)
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+# Untuk production VPS, gunakan domain backend Anda:
+# NEXT_PUBLIC_STORAGE_URL=https://api.yourdomain.com
 ```
 
 ---

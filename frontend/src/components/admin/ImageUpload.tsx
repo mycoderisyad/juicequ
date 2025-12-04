@@ -10,6 +10,35 @@ import { Upload, X, Image as ImageIcon, Loader2, CheckCircle } from "lucide-reac
 import { cn } from "@/lib/utils";
 import { uploadApi } from "@/lib/api/admin";
 
+// Backend API URL for serving uploaded images
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8000";
+
+/**
+ * Convert a relative image URL to full URL if needed
+ * e.g., /uploads/thumbnails/image.webp -> http://localhost:8000/uploads/thumbnails/image.webp
+ */
+function getFullImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  
+  // Already a full URL or data URL
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+    return url;
+  }
+  
+  // Backend uploads path - prepend API base URL
+  if (url.startsWith("/uploads/")) {
+    return `${API_BASE_URL}${url}`;
+  }
+  
+  // Frontend public path - keep as is (Next.js will handle it)
+  if (url.startsWith("/images/")) {
+    return url;
+  }
+  
+  // Default: assume it's a backend path
+  return `${API_BASE_URL}${url}`;
+}
+
 interface ImageUploadProps {
   label: string;
   imageType: "hero" | "bottle" | "thumbnail" | "catalog";
@@ -29,7 +58,7 @@ export function ImageUpload({
   className,
   helpText,
 }: ImageUploadProps) {
-  const [preview, setPreview] = useState<string | null>(currentImage || null);
+  const [preview, setPreview] = useState<string | null>(getFullImageUrl(currentImage));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
     success: boolean;
@@ -38,6 +67,11 @@ export function ImageUpload({
     error?: string;
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Update preview when currentImage changes
+  React.useEffect(() => {
+    setPreview(getFullImageUrl(currentImage));
+  }, [currentImage]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,12 +103,13 @@ export function ImageUpload({
 
     try {
       const result = await uploadApi.uploadImage(file, imageType, productId);
+      const fullUrl = getFullImageUrl(result.url);
       setUploadResult({
         success: true,
         url: result.url,
         sizeReduction: result.size_reduction,
       });
-      setPreview(result.url);
+      setPreview(fullUrl);
       onUploadComplete?.(result.url);
     } catch (error) {
       console.error("Upload failed:", error);

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore } from "@/lib/store";
 import { useCurrency } from "@/lib/hooks/use-store";
+import { getPlaceholderImage, getImageUrl } from "@/lib/image-utils";
 
 export interface Product {
   id: string;
@@ -50,6 +51,7 @@ interface ProductCardProps {
 export function ProductCard({ product, className, onAddToCart }: ProductCardProps) {
   const [quantity, setQuantity] = React.useState(1);
   const [isFavorite, setIsFavorite] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const { format: formatCurrency } = useCurrency();
 
@@ -98,6 +100,10 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
   const imageColor = product.image_color || "bg-gray-200";
   const displayPrice = product.base_price;
   const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
+  
+  // Check if productImage is a color class (bg-*) rather than actual image
+  const isColorClass = productImage?.startsWith('bg-') || false;
+  const hasValidImage = productImage && !isColorClass && !imageError;
 
   return (
     <Link
@@ -110,13 +116,14 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
     >
       {/* Image Area */}
       <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl bg-gray-50">
-        {productImage ? (
+        {hasValidImage ? (
           <>
             {/* Product image from database */}
             <img
-              src={productImage}
+              src={getImageUrl(productImage)}
               alt={product.name}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              onError={() => setImageError(true)}
             />
           </>
         ) : (

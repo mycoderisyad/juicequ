@@ -8,6 +8,7 @@ import { Minus, Plus, Trash2, ArrowRight, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/hooks/use-store";
+import { getImageUrl } from "@/lib/image-utils";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, total } = useCartStore();
@@ -19,10 +20,10 @@ export default function CartPage() {
 
   // Helper to get image URL from item (check image, then color if it's a URL)
   const getItemImage = (item: { image?: string; color?: string }) => {
-    if (item.image) return item.image;
+    if (item.image) return getImageUrl(item.image);
     // Check if color is actually an image URL (not a CSS class)
     if (item.color && (item.color.startsWith('http') || item.color.startsWith('/'))) {
-      return item.color;
+      return getImageUrl(item.color);
     }
     return null;
   };

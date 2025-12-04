@@ -11,6 +11,7 @@ import { useCartStore } from "@/lib/store";
 import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
 import { useCurrency } from "@/lib/hooks/use-store";
 import { AIFotobooth } from "@/components/products";
+import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
 
 interface DisplayProduct {
@@ -168,7 +169,7 @@ export default function ProductPage() {
             <div className="relative aspect-square overflow-hidden rounded-[3rem] bg-gray-50">
               {(product.thumbnail_image || product.bottle_image || product.hero_image) ? (
                 <img
-                  src={product.thumbnail_image || product.bottle_image || product.hero_image}
+                  src={getImageUrl(product.thumbnail_image || product.bottle_image || product.hero_image)}
                   alt={product.name}
                   className="absolute inset-0 h-full w-full object-cover"
                 />

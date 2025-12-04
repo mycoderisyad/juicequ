@@ -1,7 +1,7 @@
 """
 Upload API for product images.
 Auto-converts images to WebP format for optimization.
-Supports local storage (development) and cloud storage (production).
+Stores images locally on the server (VPS storage).
 """
 import os
 import uuid
@@ -27,18 +27,11 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 def get_upload_base_dir() -> str:
     """
     Get the base directory for uploads.
-    - If UPLOAD_BASE_PATH is set in config/env, use that
-    - Otherwise, calculate relative path from this file to frontend/public/images/products
+    Uses UPLOAD_BASE_PATH from config (default: ./uploads)
+    Files are stored on the same server (VPS) as the application.
     """
-    if settings.upload_base_path:
-        return os.path.abspath(settings.upload_base_path)
-    
-    # Default: calculate path relative to this file
-    # Path from: backend/app/api/v1/endpoints/admin/upload.py
-    # Go up 6 levels to reach juicequ/, then into frontend/public/images/products
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "..", "frontend", "public", "images", "products")
-    )
+    base_path = settings.upload_base_path or "./uploads"
+    return os.path.abspath(base_path)
 
 
 def get_file_extension(filename: str) -> str:
@@ -49,7 +42,7 @@ def get_file_extension(filename: str) -> str:
 def ensure_upload_dirs():
     """Ensure upload directories exist."""
     base_dir = get_upload_base_dir()
-    dirs = ["hero", "bottles", "thumbnails", "catalog"]
+    dirs = ["hero", "bottles", "thumbnails", "catalog", "products"]
     for d in dirs:
         path = os.path.join(base_dir, d)
         os.makedirs(path, exist_ok=True)
@@ -82,7 +75,7 @@ def convert_to_webp(image_data: bytes, quality: int = 85) -> bytes:
 
 
 def save_image(image_data: bytes, folder: str, filename: str) -> str:
-    """Save image to disk and return relative URL path."""
+    """Save image to disk and return URL path for accessing via API."""
     ensure_upload_dirs()
     
     base_dir = get_upload_base_dir()
@@ -94,8 +87,8 @@ def save_image(image_data: bytes, folder: str, filename: str) -> str:
     with open(file_path, "wb") as f:
         f.write(image_data)
     
-    # Return URL path (relative to public folder)
-    return f"/images/products/{folder}/{filename}"
+    # Return URL path (served by FastAPI static files at /uploads/)
+    return f"/uploads/{folder}/{filename}"
 
 
 @router.post(

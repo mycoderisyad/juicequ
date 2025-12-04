@@ -14,6 +14,7 @@ import { useCurrency } from "@/lib/hooks/use-store";
 import { useTranslation } from "@/lib/i18n";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { productsApi, type BestsellerProduct } from "@/lib/api/customer";
+import { getImageUrl } from "@/lib/image-utils";
 
 // Fallback bestseller products (used when API fails or while loading)
 const fallbackBestsellerProducts: BestsellerProduct[] = [
@@ -199,7 +200,7 @@ export default function HomePage() {
                      }}
                    >
                       <div className="relative w-full h-full transition-transform duration-300 hover:scale-110">
-                        <Image src={prevProduct.bottle_image} alt={prevProduct.name} fill className="object-contain" />
+                        <img src={getImageUrl(prevProduct.bottle_image)} alt={prevProduct.name} className="object-contain w-full h-full" />
                       </div>
                    </div>
                  )}
@@ -213,12 +214,10 @@ export default function HomePage() {
                        : 'w-48 h-[240px] sm:w-80 sm:h-[400px] lg:w-[360px] lg:h-[440px]'
                  }`}>
                      {currentProduct && (
-                       <Image 
-                         src={currentProduct.bottle_image} 
+                       <img 
+                         src={getImageUrl(currentProduct.bottle_image)} 
                          alt={currentProduct.name} 
-                         fill 
-                         className="object-contain drop-shadow-[0_25px_40px_rgba(0,0,0,0.15)] transition-all duration-700 ease-in-out"
-                         priority
+                         className="w-full h-full object-contain drop-shadow-[0_25px_40px_rgba(0,0,0,0.15)] transition-all duration-700 ease-in-out"
                        />
                      )}
                  </div>
@@ -235,7 +234,7 @@ export default function HomePage() {
                      }}
                    >
                       <div className="relative w-full h-full transition-transform duration-300 hover:scale-110">
-                        <Image src={nextProduct.bottle_image} alt={nextProduct.name} fill className="object-contain" />
+                        <img src={getImageUrl(nextProduct.bottle_image)} alt={nextProduct.name} className="object-contain w-full h-full" />
                       </div>
                    </div>
                  )}
@@ -321,11 +320,10 @@ export default function HomePage() {
                           ? `bg-white shadow-lg ring-2 ring-offset-2 ring-emerald-200` 
                           : 'bg-stone-100/80'
                       }`}>
-                        <Image 
-                          src={product.bottle_image} 
+                        <img 
+                          src={getImageUrl(product.bottle_image)} 
                           alt={product.name} 
-                          fill 
-                          className="object-contain p-2 transition-transform duration-300 group-hover:scale-110" 
+                          className="object-contain w-full h-full p-2 transition-transform duration-300 group-hover:scale-110" 
                         />
                       </div>
                       <span className={`mt-2.5 text-xs font-semibold text-center transition-all duration-500 ease-in-out max-w-[100px] leading-tight ${
