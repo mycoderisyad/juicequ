@@ -44,6 +44,10 @@ export const useCartStore = create<CartState>()(
         const currentItems = get().items;
         const existingItem = currentItems.find((i) => i.id === item.id);
         const quantityToAdd = item.quantity || 1;
+        // Ensure price is a valid number
+        const validPrice = typeof item.price === 'number' && !isNaN(item.price) 
+          ? item.price 
+          : parseFloat(String(item.price)) || 0;
         
         if (existingItem) {
           set({
@@ -59,7 +63,7 @@ export const useCartStore = create<CartState>()(
           // Let's be explicit.
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { quantity, ...rest } = item;
-          set({ items: [...currentItems, { ...rest, quantity: quantityToAdd }] });
+          set({ items: [...currentItems, { ...rest, price: validPrice, quantity: quantityToAdd }] });
         }
       },
       removeItem: (id) => {
@@ -77,7 +81,13 @@ export const useCartStore = create<CartState>()(
         }
       },
       clearCart: () => set({ items: [] }),
-      total: () => get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+      total: () => get().items.reduce((acc, item) => {
+        // Ensure price is valid number
+        const price = typeof item.price === 'number' && !isNaN(item.price) 
+          ? item.price 
+          : parseFloat(String(item.price)) || 0;
+        return acc + price * item.quantity;
+      }, 0),
     }),
     {
       name: 'cart-storage',

@@ -61,7 +61,10 @@ export interface BestsellerProduct {
 export interface Category {
   id: string;
   name: string;
-  icon: string;
+  icon?: string;
+  color?: string;
+  subtitle?: string;
+  description?: string;
 }
 
 export interface CartItem {

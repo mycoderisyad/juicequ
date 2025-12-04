@@ -14,7 +14,8 @@ import {
   Home,
   ShoppingCart,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Store
 } from "lucide-react";
 import { useStore } from "@/lib/hooks/use-store";
 import { StoreStatusIndicator } from "@/components/ui/StoreStatusIndicator";
@@ -131,11 +132,19 @@ export default function CashierLayout({ children }: CashierLayoutProps) {
           </ul>
         </nav>
         
-        <div className="border-t p-2">
+        <div className="border-t p-2 space-y-1">
+          <Link
+            href="/"
+            title={!sidebarOpen ? "Halaman Customer" : undefined}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 ${!sidebarOpen ? "justify-center" : ""}`}
+          >
+            <Store className="h-5 w-5 shrink-0" />
+            {sidebarOpen && <span>Halaman Customer</span>}
+          </Link>
           <Link
             href="/"
             title={!sidebarOpen ? "Keluar" : undefined}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 ${!sidebarOpen ? "justify-center" : ""}`}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-red-500 hover:bg-red-50 hover:text-red-600 ${!sidebarOpen ? "justify-center" : ""}`}
           >
             <LogOut className="h-5 w-5 shrink-0" />
             {sidebarOpen && <span>Keluar</span>}

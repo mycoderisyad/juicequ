@@ -166,3 +166,22 @@ class AIInteractionListResponse(BaseModel):
     total: int
     page: int = 1
     page_size: int = 20
+
+
+# =============================================================================
+# AI Fotobooth Schemas
+# =============================================================================
+
+class FotoboothRequest(BaseModel):
+    """Schema for AI Fotobooth generation request."""
+    product_id: int = Field(..., description="Product ID to feature in fotobooth")
+    image_data: str = Field(..., description="Base64 encoded user selfie image")
+    style: Optional[str] = Field("natural", description="Image style (natural/vibrant/artistic)")
+
+
+class FotoboothResponse(BaseModel):
+    """Schema for AI Fotobooth generation response."""
+    image_url: str = Field(..., description="URL of generated fotobooth image")
+    product_name: str = Field(..., description="Name of featured product")
+    generation_time_ms: int = Field(..., description="Time taken to generate image (ms)")
+    message: str = Field(..., description="Success message")

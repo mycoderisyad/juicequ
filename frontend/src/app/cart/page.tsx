@@ -132,10 +132,12 @@ export default function CartPage() {
                     <span>{formatCurrency(finalTotal)}</span>
                   </div>
 
-                  <Button className="mt-8 w-full rounded-full bg-green-600 py-6 text-lg hover:bg-green-700">
-                    {t("cart.checkout")}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                  <Link href="/checkout">
+                    <Button className="mt-8 w-full rounded-full bg-green-600 py-6 text-lg hover:bg-green-700">
+                      {t("cart.checkout")}
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </Link>
                   
                   <p className="mt-4 text-center text-xs text-gray-400">
                     {t("cart.secureCheckout")}

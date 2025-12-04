@@ -33,7 +33,7 @@
   },
   "nav": {
     "home": "Home",
-    "menu": "Menu",
+    "menu": "Products",
     "aiChat": "AI Chat",
     "about": "About",
     "cart": "Cart",
@@ -52,10 +52,14 @@
   "home": {
     "hero": {
       "badge": "Fast & Fresh Juice Service",
+      "badgeBestseller": "Bestseller",
       "title1": "Smoothies to",
       "title2": "make your day",
       "title3": "smooth",
+      "titleFresh": "Fresh &",
+      "titleHealthy": "Healthy",
       "subtitle": "Discover local fresh juice, order online and pick up at the nearest outlet.",
+      "subtitleBestseller": "The best fresh juice selection for your health",
       "orderNow": "Order Now",
       "viewMenu": "View Menu"
     },
@@ -81,9 +85,13 @@
       "snacks": "Snacks"
     },
     "browseCategories": {
-      "title": "Browse Categories",
-      "subtitle": "Find your favorite menu by category",
-      "browseCategory": "Browse"
+      "badge": "Browse Menu",
+      "title": "Find Your",
+      "titleAccent": "Favorite",
+      "subtitle": "Choose a menu category that suits your mood and nutritional needs today.",
+      "browseCategory": "Browse",
+      "viewMenu": "View Menu",
+      "defaultDescription": "Enjoy fresh and healthy menu options from this category."
     },
     "whyChooseUs": {
       "title": "Why Choose Us?",
@@ -136,14 +144,18 @@
       "chatWithAI": "Chat with AI"
     },
     "locations": {
-      "title": "Location & Contact",
-      "subtitle": "Find us or contact for more information",
+      "title": "Location",
+      "subtitle": "Visit our store and enjoy fresh juice directly",
       "visitUs": "Visit Us",
-      "contactUs": "Contact Us",
       "openHours": "Open Hours",
       "weekdays": "Monday - Friday",
       "weekend": "Saturday - Sunday",
-      "closed": "Closed"
+      "closed": "Closed",
+      "open": "Open",
+      "address": "Address",
+      "openInGoogleMaps": "Open in Google Maps",
+      "openEveryDay": "Open every day",
+      "openDays": "Open"
     },
     "newsletter": {
       "title": "Get Latest Updates",

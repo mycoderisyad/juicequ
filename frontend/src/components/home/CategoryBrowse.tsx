@@ -4,26 +4,73 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 import { productsApi, type Category } from "@/lib/api/customer";
+import { Sparkles, ArrowRight } from "lucide-react";
 
-// Color palette untuk kategori
-const colorPalette = [
-  { bgColor: "bg-pink-100 hover:bg-pink-200", iconBg: "bg-pink-200" },
-  { bgColor: "bg-orange-100 hover:bg-orange-200", iconBg: "bg-orange-200" },
-  { bgColor: "bg-purple-100 hover:bg-purple-200", iconBg: "bg-purple-200" },
-  { bgColor: "bg-amber-100 hover:bg-amber-200", iconBg: "bg-amber-200" },
-  { bgColor: "bg-green-100 hover:bg-green-200", iconBg: "bg-green-200" },
-  { bgColor: "bg-yellow-100 hover:bg-yellow-200", iconBg: "bg-yellow-200" },
-  { bgColor: "bg-blue-100 hover:bg-blue-200", iconBg: "bg-blue-200" },
-  { bgColor: "bg-teal-100 hover:bg-teal-200", iconBg: "bg-teal-200" },
-  { bgColor: "bg-red-100 hover:bg-red-200", iconBg: "bg-red-200" },
-  { bgColor: "bg-indigo-100 hover:bg-indigo-200", iconBg: "bg-indigo-200" },
+// Fallback colors - used when category doesn't have color from database
+const fallbackColorPalette = [
+  { 
+    blobColor: "bg-rose-200",
+    subtitleColor: "text-rose-600/70",
+    bgGradient: "from-rose-50 to-rose-100/50",
+    iconBg: "bg-rose-100 text-rose-500",
+    hoverBorder: "hover:border-rose-200",
+    shadowColor: "hover:shadow-rose-100/50"
+  },
+  { 
+    blobColor: "bg-orange-200",
+    subtitleColor: "text-orange-600/70",
+    bgGradient: "from-orange-50 to-orange-100/50",
+    iconBg: "bg-orange-100 text-orange-500",
+    hoverBorder: "hover:border-orange-200",
+    shadowColor: "hover:shadow-orange-100/50"
+  },
+  { 
+    blobColor: "bg-violet-200",
+    subtitleColor: "text-violet-600/70",
+    bgGradient: "from-violet-50 to-violet-100/50",
+    iconBg: "bg-violet-100 text-violet-500",
+    hoverBorder: "hover:border-violet-200",
+    shadowColor: "hover:shadow-violet-100/50"
+  },
+  { 
+    blobColor: "bg-emerald-200",
+    subtitleColor: "text-emerald-600/70",
+    bgGradient: "from-emerald-50 to-emerald-100/50",
+    iconBg: "bg-emerald-100 text-emerald-500",
+    hoverBorder: "hover:border-emerald-200",
+    shadowColor: "hover:shadow-emerald-100/50"
+  },
+  { 
+    blobColor: "bg-amber-200",
+    subtitleColor: "text-amber-600/70",
+    bgGradient: "from-amber-50 to-amber-100/50",
+    iconBg: "bg-amber-100 text-amber-500",
+    hoverBorder: "hover:border-amber-200",
+    shadowColor: "hover:shadow-amber-100/50"
+  },
+  { 
+    blobColor: "bg-sky-200",
+    subtitleColor: "text-sky-600/70",
+    bgGradient: "from-sky-50 to-sky-100/50",
+    iconBg: "bg-sky-100 text-sky-500",
+    hoverBorder: "hover:border-sky-200",
+    shadowColor: "hover:shadow-sky-100/50"
+  },
 ];
 
-// Default emoji jika tidak ada icon dari database
+// Default emoji when icon is not available from database
 const defaultEmoji = "🍹";
 
+// Fallback subtitles - used when category doesn't have subtitle from database
+const fallbackSubtitles: Record<string, { en: string; id: string }> = {
+  smoothies: { en: "Creamy & Dreamy", id: "Lembut & Nikmat" },
+  juices: { en: "Pure Refreshment", id: "Segar Murni" },
+  bowls: { en: "Healthy & Filling", id: "Sehat & Mengenyangkan" },
+  default: { en: "Fresh & Tasty", id: "Segar & Lezat" },
+};
+
 export function CategoryBrowse() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,7 +80,6 @@ export function CategoryBrowse() {
       try {
         const response = await productsApi.getCategories();
         if (response.categories && response.categories.length > 0) {
-          // Filter out "All" category and only show active ones
           const filteredCategories = response.categories
             .filter(cat => cat.name.toLowerCase() !== "all");
           setCategories(filteredCategories);
@@ -47,9 +93,37 @@ export function CategoryBrowse() {
     fetchCategories();
   }, []);
 
-  // Get color based on index
-  const getCategoryColor = (index: number) => {
-    return colorPalette[index % colorPalette.length];
+  // Get fallback color based on index
+  const getFallbackColor = (index: number) => {
+    return fallbackColorPalette[index % fallbackColorPalette.length];
+  };
+
+  // Get subtitle - prioritize from database, fallback to hardcoded
+  const getCategorySubtitle = (category: Category) => {
+    if (category.subtitle) return category.subtitle;
+    
+    const key = category.name.toLowerCase();
+    const subtitle = fallbackSubtitles[key] || fallbackSubtitles.default;
+    return locale === "id" ? subtitle.id : subtitle.en;
+  };
+
+  // Get category colors - prioritize from database, fallback to palette
+  const getCategoryColors = (category: Category, index: number) => {
+    const fallback = getFallbackColor(index);
+    
+    if (category.color) {
+      const baseColor = category.color;
+      return {
+        blobColor: `bg-${baseColor}-200`,
+        subtitleColor: `text-${baseColor}-600/70`,
+        bgGradient: `from-${baseColor}-50 to-${baseColor}-100/50`,
+        iconBg: `bg-${baseColor}-100 text-${baseColor}-500`,
+        hoverBorder: `hover:border-${baseColor}-200`,
+        shadowColor: `hover:shadow-${baseColor}-100/50`
+      };
+    }
+    
+    return fallback;
   };
 
   // Don't render if no categories
@@ -59,72 +133,93 @@ export function CategoryBrowse() {
 
   return (
     <section 
-      className="py-10 sm:py-16 lg:py-20 bg-gradient-to-b from-white via-orange-50/30 to-white"
+      className="relative py-12 sm:py-16 lg:py-20 bg-stone-50 overflow-hidden"
       aria-labelledby="browse-categories-title"
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="mb-8 sm:mb-12 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-orange-800 mb-3 sm:mb-4">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-500 rounded-full animate-pulse" aria-hidden="true"></span>
-            <h2 id="browse-categories-title">{t("home.browseCategories.title")}</h2>
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-500 rounded-full animate-pulse" aria-hidden="true"></span>
-          </div>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-80 h-80 bg-emerald-100/40 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-lime-100/30 rounded-full blur-3xl" />
+      </div>
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Header */}
+        <div className="text-center mb-12 sm:mb-16 relative">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-24 bg-emerald-100/50 blur-3xl rounded-full -z-10" />
+          
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-stone-200 text-stone-600 text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
+            <span className="text-amber-400"><Sparkles size={14} /></span>
+            {t("home.browseCategories.badge")}
+          </span>
+          
+          <h2 
+            id="browse-categories-title"
+            className="text-3xl sm:text-4xl md:text-5xl font-serif font-medium text-emerald-950 tracking-tight mb-4"
+          >
+            {t("home.browseCategories.title")} <span className="italic text-emerald-600">{t("home.browseCategories.titleAccent")}</span>
+          </h2>
+          <p className="text-stone-500 text-base sm:text-lg max-w-2xl mx-auto px-4">
             {t("home.browseCategories.subtitle")}
           </p>
         </div>
+
         {/* Category Cards */}
         <nav aria-label={t("home.browseCategories.title")}>
-          <ul className="flex flex-wrap justify-center gap-3 sm:gap-4 lg:gap-6 max-w-6xl mx-auto" role="list">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {categories.map((category, index) => {
-              const colors = getCategoryColor(index);
+              const colors = getCategoryColors(category, index);
               const categoryIcon = category.icon || defaultEmoji;
+              const subtitle = getCategorySubtitle(category);
+              const description = category.description || t("home.browseCategories.defaultDescription");
               
               return (
-                <li key={category.id} className="w-[calc(50%-6px)] sm:w-[calc(50%-8px)] lg:w-[calc(25%-18px)]">
-                  <Link
-                    href={`/menu?category=${category.id}`}
-                    aria-label={`${t("home.browseCategories.browseCategory")} ${category.name}`}
-                    className={`
-                      group relative flex flex-col items-center justify-center
-                      rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8
-                      ${colors.bgColor}
-                      border-2 border-white/50
-                      transition-all duration-500 ease-out
-                      cursor-pointer overflow-hidden
-                      focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-                      h-full min-h-[120px] sm:min-h-[160px] lg:min-h-[200px]
-                    `}
-                  >
-                    {/* Background decoration */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true"></div>
-                    
-                    {/* Emoji Icon */}
-                    <div 
-                      className={`
-                        relative z-10 w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 
-                        rounded-xl sm:rounded-2xl ${colors.iconBg}
-                        flex items-center justify-center
-                        mb-3 sm:mb-4 lg:mb-6 text-2xl sm:text-4xl lg:text-5xl
-                        group-hover:scale-110 group-hover:rotate-6 
-                        transition-all duration-500 ease-out
-                        shadow-md sm:shadow-lg group-hover:shadow-xl
-                      `}
-                      aria-hidden="true"
-                    >
-                      {categoryIcon}
+                <Link
+                  key={category.id}
+                  href={`/menu?category=${category.id}`}
+                  aria-label={`${t("home.browseCategories.browseCategory")} ${category.name}`}
+                  className={`
+                    group relative rounded-3xl sm:rounded-4xl p-6 sm:p-8 lg:p-10 
+                    border border-stone-100 bg-linear-to-br ${colors.bgGradient}
+                    transition-all duration-500 cursor-pointer 
+                    ${colors.hoverBorder} hover:shadow-2xl ${colors.shadowColor} 
+                    hover:-translate-y-2 overflow-hidden
+                    focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
+                  `}
+                >
+                  {/* Decorative blob */}
+                  <div className={`absolute -right-10 -bottom-10 w-48 h-48 rounded-full mix-blend-multiply filter blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 ${colors.blobColor}`} />
+
+                  {/* Icon */}
+                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl ${colors.iconBg} flex items-center justify-center mb-6 sm:mb-8 shadow-sm group-hover:scale-110 transition-transform duration-300 relative z-10 text-3xl sm:text-4xl`}>
+                    {categoryIcon}
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <div className={`text-xs sm:text-sm font-bold uppercase tracking-wider mb-2 ${colors.subtitleColor}`}>
+                      {subtitle}
                     </div>
-                    
-                    {/* Category Name */}
-                    <span className="relative z-10 text-sm sm:text-base lg:text-lg font-bold text-gray-800 text-center">
+                    <h3 className="text-2xl sm:text-3xl font-serif font-medium text-stone-800 mb-3 group-hover:text-black transition-colors">
                       {category.name}
-                    </span>
-                  </Link>
-                </li>
+                    </h3>
+                    <p className="text-stone-500 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base group-hover:text-stone-600">
+                      {description}
+                    </p>
+
+                    {/* Action button */}
+                    <div className="flex items-center gap-2 font-semibold text-stone-800 group/btn">
+                      <span className="border-b-2 border-transparent group-hover:border-stone-800 transition-all text-sm sm:text-base">
+                        {t("home.browseCategories.viewMenu")}
+                      </span>
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:bg-stone-800 group-hover:text-white transition-all">
+                        <ArrowRight size={14} />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
               );
             })}
-          </ul>
+          </div>
         </nav>
       </div>
     </section>

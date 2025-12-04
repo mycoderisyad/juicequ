@@ -11,6 +11,7 @@ import { CustomerReviews } from "@/components/home/CustomerReviews";
 import { CTABanner } from "@/components/home/CTABanner";
 import { StoreInfoSection } from "@/components/home/StoreInfoSection";
 import { useCurrency } from "@/lib/hooks/use-store";
+import { useTranslation } from "@/lib/i18n";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { productsApi, type BestsellerProduct } from "@/lib/api/customer";
 
@@ -77,11 +78,11 @@ const fallbackBestsellerProducts: BestsellerProduct[] = [
 
 export default function HomePage() {
   const { format } = useCurrency();
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [selectedSize, setSelectedSize] = useState<'S' | 'M' | 'L'>('S');
   const [bestsellerProducts, setBestsellerProducts] = useState<BestsellerProduct[]>([]);
-  const [isLoadingBestsellers, setIsLoadingBestsellers] = useState(true);
 
   // Get current product safely - only show when we have products
   const safeCurrentIndex = bestsellerProducts.length > 0 ? currentIndex % bestsellerProducts.length : 0;
@@ -97,26 +98,19 @@ export default function HomePage() {
   useEffect(() => {
     const fetchBestsellers = async () => {
       try {
-        setIsLoadingBestsellers(true);
         const response = await productsApi.getBestsellers(3);
         if (response.items && response.items.length > 0) {
           setBestsellerProducts(response.items);
-          setCurrentIndex(0); // Reset index when products change
+          setCurrentIndex(0);
         } else {
-          // Use fallback if no items returned
           setBestsellerProducts(fallbackBestsellerProducts);
         }
-      } catch (err) {
-        console.error("Failed to fetch bestsellers, using fallback:", err);
-        // Use fallback on error
+      } catch {
         setBestsellerProducts(fallbackBestsellerProducts);
-      } finally {
-        setIsLoadingBestsellers(false);
       }
     };
     fetchBestsellers();
   }, []);
-
 
   const goToNext = useCallback(() => {
     if (isTransitioning || bestsellerProducts.length === 0) return;
@@ -151,24 +145,45 @@ export default function HomePage() {
       {/* Main Content */}
       <main id="main-content" className="flex-1">
         {/* Hero Section - Redesigned with smooth animations */}
-        <section className="relative min-h-[calc(100svh-100px)] sm:min-h-[calc(100vh-80px)] flex flex-col items-center justify-center sm:justify-start pt-16 sm:pt-20 lg:pt-24 pb-2 sm:pb-8 bg-linear-to-b from-gray-50/50 to-white overflow-hidden">
+        <section className="relative min-h-[calc(100svh-100px)] sm:min-h-[calc(100vh-80px)] flex flex-col items-center justify-center sm:justify-start sm:pt-8 lg:pt-12 pb-2 sm:pb-8 bg-stone-50 overflow-hidden">
           
-          {/* Background Decorative Blobs - Color follows product */}
+          {/* Background Decorative Blobs - Emerald theme base with product accent */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-             {/* Left Blob */}
+             {/* Top decorative blob */}
              <div 
-               className={`absolute -left-40 bottom-20 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] rounded-full transition-all duration-1500 ease-in-out ${currentProduct?.color?.replace('bg-', 'bg-') || 'bg-green-300'}`}
+               className="absolute -top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-emerald-100/40"
+               style={{ filter: 'blur(100px)' }}
+             />
+             {/* Left Blob - follows product color */}
+             <div 
+               className={`absolute -left-40 bottom-20 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] rounded-full transition-all duration-1500 ease-in-out ${currentProduct?.color?.replace('bg-', 'bg-') || 'bg-emerald-300'}`}
                style={{ opacity: 0.15, filter: 'blur(100px)' }}
              />
              {/* Right Blob */}
              <div 
-               className={`absolute -right-40 bottom-10 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] rounded-full transition-all duration-1500 ease-in-out ${currentProduct?.color?.replace('bg-', 'bg-') || 'bg-green-200'}`}
+               className={`absolute -right-40 bottom-10 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] rounded-full transition-all duration-1500 ease-in-out ${currentProduct?.color?.replace('bg-', 'bg-') || 'bg-lime-200'}`}
                style={{ opacity: 0.12, filter: 'blur(80px)' }}
              />
+             {/* Subtle pattern overlay */}
+             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(16,185,129,0.05),transparent_70%)]" />
+          </div>
+
+          {/* Hero Header - Badge and Title */}
+          <div className="text-center z-20 px-4 mb-2 sm:mb-4 mt-8 sm:mt-10 lg:mt-12">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-3 sm:mb-4 shadow-sm">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              {t("home.hero.badgeBestseller")}
+            </span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-medium text-emerald-950 tracking-tight">
+              {t("home.hero.titleFresh")} <span className="italic text-emerald-600">{t("home.hero.titleHealthy")}</span>
+            </h1>
+            <p className="text-stone-500 text-sm sm:text-base mt-2 max-w-md mx-auto">
+              {t("home.hero.subtitleBestseller")}
+            </p>
           </div>
 
           {/* Main Content Area - 3 Products View (This is the visual anchor) */}
-          <div className="relative w-full max-w-5xl mx-auto flex items-center justify-center h-44 sm:h-64 lg:h-80 mt-0 sm:mt-4">
+          <div className="relative w-full max-w-5xl mx-auto flex items-center justify-center h-44 sm:h-64 lg:h-80 mt-4 sm:mt-8 lg:mt-10">
 
               {/* Products Container */}
               <div className="relative flex items-center justify-center w-full h-full">
@@ -227,30 +242,29 @@ export default function HomePage() {
               </div>
           </div>
 
-          {/* Title & Price (Below Products) */}
-          <div className="text-center z-20 mb-3 sm:mb-4 mt-2 sm:mt-4">
-             <h1 
-               className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight transition-all duration-500 ease-in-out"
-               style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-             >
-                {currentProduct?.name || 'Green Glow'}
-             </h1>
-             <p className={`text-base sm:text-xl font-bold mt-1.5 sm:mt-1 transition-all duration-500 ease-in-out ${currentProduct?.accent_color || 'text-green-500'}`}>
-                {currentProduct ? format(parseFloat(currentProduct.price)) : '$6.50'}
-             </p>
+          {/* Product Name & Price (Below Products) */}
+          <div className="text-center z-20 mb-3 sm:mb-4 mt-3 sm:mt-4 px-4">
+               <h2 
+                 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-emerald-950 tracking-tight transition-all duration-500 ease-in-out"
+               >
+                  {currentProduct?.name || 'Green Glow'}
+               </h2>
+               <p className={`text-lg sm:text-xl font-bold mt-1 sm:mt-2 transition-all duration-500 ease-in-out ${currentProduct?.accent_color || 'text-emerald-600'}`}>
+                  {currentProduct ? format(parseFloat(currentProduct.price)) : '$6.50'}
+               </p>
           </div>
 
           {/* Size Selector */}
-          <div className="flex items-center justify-center z-20 mt-2 sm:mt-0 mb-4 sm:mb-4">
-             <div className="flex items-center gap-1 sm:gap-2 bg-white rounded-full px-1.5 sm:px-2 py-1 sm:py-1.5 shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100">
+          <div className="flex items-center justify-center z-20 mb-4 sm:mb-4">
+             <div className="flex items-center gap-1 sm:gap-2 bg-white rounded-full px-1.5 sm:px-2 py-1 sm:py-1.5 shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-stone-100">
                 {(['S', 'M', 'L'] as const).map((size) => (
                   <button 
                     key={size}
                     onClick={() => setSelectedSize(size)}
                     className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold transition-all duration-300 ease-out ${
                       selectedSize === size 
-                        ? `bg-white shadow-md ring-2 ring-gray-100 ${currentProduct?.accent_color || 'text-green-600'}` 
-                        : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                        ? `bg-white shadow-md ring-2 ring-emerald-100 ${currentProduct?.accent_color || 'text-emerald-600'}` 
+                        : 'text-stone-400 hover:text-stone-600 hover:bg-stone-50'
                     }`}
                   >
                     {size}
@@ -272,15 +286,15 @@ export default function HomePage() {
                 currentProduct?.color?.replace('bg-', 'ring-') || 'ring-green-500'
               } ring-2`}
             >
-               Buy now
+               {t("home.hero.orderNow")}
             </button>
           </Link>
 
           {/* Thumbnail Carousel */}
-          <div className="w-full max-w-4xl mx-auto px-4 relative pb-2 sm:pb-6 mt-8 sm:mt-0">
+          <div className="w-full max-w-4xl mx-auto px-4 relative pb-2 sm:pb-6 mt-4 sm:mt-0">
               <button 
                 onClick={goToPrev} 
-                className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gray-300 hover:text-gray-600 transition-colors duration-200 z-10"
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-stone-300 hover:text-emerald-600 transition-colors duration-200 z-10"
               >
                  <ChevronLeft className="w-6 h-6 stroke-[1.5]" />
               </button>
@@ -302,10 +316,10 @@ export default function HomePage() {
                          : 'opacity-40 hover:opacity-70'
                      }`}
                    >
-                      <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden transition-all duration-500 ease-in-out ${
+                      <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-500 ease-in-out ${
                         index === currentIndex 
-                          ? `${product.bg_accent || 'bg-green-50'} shadow-lg ring-2 ring-offset-2 ${product.color?.replace('bg-', 'ring-') || 'ring-green-200'}` 
-                          : 'bg-gray-50/80'
+                          ? `bg-white shadow-lg ring-2 ring-offset-2 ring-emerald-200` 
+                          : 'bg-stone-100/80'
                       }`}>
                         <Image 
                           src={product.bottle_image} 
@@ -315,7 +329,7 @@ export default function HomePage() {
                         />
                       </div>
                       <span className={`mt-2.5 text-xs font-semibold text-center transition-all duration-500 ease-in-out max-w-[100px] leading-tight ${
-                        index === currentIndex ? 'text-gray-900' : 'text-gray-400'
+                        index === currentIndex ? 'text-emerald-950' : 'text-stone-400'
                       }`}>
                         {product.name}
                       </span>
@@ -325,24 +339,16 @@ export default function HomePage() {
 
               <button 
                 onClick={goToNext} 
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gray-300 hover:text-gray-600 transition-colors duration-200 z-10"
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-stone-300 hover:text-emerald-600 transition-colors duration-200 z-10"
               >
                  <ChevronRight className="w-6 h-6 stroke-[1.5]" />
               </button>
           </div>
 
         </section>
-
-        {/* Browse Categories Section */}
         <CategoryBrowse />
-
-        {/* Customer Reviews */}
         <CustomerReviews />
-
-        {/* Store Info with Map */}
         <StoreInfoSection />
-
-        {/* CTA Banner */}
         <CTABanner />
       </main>
       
