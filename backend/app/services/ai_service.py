@@ -17,6 +17,7 @@ from app.core.exceptions import BadRequestException, ExternalServiceException
 from app.models.ai_interaction import AIInteraction, InteractionStatus, InteractionType
 from app.models.product import Product, ProductSize
 from app.models.user import User
+from app.services.ai.stt_service import STTService
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ class AIService:
             timeout=30.0,
         )
         self.chroma_client = None
+        self.stt_service = STTService(settings.gcp_speech_credentials if settings.gcp_speech_credentials else None)
 
     async def chat(
         self,
@@ -789,11 +791,56 @@ Remember: Always respond in English and be very friendly!"""
         Returns:
             Transcribed text
         """
-        # For now, return a placeholder
-        # In a full implementation, this would use Google Cloud Speech-to-Text
-        logger.warning("Audio transcription not implemented - returning placeholder")
-        return "[Audio transcription would appear here]"
+        # Use the STT service for transcription
+        return await self.stt_service.transcribe(audio_data, language="id-ID")
+
+    async def generate_fotobooth(
+        self,
+        user_id: str,
+        product_id: int,
+        image_data: str,
+        style: str = "natural",
+    ) -> Dict[str, Any]:
+        """
+        Generate AI Fotobooth image combining user selfie with product.
+        
+        Args:
+            user_id: User ID
+            product_id: Product to feature in fotobooth
+            image_data: Base64 encoded user image
+            style: Image style (natural/vibrant/artistic)
+        
+        Returns:
+            Dict with image_url, product_name, generation_time_ms
+        """
+        start_time = time.time()
+        
+        # Get product info
+        product = self.db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise BadRequestException(f"Product {product_id} not found")
+        
+        # TODO: Implement actual AI image generation
+        # For now, return a placeholder response
+        # In production, this would:
+        # 1. Decode base64 image
+        # 2. Send to AI image generation service (e.g., Stable Diffusion API)
+        # 3. Compose user image with product image
+        # 4. Upload to GCS
+        # 5. Return public URL
+        
+        generation_time = int((time.time() - start_time) * 1000)
+        
+        logger.info(f"Fotobooth generation placeholder for user {user_id}, product {product_id}")
+        
+        # Placeholder return - in production, replace with actual generated image URL
+        return {
+            "image_url": f"https://storage.googleapis.com/juicequ-assets/fotobooth/{user_id}_{product_id}_{int(time.time())}.jpg",
+            "product_name": product.name,
+            "generation_time_ms": generation_time,
+        }
 
     async def close(self):
-        """Close HTTP client."""
+        """Close HTTP client and STT service."""
         await self.kolosal_client.aclose()
+        await self.stt_service.close()

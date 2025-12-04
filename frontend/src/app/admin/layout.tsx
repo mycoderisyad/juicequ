@@ -15,7 +15,9 @@ import {
   Settings,
   LogOut,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Store,
+  ShoppingBag
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -97,11 +99,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             })}
           </ul>
           
-          <div className="mt-8 border-t border-gray-700 pt-4">
+          <div className="mt-8 border-t border-gray-700 pt-4 space-y-1">
+            <Link
+              href="/"
+              title={!sidebarOpen ? "Halaman Customer" : undefined}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white ${!sidebarOpen ? "justify-center" : ""}`}
+            >
+              <Store className="h-5 w-5 shrink-0" />
+              {sidebarOpen && <span>Halaman Customer</span>}
+            </Link>
+            <Link
+              href="/cashier"
+              title={!sidebarOpen ? "Halaman Kasir" : undefined}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white ${!sidebarOpen ? "justify-center" : ""}`}
+            >
+              <ShoppingBag className="h-5 w-5 shrink-0" />
+              {sidebarOpen && <span>Halaman Kasir</span>}
+            </Link>
             <Link
               href="/"
               title={!sidebarOpen ? "Keluar" : undefined}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white ${!sidebarOpen ? "justify-center" : ""}`}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-red-400 hover:bg-red-900/30 hover:text-red-300 ${!sidebarOpen ? "justify-center" : ""}`}
             >
               <LogOut className="h-5 w-5 shrink-0" />
               {sidebarOpen && <span>Keluar</span>}

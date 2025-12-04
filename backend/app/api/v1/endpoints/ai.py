@@ -15,6 +15,8 @@ from app.schemas.ai import (
     AIInteractionResponse,
     ChatRequest,
     ChatResponse,
+    FotoboothRequest,
+    FotoboothResponse,
     RecommendationResponse,
     ProductRecommendation,
     VoiceOrderResponse,
@@ -249,3 +251,36 @@ async def get_interaction_history(
         page=page,
         page_size=page_size,
     )
+
+
+@router.post("/fotobooth", response_model=FotoboothResponse)
+async def generate_fotobooth(
+    request: FotoboothRequest,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: CurrentUser,
+):
+    """
+    Generate AI Fotobooth image for product review.
+    User uploads selfie, AI generates photo with juice product.
+    """
+    try:
+        service = AIService(db)
+        result = await service.generate_fotobooth(
+            user_id=current_user.id,
+            product_id=request.product_id,
+            image_data=request.image_data,
+            style=request.style or "natural",
+        )
+        await service.close()
+        
+        return FotoboothResponse(
+            image_url=result["image_url"],
+            product_name=result["product_name"],
+            generation_time_ms=result["generation_time_ms"],
+            message="AI Fotobooth image generated successfully!",
+        )
+    except ExternalServiceException:
+        raise
+    except Exception as e:
+        logger.error(f"Fotobooth error: {e}")
+        raise BadRequestException(f"Failed to generate fotobooth image: {e}")

@@ -10,6 +10,7 @@ import { Minus, Plus, ArrowLeft, ShoppingBag, RefreshCw } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
 import { useCurrency } from "@/lib/hooks/use-store";
+import { AIFotobooth } from "@/components/products";
 import Link from "next/link";
 
 interface DisplayProduct {
@@ -234,6 +235,11 @@ export default function ProductPage() {
                   <ShoppingBag className="mr-2 h-5 w-5" />
                   Add to Cart - {format(parseFloat(product.price) * quantity)}
                 </Button>
+              </div>
+
+              {/* AI Fotobooth Section */}
+              <div className="mt-8 pt-8 border-t border-gray-200">
+                <AIFotobooth productId={product.id} productName={product.name} />
               </div>
             </div>
           </div>

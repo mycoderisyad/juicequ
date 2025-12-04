@@ -26,9 +26,7 @@
 - Pemesanan online dengan pre-order
 - AI Chatbot (tanya produk, nutrisi, rekomendasi)
 - Voice ordering
-- Review produk
-- AI Fotobooth
-- Loyalty program
+- Review produk dengan AI Fotobooth
 
 ### Kasir
 - POS dengan voice input

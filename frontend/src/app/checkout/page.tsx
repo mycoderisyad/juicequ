@@ -30,6 +30,16 @@ export default function CheckoutPage() {
   const cartTotal = total();
   const tax = cartTotal * 0.1;
 
+  // Helper to ensure price is valid number
+  const getValidPrice = (price: number | string | undefined): number => {
+    if (typeof price === 'number' && !isNaN(price)) return price;
+    if (typeof price === 'string') {
+      const parsed = parseFloat(price);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  };
+
   // Helper to get image URL from item (check image, then color if it's a URL)
   const getItemImage = (item: { image?: string; color?: string }) => {
     if (item.image) return item.image;
@@ -59,7 +69,7 @@ export default function CheckoutPage() {
         items: items.map((item) => ({
           product_id: String(item.id),
           name: item.name,
-          price: item.price,
+          price: getValidPrice(item.price),
           quantity: item.quantity,
         })),
         notes: notes || undefined,
@@ -174,6 +184,7 @@ export default function CheckoutPage() {
                 <div className="space-y-4">
                   {items.map((item) => {
                     const imageUrl = getItemImage(item);
+                    const itemPrice = getValidPrice(item.price);
                     return (
                       <div key={item.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -192,7 +203,7 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                         <p className="font-semibold text-gray-900">
-                          {formatCurrency(item.price * item.quantity)}
+                          {formatCurrency(itemPrice * item.quantity)}
                         </p>
                       </div>
                     );
@@ -215,7 +226,7 @@ export default function CheckoutPage() {
                     }`}
                   >
                     <Banknote className="h-6 w-6 text-green-600" />
-                    <span className="font-medium">Cash</span>
+                    <span className="font-medium text-gray-900">Cash</span>
                   </button>
                   <button
                     onClick={() => setPaymentMethod("qris")}
@@ -226,7 +237,7 @@ export default function CheckoutPage() {
                     }`}
                   >
                     <Smartphone className="h-6 w-6 text-blue-600" />
-                    <span className="font-medium">QRIS</span>
+                    <span className="font-medium text-gray-900">QRIS</span>
                   </button>
                   <button
                     onClick={() => setPaymentMethod("transfer")}
@@ -237,7 +248,7 @@ export default function CheckoutPage() {
                     }`}
                   >
                     <CreditCard className="h-6 w-6 text-purple-600" />
-                    <span className="font-medium">Transfer</span>
+                    <span className="font-medium text-gray-900">Transfer</span>
                   </button>
                 </div>
               </div>
@@ -251,7 +262,7 @@ export default function CheckoutPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Any special requests? (e.g., less ice, extra sweet)"
-                  className="w-full rounded-xl border border-gray-200 p-4 focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-600/20"
+                  className="w-full rounded-xl border border-gray-200 p-4 text-gray-900 placeholder:text-gray-400 focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-600/20"
                   rows={3}
                 />
               </div>
@@ -267,13 +278,13 @@ export default function CheckoutPage() {
                       <label className="mb-2 block text-sm font-medium text-gray-700">
                         Name
                       </label>
-                      <Input value={user.full_name} disabled />
+                      <Input value={user.full_name} disabled className="text-gray-900 disabled:text-gray-700 disabled:opacity-100" />
                     </div>
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
                         Email
                       </label>
-                      <Input value={user.email} disabled />
+                      <Input value={user.email} disabled className="text-gray-900 disabled:text-gray-700 disabled:opacity-100" />
                     </div>
                   </div>
                 </div>

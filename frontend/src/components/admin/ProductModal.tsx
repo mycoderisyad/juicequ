@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { X, Check, Loader2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { X, Check, Loader2, AlertCircle, ChevronDown, ChevronUp, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -218,12 +218,10 @@ export function ProductModal({
           />
 
           <div className="grid grid-cols-2 gap-4">
-            <FormFieldNumber
+            <FormFieldPrice
               label="Price (Rp)"
               value={formData.price}
               onChange={(v) => updateField("price", v)}
-              step={1000}
-              min={0}
               required
             />
             <FormFieldSelect
@@ -242,11 +240,10 @@ export function ProductModal({
               onChange={(v) => updateField("stock", v)}
               min={0}
             />
-            <FormFieldText
+            <FormFieldColorPicker
               label="Image Color Class"
               value={formData.image}
               onChange={(v) => updateField("image", v)}
-              placeholder="e.g., bg-red-500"
             />
           </div>
 
@@ -460,6 +457,266 @@ function FormFieldNumber({
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
         required={required}
       />
+    </div>
+  );
+}
+
+function FormFieldPrice({
+  label,
+  value,
+  onChange,
+  required,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  required?: boolean;
+}) {
+  const [displayValue, setDisplayValue] = useState(value > 0 ? value.toString() : "");
+
+  // Sync display value when external value changes
+  useEffect(() => {
+    setDisplayValue(value > 0 ? value.toString() : "");
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    
+    // Allow empty input
+    if (inputValue === "") {
+      setDisplayValue("");
+      onChange(0);
+      return;
+    }
+    
+    // Remove leading zeros and non-numeric characters
+    const cleanedValue = inputValue.replace(/^0+(?=\d)/, "").replace(/[^\d]/g, "");
+    
+    setDisplayValue(cleanedValue);
+    const numValue = parseInt(cleanedValue, 10);
+    onChange(isNaN(numValue) ? 0 : numValue);
+  };
+
+  return (
+    <div>
+      <label className="mb-1 block text-sm font-medium text-gray-700">
+        {label} {required && "*"}
+      </label>
+      <Input
+        type="text"
+        inputMode="numeric"
+        value={displayValue}
+        onChange={handleChange}
+        placeholder="0"
+        required={required}
+      />
+    </div>
+  );
+}
+
+// Predefined Tailwind color palette for quick selection
+const colorPalette = [
+  { name: "Red", class: "bg-red-500", color: "#ef4444" },
+  { name: "Orange", class: "bg-orange-500", color: "#f97316" },
+  { name: "Amber", class: "bg-amber-500", color: "#f59e0b" },
+  { name: "Yellow", class: "bg-yellow-500", color: "#eab308" },
+  { name: "Lime", class: "bg-lime-500", color: "#84cc16" },
+  { name: "Green", class: "bg-green-500", color: "#22c55e" },
+  { name: "Emerald", class: "bg-emerald-500", color: "#10b981" },
+  { name: "Teal", class: "bg-teal-500", color: "#14b8a6" },
+  { name: "Cyan", class: "bg-cyan-500", color: "#06b6d4" },
+  { name: "Sky", class: "bg-sky-500", color: "#0ea5e9" },
+  { name: "Blue", class: "bg-blue-500", color: "#3b82f6" },
+  { name: "Indigo", class: "bg-indigo-500", color: "#6366f1" },
+  { name: "Violet", class: "bg-violet-500", color: "#8b5cf6" },
+  { name: "Purple", class: "bg-purple-500", color: "#a855f7" },
+  { name: "Fuchsia", class: "bg-fuchsia-500", color: "#d946ef" },
+  { name: "Pink", class: "bg-pink-500", color: "#ec4899" },
+  { name: "Rose", class: "bg-rose-500", color: "#f43f5e" },
+];
+
+function FormFieldColorPicker({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customColor, setCustomColor] = useState("#10b981");
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const colorInputRef = useRef<HTMLInputElement>(null);
+
+  // Close picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setShowPicker(false);
+        setShowCustomInput(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedColor = colorPalette.find(c => c.class === value);
+  
+  // Check if value is a custom color (starts with # or rgb)
+  const isCustomColor = value && !selectedColor && (value.startsWith("#") || value.startsWith("rgb") || value.startsWith("bg-["));
+
+  // Extract display color for preview
+  const getDisplayStyle = () => {
+    if (!value) return {};
+    if (value.startsWith("#") || value.startsWith("rgb")) {
+      return { backgroundColor: value };
+    }
+    if (value.startsWith("bg-[#")) {
+      // Extract hex from bg-[#xxxxxx]
+      const match = value.match(/bg-\[(#[a-fA-F0-9]+)\]/);
+      if (match) return { backgroundColor: match[1] };
+    }
+    return {};
+  };
+
+  const handleCustomColorApply = () => {
+    // Save as Tailwind arbitrary value format
+    onChange(`bg-[${customColor}]`);
+    setShowPicker(false);
+    setShowCustomInput(false);
+  };
+
+  return (
+    <div className="relative" ref={pickerRef}>
+      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <button
+        type="button"
+        onClick={() => setShowPicker(!showPicker)}
+        className="w-full flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-900 hover:border-green-500 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+      >
+        {value ? (
+          <>
+            {selectedColor ? (
+              <div className={`w-6 h-6 rounded-md ${value}`} />
+            ) : (
+              <div className="w-6 h-6 rounded-md" style={getDisplayStyle()} />
+            )}
+            <span className="flex-1 text-left">
+              {selectedColor?.name || (isCustomColor ? "Custom Color" : value)}
+            </span>
+          </>
+        ) : (
+          <>
+            <Palette className="w-5 h-5 text-gray-400" />
+            <span className="flex-1 text-left text-gray-400">Select a color</span>
+          </>
+        )}
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showPicker ? "rotate-180" : ""}`} />
+      </button>
+
+      {showPicker && (
+        <div className="absolute z-50 mt-2 w-full rounded-xl border border-gray-200 bg-white p-3 shadow-lg">
+          {/* Default Colors Section */}
+          <p className="text-xs font-medium text-gray-500 mb-2">Default Colors</p>
+          <div className="grid grid-cols-6 gap-2">
+            {colorPalette.map((color) => (
+              <button
+                key={color.class}
+                type="button"
+                onClick={() => {
+                  onChange(color.class);
+                  setShowPicker(false);
+                  setShowCustomInput(false);
+                }}
+                className={`w-8 h-8 rounded-lg ${color.class} hover:scale-110 transition-transform ${
+                  value === color.class ? "ring-2 ring-offset-2 ring-green-500" : ""
+                }`}
+                title={color.name}
+              />
+            ))}
+          </div>
+          
+          {/* Add Custom Color Section */}
+          <div className="mt-3 pt-3 border-t">
+            {!showCustomInput ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCustomInput(true);
+                  // Open native color picker after a short delay
+                  setTimeout(() => colorInputRef.current?.click(), 100);
+                }}
+                className="w-full flex items-center justify-center gap-2 text-sm text-green-600 hover:text-green-700 py-2 rounded-lg hover:bg-green-50 transition-colors"
+              >
+                <span className="text-lg">+</span>
+                <span>Add Custom Color</span>
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-gray-500">Custom Color</p>
+                <div className="flex items-center gap-3">
+                  {/* Color preview & picker trigger */}
+                  <div className="relative">
+                    <div 
+                      className="w-10 h-10 rounded-lg border-2 border-gray-200 cursor-pointer hover:border-green-500 transition-colors"
+                      style={{ backgroundColor: customColor }}
+                      onClick={() => colorInputRef.current?.click()}
+                    />
+                    <input
+                      ref={colorInputRef}
+                      type="color"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+                  
+                  {/* Hex input */}
+                  <input
+                    type="text"
+                    value={customColor}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.match(/^#[0-9A-Fa-f]{0,6}$/)) {
+                        setCustomColor(val);
+                      }
+                    }}
+                    placeholder="#000000"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  />
+                  
+                  {/* Apply button */}
+                  <button
+                    type="button"
+                    onClick={handleCustomColorApply}
+                    className="px-3 py-2 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Clear option */}
+          <div className="mt-3 pt-3 border-t">
+            <button
+              type="button"
+              onClick={() => {
+                onChange("");
+                setShowPicker(false);
+                setShowCustomInput(false);
+              }}
+              className="w-full text-sm text-gray-500 hover:text-gray-700 py-1"
+            >
+              Clear selection
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

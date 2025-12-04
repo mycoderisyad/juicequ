@@ -6,7 +6,8 @@ import {
   Home, 
   Info, 
   Sparkles, 
-  X 
+  X,
+  ShoppingBasket
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/ui/CurrencySwitcher";
@@ -34,7 +35,7 @@ export function Header() {
   // Navigation links configuration
   const navLinks: NavLink[] = [
     { href: "/", labelKey: "nav.home", icon: Home },
-    { href: "/menu", labelKey: "nav.menu", icon: MenuIcon },
+    { href: "/menu", labelKey: "nav.menu", icon: ShoppingBasket },
     { href: "/chat", labelKey: "nav.aiChat", icon: Sparkles, special: true },
     { href: "/about", labelKey: "nav.about", icon: Info },
   ];

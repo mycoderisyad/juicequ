@@ -8,7 +8,7 @@ export function CTABanner() {
   const { t } = useTranslation();
 
   return (
-    <section className="py-8 sm:py-12 lg:py-16">
+    <section className="py-8 sm:py-12 lg:py-16 bg-white">
       <div className="container mx-auto px-4">
         <div className="relative overflow-hidden rounded-2xl sm:rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-r from-green-600 via-green-500 to-teal-500 p-6 sm:p-8 md:p-12 lg:p-16">
           {/* Background decoration */}

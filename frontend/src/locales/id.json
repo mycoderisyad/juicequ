@@ -33,7 +33,7 @@
   },
   "nav": {
     "home": "Beranda",
-    "menu": "Menu",
+    "menu": "Produk",
     "aiChat": "AI Chat",
     "about": "Tentang",
     "cart": "Keranjang",
@@ -52,10 +52,14 @@
   "home": {
     "hero": {
       "badge": "Layanan Jus Cepat & Segar",
+      "badgeBestseller": "Terlaris",
       "title1": "Smoothies untuk",
       "title2": "membuat harimu",
       "title3": "lebih segar",
+      "titleFresh": "Segar &",
+      "titleHealthy": "Sehat",
       "subtitle": "Temukan jus lokal segar, pesan online dan ambil di outlet terdekat.",
+      "subtitleBestseller": "Jus segar pilihan terbaik untuk kesehatanmu",
       "orderNow": "Pesan Sekarang",
       "viewMenu": "Lihat Menu"
     },
@@ -81,9 +85,13 @@
       "snacks": "Camilan"
     },
     "browseCategories": {
-      "title": "Jelajahi Kategori",
-      "subtitle": "Temukan menu favorit berdasarkan kategori",
-      "browseCategory": "Jelajahi"
+      "badge": "Jelajahi Menu",
+      "title": "Temukan",
+      "titleAccent": "Favoritmu",
+      "subtitle": "Pilih kategori menu yang sesuai dengan mood dan kebutuhan nutrisimu hari ini.",
+      "browseCategory": "Jelajahi",
+      "viewMenu": "Lihat Menu",
+      "defaultDescription": "Nikmati pilihan menu segar dan sehat dari kategori ini."
     },
     "whyChooseUs": {
       "title": "Kenapa Harus Pilih Kami?",
@@ -136,14 +144,18 @@
       "chatWithAI": "Chat dengan AI"
     },
     "locations": {
-      "title": "Lokasi & Kontak",
-      "subtitle": "Temukan kami atau hubungi untuk informasi lebih lanjut",
+      "title": "Lokasi",
+      "subtitle": "Kunjungi toko kami dan nikmati jus segar langsung",
       "visitUs": "Kunjungi Kami",
-      "contactUs": "Hubungi Kami",
       "openHours": "Jam Operasional",
       "weekdays": "Senin - Jumat",
       "weekend": "Sabtu - Minggu",
-      "closed": "Tutup"
+      "closed": "Tutup",
+      "open": "Buka",
+      "address": "Alamat",
+      "openInGoogleMaps": "Buka di Google Maps",
+      "openEveryDay": "Buka setiap hari",
+      "openDays": "Buka"
     },
     "newsletter": {
       "title": "Dapatkan Info Terbaru",
