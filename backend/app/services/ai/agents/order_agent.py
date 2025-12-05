@@ -97,14 +97,9 @@ class OrderAgent(BaseAgent):
             quantity = item["quantity"]
             size_str = item["size"]
             
-            # Get size enum
-            size = ProductSize.MEDIUM
-            if size_str == "small":
-                size = ProductSize.SMALL
-            elif size_str == "large":
-                size = ProductSize.LARGE
-            
-            unit_price = product.get_price(size)
+            # Always use base_price for consistency with frontend display
+            # Size-based pricing should only apply at checkout if needed
+            unit_price = product.base_price
             item_total = unit_price * quantity
             total_price += item_total
             
@@ -254,46 +249,62 @@ class OrderAgent(BaseAgent):
         """Extract products mentioned in user input."""
         products = self._get_all_products()
         found_products = []
+        matched_product_ids = set()
         
         quantity = entities.get("quantity", 1)
         size = entities.get("size", "medium")
         
-        for product in products:
+        # Sort products by name length (longer names first) to match more specific products first
+        products_sorted = sorted(products, key=lambda p: len(p.name), reverse=True)
+        
+        for product in products_sorted:
+            # Skip if already matched
+            if product.id in matched_product_ids:
+                continue
+                
             product_name_lower = product.name.lower()
             
-            # Direct name match
+            # Direct full name match (highest priority)
             if product_name_lower in user_input:
                 found_products.append({
                     "product": product,
                     "quantity": self._extract_quantity_for_product(user_input, product_name_lower, quantity),
                     "size": size,
                 })
+                matched_product_ids.add(product.id)
                 continue
             
-            # Fuzzy match - check if significant words match
+            # Check for unique identifying words (not common words like "smoothie", "juice")
+            common_words = {"smoothie", "juice", "jus", "bowl", "fresh", "segar"}
             product_words = product_name_lower.split()
-            significant_words = [w for w in product_words if len(w) > 3]
+            unique_words = [w for w in product_words if len(w) > 3 and w not in common_words]
             
-            if significant_words:
-                matches = sum(1 for word in significant_words if word in user_input)
-                if matches >= len(significant_words) * 0.5:  # At least 50% match
+            if unique_words:
+                # All unique words must be present for a match
+                matches = sum(1 for word in unique_words if word in user_input)
+                if matches == len(unique_words):
                     found_products.append({
                         "product": product,
                         "quantity": self._extract_quantity_for_product(user_input, product_name_lower, quantity),
                         "size": size,
                     })
+                    matched_product_ids.add(product.id)
                     continue
             
-            # Check aliases
+            # Check aliases only if no unique words matched
             for alias_key, aliases in self.PRODUCT_ALIASES.items():
                 if alias_key in product_name_lower:
+                    # Check if alias AND at least one other unique word is present
                     if any(alias in user_input for alias in aliases):
-                        found_products.append({
-                            "product": product,
-                            "quantity": quantity,
-                            "size": size,
-                        })
-                        break
+                        other_unique = [w for w in product_words if w != alias_key and len(w) > 3 and w not in common_words]
+                        if other_unique and any(w in user_input for w in other_unique):
+                            found_products.append({
+                                "product": product,
+                                "quantity": quantity,
+                                "size": size,
+                            })
+                            matched_product_ids.add(product.id)
+                            break
         
         return found_products
     

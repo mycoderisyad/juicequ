@@ -74,17 +74,16 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
     if (onAddToCart) {
       onAddToCart(product, quantity);
     } else {
-      // Use global cart store
+      // Use global cart store - pass quantity directly
       const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
-      for (let i = 0; i < quantity; i++) {
-        addItem({
-          id: parseInt(product.id) || 0,
-          name: product.name,
-          price: product.base_price,
-          color: product.image_color,
-          image: productImage,
-        });
-      }
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.base_price,
+        color: product.image_color,
+        image: productImage,
+        quantity: quantity,
+      });
     }
     
     // Reset quantity after adding
