@@ -56,6 +56,18 @@ class PasswordResetConfirm(BaseModel):
     new_password: str = Field(..., min_length=8, max_length=100)
 
 
+class VerifyEmailRequest(BaseModel):
+    """Schema for requesting email verification link."""
+    
+    email: EmailStr
+
+
+class VerifyEmailConfirm(BaseModel):
+    """Schema for verifying email with token."""
+    
+    token: str
+
+
 class MessageResponse(BaseModel):
     """Generic message response."""
     

@@ -69,6 +69,23 @@ class Settings(BaseSettings):
     upload_base_path: str = "./uploads"  # Path to uploads directory
     upload_max_size_mb: int = 10  # Maximum file size in MB
     upload_allowed_extensions: str = "jpg,jpeg,png,webp,gif"  # Comma-separated
+    
+    # Email
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_from_name: str = "JuiceQu"
+    smtp_use_tls: bool = True
+    smtp_use_ssl: bool = False
+    
+    # Frontend
+    frontend_url: str = "http://localhost:3000"
+    
+    # Tokens
+    verification_token_expire_minutes: int = 60 * 24  # 24 hours
+    reset_token_expire_minutes: int = 60  # 1 hour
 
     @property
     def cors_origins_list(self) -> list[str]:

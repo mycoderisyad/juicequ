@@ -2,12 +2,11 @@
 Admin Products API.
 Manage products and inventory.
 """
-from datetime import datetime
 from typing import Annotated
 import uuid
 import json
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile, File
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -15,6 +14,16 @@ from app.db.session import get_db
 from app.core.permissions import require_roles
 from app.models.user import User, UserRole
 from app.models.product import Product, ProductCategory
+
+# Import/Export functions
+from app.api.v1.endpoints.admin.product_import_export import (
+    ImportResult,
+    export_products_to_csv,
+    export_products_to_excel,
+    import_products_from_csv,
+    import_products_from_excel,
+    generate_csv_template,
+)
 
 router = APIRouter()
 
@@ -130,6 +139,76 @@ async def get_products(
         "skip": skip,
         "limit": limit,
     }
+
+
+@router.get(
+    "/export/csv",
+    summary="Export products to CSV",
+    description="Export all products to CSV format.",
+)
+async def export_products_csv_route(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+):
+    """Export all products to CSV format."""
+    products = db.query(Product).filter(Product.is_deleted == False).all()
+    return export_products_to_csv(products)
+
+
+@router.get(
+    "/export/excel",
+    summary="Export products to Excel",
+    description="Export all products to Excel format.",
+)
+async def export_products_excel_route(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+):
+    """Export all products to Excel format (XLSX)."""
+    products = db.query(Product).filter(Product.is_deleted == False).all()
+    return export_products_to_excel(products)
+
+
+@router.post(
+    "/import/csv",
+    summary="Import products from CSV",
+    description="Import products from CSV file. Updates existing products by name.",
+    response_model=ImportResult,
+)
+async def import_csv_route(
+    file: UploadFile = File(...),
+    db: Annotated[Session, Depends(get_db)] = None,
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+):
+    """Import products from CSV file."""
+    return await import_products_from_csv(file, db)
+
+
+@router.post(
+    "/import/excel",
+    summary="Import products from Excel",
+    description="Import products from Excel file. Updates existing products by name.",
+    response_model=ImportResult,
+)
+async def import_excel_route(
+    file: UploadFile = File(...),
+    db: Annotated[Session, Depends(get_db)] = None,
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+):
+    """Import products from Excel file."""
+    return await import_products_from_excel(file, db)
+
+
+@router.get(
+    "/template/csv",
+    summary="Download CSV template",
+    description="Download a CSV template for importing products.",
+)
+async def download_csv_template_route(
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+):
+    """Download CSV template for product import."""
+    return generate_csv_template()
 
 
 @router.get(

@@ -41,7 +41,7 @@ export default function RegisterPage() {
       });
       
       // Redirect to login on success
-      router.push("/login");
+      router.push("/login?verify=email");
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const errorResponse = (err as { response: { data: { detail: string } } }).response;

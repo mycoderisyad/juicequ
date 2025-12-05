@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Edit2, Trash2, Package, AlertCircle, Loader2, MoreHorizontal } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Package, AlertCircle, Loader2, MoreHorizontal, FileUp, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ProductModal, DeleteModal } from "@/components/admin";
+import { ProductModal, DeleteModal, ImportExportModal } from "@/components/admin";
 import { adminProductsApi, categoriesApi } from "@/lib/api/admin";
 
 interface Product {
@@ -91,6 +91,7 @@ function useProductModals(refetch: () => void) {
   const [isSaving, setIsSaving] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,6 +108,10 @@ function useProductModals(refetch: () => void) {
   const handleDeleteClick = (product: Product) => {
     setSelectedProduct(product);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleOpenImportExport = () => {
+    setIsImportExportModalOpen(true);
   };
 
   const handleSave = async (data: Partial<Product>) => {
@@ -157,30 +162,42 @@ function useProductModals(refetch: () => void) {
     setIsProductModalOpen,
     isDeleteModalOpen,
     setIsDeleteModalOpen,
+    isImportExportModalOpen,
+    setIsImportExportModalOpen,
     selectedProduct,
     handleCreate,
     handleEdit,
     handleDeleteClick,
+    handleOpenImportExport,
     handleSave,
     handleDelete,
     handleToggleAvailability,
   };
 }
 
-function ProductsHeader({ onCreate }: { onCreate: () => void }) {
+function ProductsHeader({ onCreate, onImportExport }: { onCreate: () => void; onImportExport: () => void }) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
       <div>
         <h1 className="text-2xl font-serif font-bold text-stone-800">Products</h1>
         <p className="text-stone-500 text-sm">Kelola katalog produk kamu</p>
       </div>
-      <button 
-        onClick={onCreate} 
-        className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
-      >
-        <Plus size={18} />
-        Tambah Produk
-      </button>
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onImportExport} 
+          className="flex items-center gap-2 bg-white text-stone-700 px-5 py-3 rounded-full border border-stone-200 hover:bg-stone-50 hover:border-stone-300 transition-colors font-medium"
+        >
+          <FileUp size={18} />
+          Import / Export
+        </button>
+        <button 
+          onClick={onCreate} 
+          className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
+        >
+          <Plus size={18} />
+          Tambah Produk
+        </button>
+      </div>
     </div>
   );
 }
@@ -401,7 +418,7 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      <ProductsHeader onCreate={modalsState.handleCreate} />
+      <ProductsHeader onCreate={modalsState.handleCreate} onImportExport={modalsState.handleOpenImportExport} />
       {combinedError && <ErrorBanner message={combinedError} onDismiss={clearError} />}
       <ProductsFilter
         searchQuery={productsState.searchQuery}
@@ -435,6 +452,11 @@ export default function AdminProductsPage() {
         onConfirm={modalsState.handleDelete}
         itemName={modalsState.selectedProduct?.name || ""}
         isLoading={modalsState.isSaving}
+      />
+      <ImportExportModal
+        isOpen={modalsState.isImportExportModalOpen}
+        onClose={() => modalsState.setIsImportExportModalOpen(false)}
+        onImportSuccess={productsState.refetch}
       />
     </div>
   );

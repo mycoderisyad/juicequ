@@ -1,10 +1,13 @@
 """
 Authentication service for user login, registration, and token management.
 """
-from datetime import datetime, timezone
+import hashlib
+import secrets
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.core.exceptions import (
     AuthenticationError,
     DuplicateError,
@@ -20,6 +23,7 @@ from app.core.security import (
 )
 from app.models.user import User, UserRole
 from app.schemas.auth import LoginRequest, RegisterRequest, Token
+from app.services.email_service import EmailService
 
 
 class AuthService:
@@ -27,6 +31,86 @@ class AuthService:
     
     def __init__(self, db: Session):
         self.db = db
+        self.email_service = EmailService()
+    
+    @staticmethod
+    def _hash_token(token: str) -> str:
+        """Hash token using SHA256 for storage."""
+        return hashlib.sha256(token.encode("utf-8")).hexdigest()
+    
+    @staticmethod
+    def _generate_token(expire_minutes: int) -> tuple[str, str, datetime]:
+        """Generate raw token, hashed token, and expiry."""
+        raw_token = secrets.token_urlsafe(32)
+        hashed_token = AuthService._hash_token(raw_token)
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)
+        return raw_token, hashed_token, expires_at
+    
+    @staticmethod
+    def _build_link(path: str, token: str) -> str:
+        """Build absolute link for email actions."""
+        base_url = settings.frontend_url.rstrip("/")
+        return f"{base_url}{path}?token={token}"
+    
+    def _send_verification_email(self, user: User) -> None:
+        """Prepare and send verification email."""
+        raw_token, hashed_token, expires_at = self._generate_token(
+            settings.verification_token_expire_minutes
+        )
+        user.verification_token = hashed_token
+        user.verification_token_expires_at = expires_at
+        
+        verify_link = self._build_link("/verify-email", raw_token)
+        html_body = (
+            f"<p>Hello {user.full_name},</p>"
+            "<p>Please verify your email address to activate your JuiceQu account.</p>"
+            f'<p><a href="{verify_link}">Verify Email</a></p>'
+            f"<p>This link expires in {settings.verification_token_expire_minutes // 60} "
+            "hour(s). If you did not create an account, you can ignore this email.</p>"
+        )
+        text_body = (
+            f"Hello {user.full_name},\n\n"
+            "Please verify your email address to activate your JuiceQu account.\n"
+            f"Verification link: {verify_link}\n\n"
+            "If you did not create an account, you can ignore this email."
+        )
+        
+        self.email_service.send_email(
+            recipient=user.email,
+            subject="Verify your JuiceQu email",
+            html_body=html_body,
+            text_body=text_body,
+        )
+    
+    def _send_reset_email(self, user: User) -> None:
+        """Prepare and send password reset email."""
+        raw_token, hashed_token, expires_at = self._generate_token(
+            settings.reset_token_expire_minutes
+        )
+        user.reset_token_hash = hashed_token
+        user.reset_token_expires_at = expires_at
+        
+        reset_link = self._build_link("/reset-password", raw_token)
+        html_body = (
+            f"<p>Hello {user.full_name},</p>"
+            "<p>We received a request to reset your JuiceQu password.</p>"
+            f'<p><a href="{reset_link}">Reset Password</a></p>'
+            f"<p>This link expires in {settings.reset_token_expire_minutes} minutes. "
+            "If you did not request this, you can ignore this email.</p>"
+        )
+        text_body = (
+            f"Hello {user.full_name},\n\n"
+            "We received a request to reset your JuiceQu password.\n"
+            f"Reset link: {reset_link}\n\n"
+            "If you did not request this, you can ignore this email."
+        )
+        
+        self.email_service.send_email(
+            recipient=user.email,
+            subject="Reset your JuiceQu password",
+            html_body=html_body,
+            text_body=text_body,
+        )
     
     def register(self, data: RegisterRequest) -> User:
         """
@@ -61,7 +145,15 @@ class AuthService:
         )
         
         self.db.add(user)
-        self.db.commit()
+        self.db.flush()
+        
+        try:
+            self._send_verification_email(user)
+            self.db.commit()
+        except Exception as exc:
+            self.db.rollback()
+            raise ValidationError("Failed to send verification email") from exc
+        
         self.db.refresh(user)
         
         return user
@@ -212,4 +304,75 @@ class AuthService:
             raise ValidationError("Current password is incorrect")
         
         user.hashed_password = get_password_hash(new_password)
+        self.db.commit()
+    
+    def request_password_reset(self, email: str) -> None:
+        """Request a password reset link."""
+        user = self.db.query(User).filter(User.email == email.lower()).first()
+        
+        # Avoid leaking whether the email exists or uses OAuth
+        if not user or user.auth_provider != "local":
+            return
+        
+        try:
+            self._send_reset_email(user)
+            self.db.commit()
+        except Exception as exc:
+            self.db.rollback()
+            raise ValidationError("Failed to send password reset email") from exc
+    
+    def reset_password(self, token: str, new_password: str) -> None:
+        """Reset password using a reset token."""
+        hashed_token = self._hash_token(token)
+        now = datetime.now(timezone.utc)
+        
+        user = self.db.query(User).filter(
+            User.reset_token_hash == hashed_token,
+            User.reset_token_expires_at != None,  # noqa: E711
+            User.reset_token_expires_at >= now,
+        ).first()
+        
+        if not user:
+            raise ValidationError("Invalid or expired reset token")
+        
+        user.hashed_password = get_password_hash(new_password)
+        user.reset_token_hash = None
+        user.reset_token_expires_at = None
+        self.db.commit()
+    
+    def send_verification(self, email: str) -> None:
+        """Send verification email for the provided address."""
+        user = self.db.query(User).filter(User.email == email.lower()).first()
+        
+        # Avoid leaking whether the email exists
+        if not user:
+            return
+        
+        if user.is_verified:
+            raise ValidationError("Email is already verified")
+        
+        try:
+            self._send_verification_email(user)
+            self.db.commit()
+        except Exception as exc:
+            self.db.rollback()
+            raise ValidationError("Failed to send verification email") from exc
+    
+    def confirm_verification(self, token: str) -> None:
+        """Confirm email verification using token."""
+        hashed_token = self._hash_token(token)
+        now = datetime.now(timezone.utc)
+        
+        user = self.db.query(User).filter(
+            User.verification_token == hashed_token,
+            User.verification_token_expires_at != None,  # noqa: E711
+            User.verification_token_expires_at >= now,
+        ).first()
+        
+        if not user:
+            raise ValidationError("Invalid or expired verification token")
+        
+        user.is_verified = True
+        user.verification_token = None
+        user.verification_token_expires_at = None
         self.db.commit()

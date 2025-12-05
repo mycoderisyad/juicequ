@@ -18,12 +18,28 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
 
   // Handle OAuth callback errors
   useEffect(() => {
     const errorParam = searchParams.get("error");
+    const verified = searchParams.get("verified");
+    const verifyPrompt = searchParams.get("verify");
+    const resetSuccess = searchParams.get("success");
+    
     if (errorParam) {
       setError(decodeURIComponent(errorParam));
+      return;
+    }
+    
+    if (verified === "1") {
+      setInfo("Email verified. You can sign in now.");
+    } else if (verifyPrompt === "email") {
+      setInfo("Check your email for a verification link.");
+    } else if (resetSuccess === "reset") {
+      setInfo("Password reset successfully. You can sign in now.");
+    } else {
+      setInfo("");
     }
   }, [searchParams]);
 
@@ -133,6 +149,11 @@ function LoginForm() {
           {/* Card */}
           <div className="rounded-3xl bg-white p-8 shadow-xl shadow-gray-200/50">
             <form className="space-y-6" onSubmit={handleSubmit}>
+              {info && (
+                <div className="rounded-lg bg-green-50 p-4 text-sm text-green-600">
+                  {info}
+                </div>
+              )}
               {error && (
                 <div className="rounded-lg bg-red-50 p-4 text-sm text-red-500">
                   {error}
@@ -193,9 +214,9 @@ function LoginForm() {
                 </div>
 
                 <div className="text-sm">
-                  <a href="#" className="font-medium text-green-600 hover:text-green-500">
-                    {t("auth.login.forgotPassword")}
-                  </a>
+                <Link href="/forgot-password" className="font-medium text-green-600 hover:text-green-500">
+                  {t("auth.login.forgotPassword")}
+                </Link>
                 </div>
               </div>
 
