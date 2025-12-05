@@ -9,8 +9,8 @@ import { persist } from "zustand/middleware";
 export { useAuthStore } from "@/store/auth-store";
 export type { User } from "@/store/auth-store";
 
-interface CartItem {
-  id: string | number;
+export interface CartItem {
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -18,14 +18,24 @@ interface CartItem {
   color?: string;
 }
 
+type CartItemInput = Omit<CartItem, "quantity" | "id"> & { 
+  id: number | string; 
+  quantity?: number;
+};
+
 interface CartState {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
-  removeItem: (id: string | number) => void;
-  updateQuantity: (id: string | number, quantity: number) => void;
+  addItem: (item: CartItemInput) => void;
+  removeItem: (id: number | string) => void;
+  updateQuantity: (id: number | string, quantity: number) => void;
   clearCart: () => void;
   total: () => number;
 }
+
+// Helper to normalize ID to string for consistent comparison
+const normalizeId = (id: number | string): string => {
+  return String(id);
+};
 
 export const useCartStore = create<CartState>()(
   persist(
@@ -33,8 +43,10 @@ export const useCartStore = create<CartState>()(
       items: [],
       addItem: (item) => {
         const currentItems = get().items;
-        const existingItem = currentItems.find((i) => i.id === item.id);
+        const itemId = normalizeId(item.id);
+        const existingItem = currentItems.find((i) => i.id === itemId);
         const quantityToAdd = item.quantity || 1;
+        
         // Ensure price is a valid number
         const validPrice =
           typeof item.price === "number" && !isNaN(item.price)
@@ -42,27 +54,37 @@ export const useCartStore = create<CartState>()(
             : parseFloat(String(item.price)) || 0;
 
         if (existingItem) {
+          // Update quantity AND price (in case price changed from server)
           set({
             items: currentItems.map((i) =>
-              i.id === item.id ? { ...i, quantity: i.quantity + quantityToAdd } : i
+              i.id === itemId
+                ? { ...i, quantity: i.quantity + quantityToAdd, price: validPrice }
+                : i
             ),
           });
         } else {
-          const { quantity: _, ...rest } = item;
+          const { quantity: _, id: __, ...rest } = item;
           set({
-            items: [...currentItems, { ...rest, price: validPrice, quantity: quantityToAdd }],
+            items: [...currentItems, { 
+              ...rest, 
+              id: itemId, 
+              price: validPrice, 
+              quantity: quantityToAdd 
+            }],
           });
         }
       },
       removeItem: (id) => {
-        set({ items: get().items.filter((i) => i.id !== id) });
+        const itemId = normalizeId(id);
+        set({ items: get().items.filter((i) => i.id !== itemId) });
       },
       updateQuantity: (id, quantity) => {
+        const itemId = normalizeId(id);
         if (quantity <= 0) {
-          get().removeItem(id);
+          get().removeItem(itemId);
         } else {
           set({
-            items: get().items.map((i) => (i.id === id ? { ...i, quantity } : i)),
+            items: get().items.map((i) => (i.id === itemId ? { ...i, quantity } : i)),
           });
         }
       },

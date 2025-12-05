@@ -409,28 +409,48 @@ export function useVoiceCommand({
       if (response.order_data && response.order_data.items && response.order_data.items.length > 0) {
         const validItems: VoiceCommandItem[] = [];
         
+        // Get fresh cart state
+        const cartStore = useCartStore.getState();
+        
         for (const item of response.order_data.items) {
           if (!item.product_id || !item.product_name || !item.unit_price || item.unit_price <= 0) {
             continue;
           }
           
+          // Use string for product ID (UUID from database)
+          const productId = String(item.product_id);
           const quantity = item.quantity > 0 ? item.quantity : 1;
           const size = item.size || "medium";
           const unitPrice = Number(item.unit_price);
           
-          if (unitPrice <= 0) continue;
+          if (unitPrice <= 0 || !productId) continue;
           
-          // Add to cart using @/lib/store format
-          addItem({
-            id: String(item.product_id),
-            name: String(item.product_name),
-            price: unitPrice,
-            quantity,
-            image: item.image_url || undefined,
-          });
+          // Check for existing item with same ID (compare as string)
+          const existingItem = cartStore.items.find(i => String(i.id) === productId);
+          
+          if (existingItem) {
+            // Update existing item's quantity (price will be updated by addItem)
+            // Use addItem to update both quantity and price
+            cartStore.addItem({
+              id: productId,
+              name: String(item.product_name),
+              price: unitPrice,
+              quantity,
+              image: item.image_url || undefined,
+            });
+          } else {
+            // Add new item to cart with correct price
+            cartStore.addItem({
+              id: productId,
+              name: String(item.product_name),
+              price: unitPrice,
+              quantity,
+              image: item.image_url || undefined,
+            });
+          }
           
           validItems.push({
-            product_id: String(item.product_id),
+            product_id: productId,
             product_name: String(item.product_name),
             quantity,
             size: size as "small" | "medium" | "large",

@@ -73,8 +73,8 @@ Website e-commerce toko juice dengan integrasi AI untuk pengalaman berbelanja ya
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Next.js 15, TypeScript, Tailwind CSS, Zustand |
-| Backend | Python 3.11+, FastAPI, SQLAlchemy, Pydantic |
+| Frontend | Next.js 16, TypeScript, Tailwind CSS, Zustand |
+| Backend | Python 3.12+, FastAPI, SQLAlchemy, Pydantic |
 | Database | PostgreSQL / SQLite |
 | AI/LLM | Kolosal AI API, ChromaDB (Vector DB) |
 | Voice | Google Cloud Speech-to-Text |
