@@ -305,3 +305,27 @@ async def generate_fotobooth(
     except Exception as e:
         logger.error(f"Fotobooth error: {e}")
         raise BadRequestException(f"Failed to generate fotobooth image: {e}")
+
+
+@router.get("/languages")
+async def get_supported_languages():
+    """
+    Get list of supported languages for voice/chat.
+    
+    Returns languages supported by STT and LLM, including regional Indonesian languages.
+    """
+    from app.services.ai.locales import SUPPORTED_LOCALES
+    
+    return {
+        "languages": [
+            {
+                "code": config.code,
+                "name": config.name,
+                "stt_code": config.stt_code,
+                "flag": config.flag,
+                "is_regional": config.is_regional,
+            }
+            for config in SUPPORTED_LOCALES.values()
+        ],
+        "default": "id",
+    }

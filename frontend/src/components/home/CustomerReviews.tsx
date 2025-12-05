@@ -132,7 +132,7 @@ export function CustomerReviews() {
                   </div>
                 )}
                 <span className="text-xs sm:text-sm font-medium text-stone-400 uppercase tracking-wider">
-                  {t(stat.labelKey)}
+                  {t(stat.labelKey as Parameters<typeof t>[0])}
                 </span>
               </div>
             </div>

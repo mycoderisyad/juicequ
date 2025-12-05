@@ -61,3 +61,17 @@ class MessageResponse(BaseModel):
     
     message: str
     success: bool = True
+
+
+class GoogleAuthRequest(BaseModel):
+    """Schema for Google OAuth callback."""
+    
+    code: str
+    state: str | None = None
+
+
+class GoogleAuthUrlResponse(BaseModel):
+    """Schema for Google OAuth URL response."""
+    
+    auth_url: str
+    state: str

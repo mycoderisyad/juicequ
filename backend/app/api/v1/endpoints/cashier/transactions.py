@@ -246,7 +246,7 @@ async def get_receipt(
         "tax": order.tax,
         "total": order.total,
         "payment_method": order.payment_method.value if order.payment_method else None,
-        "message": "Terima kasih telah berbelanja di JuiceQu! 🍹",
+        "message": "Terima kasih telah berbelanja di JuiceQu!",
     }
     
     return receipt

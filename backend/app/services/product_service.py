@@ -1,7 +1,6 @@
 """
 Product service for business logic.
 """
-import json
 from typing import Optional
 
 from sqlalchemy import or_, func
@@ -118,6 +117,9 @@ class ProductService:
         """Get all products with filters and pagination."""
         query = db.query(Product).options(joinedload(Product.category))
         
+        # Exclude soft-deleted products
+        query = query.filter(Product.is_deleted == False)
+        
         # Apply filters
         if category_id:
             query = query.filter(Product.category_id == category_id)
@@ -164,7 +166,10 @@ class ProductService:
         """Get a product by ID."""
         return db.query(Product).options(
             joinedload(Product.category)
-        ).filter(Product.id == product_id).first()
+        ).filter(
+            Product.id == product_id,
+            Product.is_deleted == False
+        ).first()
     
     @staticmethod
     def get_by_slug(
@@ -176,7 +181,8 @@ class ProductService:
         return db.query(Product).options(
             joinedload(Product.category)
         ).filter(
-            func.lower(Product.name) == slug.lower()
+            func.lower(Product.name) == slug.lower(),
+            Product.is_deleted == False
         ).first()
     
     @staticmethod
@@ -215,12 +221,14 @@ class ProductService:
         db: Session,
         product_id: str,
     ) -> bool:
-        """Delete a product."""
+        """Soft delete a product."""
         product = ProductService.get_by_id(db, product_id)
         if not product:
             return False
         
-        db.delete(product)
+        # Soft delete - mark as deleted instead of actually deleting
+        product.is_deleted = True
+        product.is_available = False
         db.commit()
         return True
     
@@ -231,7 +239,10 @@ class ProductService:
         is_available: bool = True,
     ) -> list[Product]:
         """Get all products in a category."""
-        query = db.query(Product).filter(Product.category_id == category_id)
+        query = db.query(Product).filter(
+            Product.category_id == category_id,
+            Product.is_deleted == False
+        )
         
         if is_available:
             query = query.filter(Product.is_available == True)
@@ -251,6 +262,7 @@ class ProductService:
             joinedload(Product.category)
         ).filter(
             Product.is_available == True,
+            Product.is_deleted == False,
             or_(
                 Product.name.ilike(search_term),
                 Product.description.ilike(search_term),
@@ -269,6 +281,7 @@ class ProductService:
         ).filter(
             Product.is_available == True,
             Product.is_featured == True,
+            Product.is_deleted == False,
         ).order_by(Product.display_order).limit(limit).all()
     
     @staticmethod
@@ -281,6 +294,7 @@ class ProductService:
             joinedload(Product.category)
         ).filter(
             Product.is_available == True,
+            Product.is_deleted == False,
         ).order_by(Product.order_count.desc()).limit(limit).all()
     
     @staticmethod
@@ -297,6 +311,7 @@ class ProductService:
             joinedload(Product.category)
         ).filter(
             Product.is_available == True,
+            Product.is_deleted == False,
         ).order_by(
             Product.order_count.desc(),
             Product.average_rating.desc(),

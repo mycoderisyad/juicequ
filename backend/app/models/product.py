@@ -204,6 +204,14 @@ class Product(Base):
         nullable=False,
     )
     
+    # Soft delete
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+        index=True,
+    )
+    
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

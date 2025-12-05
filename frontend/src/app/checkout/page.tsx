@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { CartSummary } from "@/components/cart";
 import { ArrowLeft, CreditCard, Banknote, Smartphone, ShoppingBag, CheckCircle } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/lib/store";
-import { api } from "@/lib/api";
+import apiClient from "@/lib/api/config";
 import { useCurrency } from "@/lib/hooks/use-store";
 import { getImageUrl } from "@/lib/image-utils";
 
@@ -77,7 +77,7 @@ export default function CheckoutPage() {
         payment_method: paymentMethod,
       };
 
-      const response = await api.post("/customer/orders", orderData);
+      const response = await apiClient.post("/customer/orders", orderData);
       
       if (response.data.success) {
         clearCart();

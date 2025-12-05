@@ -59,6 +59,11 @@ class Settings(BaseSettings):
     # ExchangeRate API (optional - can be set in admin panel)
     exchangerate_api_key: str = ""
 
+    # Google OAuth
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = "http://localhost:3000/api/auth/google/callback"
+
     # Local File Storage (VPS-based storage)
     # Files are stored on the same server as the application
     upload_base_path: str = "./uploads"  # Path to uploads directory

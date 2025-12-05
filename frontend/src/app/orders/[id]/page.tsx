@@ -20,7 +20,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
-import { api } from "@/lib/api";
+import apiClient from "@/lib/api/config";
 import { useCurrency } from "@/lib/hooks/use-store";
 
 interface OrderItem {
@@ -82,7 +82,7 @@ export default function OrderDetailPage() {
   const fetchOrder = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get(`/customer/orders/${orderId}`);
+      const response = await apiClient.get(`/customer/orders/${orderId}`);
       setOrder(response.data);
     } catch (err) {
       console.error("Failed to fetch order:", err);
@@ -112,7 +112,7 @@ export default function OrderDetailPage() {
 
     try {
       setIsCancelling(true);
-      await api.post(`/customer/orders/${orderId}/cancel`);
+      await apiClient.post(`/customer/orders/${orderId}/cancel`);
       await fetchOrder();
     } catch (err) {
       console.error("Failed to cancel order:", err);

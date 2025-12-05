@@ -1,17 +1,23 @@
 """
 Speech-to-Text Service.
 Handles audio transcription using Google Cloud Speech-to-Text.
+Supports multiple languages including regional Indonesian languages.
 """
 import logging
 import os
-import tempfile
 from typing import Optional
+
+from app.services.ai.locales import (
+    get_stt_language_code,
+    get_fallback_message,
+    get_locale_config,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class STTService:
-    """Service for Speech-to-Text operations."""
+    """Service for Speech-to-Text operations with multi-locale support."""
     
     def __init__(self, credentials_path: Optional[str] = None):
         """
@@ -41,7 +47,7 @@ class STTService:
     async def transcribe(
         self,
         audio_data: bytes,
-        language: str = "id-ID",
+        locale: str = "id",
         encoding: str = "WEBM_OPUS",
         sample_rate: int = 48000,
     ) -> str:
@@ -50,16 +56,20 @@ class STTService:
         
         Args:
             audio_data: Binary audio data
-            language: Language code (default: Indonesian)
+            locale: Locale code (id, en, jv, su)
             encoding: Audio encoding format (WEBM_OPUS, LINEAR16, FLAC, etc.)
             sample_rate: Audio sample rate in Hz
         
         Returns:
             Transcribed text
         """
+        # Get STT language code for the locale
+        language_code = get_stt_language_code(locale)
+        locale_config = get_locale_config(locale)
+        
         if not self._initialized or not self.client:
             logger.warning("STT client not available, using fallback transcription")
-            return await self._fallback_transcribe(audio_data, language)
+            return await self._fallback_transcribe(locale)
         
         try:
             from google.cloud import speech_v1 as speech
@@ -75,11 +85,60 @@ class STTService:
             
             audio_encoding = encoding_map.get(encoding, speech.RecognitionConfig.AudioEncoding.WEBM_OPUS)
             
-            # Configure recognition
+            # Try primary language code first
+            transcription = await self._try_transcribe(
+                audio_data=audio_data,
+                language_code=language_code,
+                audio_encoding=audio_encoding,
+                sample_rate=sample_rate,
+            )
+            
+            # If no result and we have alternative codes, try them
+            if not transcription and locale_config.alternative_stt_codes:
+                for alt_code in locale_config.alternative_stt_codes:
+                    if alt_code != language_code:
+                        logger.info(f"Trying alternative STT code: {alt_code}")
+                        transcription = await self._try_transcribe(
+                            audio_data=audio_data,
+                            language_code=alt_code,
+                            audio_encoding=audio_encoding,
+                            sample_rate=sample_rate,
+                        )
+                        if transcription:
+                            break
+            
+            if transcription:
+                logger.info(f"Successfully transcribed audio ({locale}): {transcription[:100]}...")
+                return transcription
+            else:
+                logger.warning(f"No transcription results returned for locale: {locale}")
+                return await self._fallback_transcribe(locale)
+                
+        except Exception as e:
+            logger.error(f"Error during transcription: {e}")
+            return await self._fallback_transcribe(locale)
+    
+    async def _try_transcribe(
+        self,
+        audio_data: bytes,
+        language_code: str,
+        audio_encoding,
+        sample_rate: int,
+    ) -> str:
+        """
+        Attempt transcription with specific language code.
+        
+        Returns:
+            Transcribed text or empty string if failed
+        """
+        try:
+            from google.cloud import speech_v1 as speech
+            
+            # Configure recognition with language-specific settings
             config = speech.RecognitionConfig(
                 encoding=audio_encoding,
                 sample_rate_hertz=sample_rate,
-                language_code=language,
+                language_code=language_code,
                 enable_automatic_punctuation=True,
                 model="latest_short",  # Optimized for short audio clips
                 use_enhanced=True,  # Use enhanced model for better accuracy
@@ -96,38 +155,114 @@ class STTService:
                 if result.alternatives:
                     transcription += result.alternatives[0].transcript + " "
             
-            transcription = transcription.strip()
+            return transcription.strip()
             
-            if transcription:
-                logger.info(f"Successfully transcribed audio: {transcription[:100]}...")
-                return transcription
+        except Exception as e:
+            logger.warning(f"Transcription failed for {language_code}: {e}")
+            return ""
+    
+    async def transcribe_with_alternatives(
+        self,
+        audio_data: bytes,
+        locale: str = "id",
+        encoding: str = "WEBM_OPUS",
+        sample_rate: int = 48000,
+        max_alternatives: int = 3,
+    ) -> list[dict]:
+        """
+        Transcribe audio and return multiple alternatives with confidence scores.
+        Useful for regional languages where accuracy may vary.
+        
+        Args:
+            audio_data: Binary audio data
+            locale: Locale code
+            encoding: Audio encoding format
+            sample_rate: Audio sample rate in Hz
+            max_alternatives: Maximum number of alternatives to return
+        
+        Returns:
+            List of dicts with 'transcript' and 'confidence' keys
+        """
+        language_code = get_stt_language_code(locale)
+        
+        if not self._initialized or not self.client:
+            return [{"transcript": await self._fallback_transcribe(locale), "confidence": 0.0}]
+        
+        try:
+            from google.cloud import speech_v1 as speech
+            
+            encoding_map = {
+                "WEBM_OPUS": speech.RecognitionConfig.AudioEncoding.WEBM_OPUS,
+                "LINEAR16": speech.RecognitionConfig.AudioEncoding.LINEAR16,
+                "FLAC": speech.RecognitionConfig.AudioEncoding.FLAC,
+                "OGG_OPUS": speech.RecognitionConfig.AudioEncoding.OGG_OPUS,
+                "MP3": speech.RecognitionConfig.AudioEncoding.MP3,
+            }
+            
+            audio_encoding = encoding_map.get(encoding, speech.RecognitionConfig.AudioEncoding.WEBM_OPUS)
+            
+            config = speech.RecognitionConfig(
+                encoding=audio_encoding,
+                sample_rate_hertz=sample_rate,
+                language_code=language_code,
+                enable_automatic_punctuation=True,
+                model="latest_short",
+                use_enhanced=True,
+                max_alternatives=max_alternatives,
+            )
+            
+            audio = speech.RecognitionAudio(content=audio_data)
+            response = self.client.recognize(config=config, audio=audio)
+            
+            alternatives = []
+            for result in response.results:
+                for alt in result.alternatives:
+                    alternatives.append({
+                        "transcript": alt.transcript,
+                        "confidence": alt.confidence,
+                    })
+            
+            if alternatives:
+                return alternatives
             else:
-                logger.warning("No transcription results returned")
-                return await self._fallback_transcribe(audio_data, language)
+                return [{"transcript": await self._fallback_transcribe(locale), "confidence": 0.0}]
                 
         except Exception as e:
-            logger.error(f"Error during transcription: {e}")
-            return await self._fallback_transcribe(audio_data, language)
+            logger.error(f"Error during transcription with alternatives: {e}")
+            return [{"transcript": await self._fallback_transcribe(locale), "confidence": 0.0}]
     
-    async def _fallback_transcribe(self, audio_data: bytes, language: str) -> str:
+    async def _fallback_transcribe(self, locale: str) -> str:
         """
         Fallback transcription when Google Cloud STT is not available.
-        Uses a simple keyword-based response for demo purposes.
         
         In production, you should configure proper Google Cloud credentials.
         """
-        # For demo/development, return a helpful message
-        if language.startswith("id"):
-            return "[Fitur voice ordering membutuhkan konfigurasi Google Cloud Speech-to-Text. Silakan ketik pesanan Anda.]"
-        else:
-            return "[Voice ordering requires Google Cloud Speech-to-Text configuration. Please type your order instead.]"
+        return f"[{get_fallback_message(locale, 'stt_unavailable')}]"
+    
+    def get_supported_languages(self) -> list[dict]:
+        """
+        Get list of supported languages for STT.
+        
+        Returns:
+            List of dicts with locale info
+        """
+        from app.services.ai.locales import SUPPORTED_LOCALES
+        
+        return [
+            {
+                "code": config.code,
+                "name": config.name,
+                "stt_code": config.stt_code,
+                "flag": config.flag,
+                "is_regional": config.is_regional,
+            }
+            for config in SUPPORTED_LOCALES.values()
+        ]
     
     async def close(self) -> None:
         """Clean up resources."""
         if self.client:
             try:
-                # Google Cloud clients don't require explicit cleanup
-                # but we can set to None to release reference
                 self.client = None
                 self._initialized = False
             except Exception as e:

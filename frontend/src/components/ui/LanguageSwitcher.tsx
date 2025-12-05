@@ -15,7 +15,7 @@ export function LanguageSwitcher({ variant = "default", upwards = false }: Langu
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const languages: Locale[] = ["id", "en"];
+  const languages: Locale[] = ["id", "en", "jv", "su"];
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {

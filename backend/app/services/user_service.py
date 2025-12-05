@@ -6,7 +6,7 @@ from typing import Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import NotFoundError, DuplicateError, ValidationError
+from app.core.exceptions import NotFoundError, DuplicateError
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole
 
