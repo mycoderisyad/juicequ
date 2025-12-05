@@ -25,25 +25,25 @@ def create_default_categories(db: Session) -> None:
         {
             "id": "smoothies",
             "name": "Smoothies",
-            "icon": "🥤",
+            "icon": "",
             "description": "Blended fruit smoothies with fresh ingredients",
         },
         {
             "id": "juices",
             "name": "Juices",
-            "icon": "🍊",
+            "icon": "",
             "description": "Fresh pressed juices from natural fruits",
         },
         {
             "id": "bowls",
             "name": "Bowls",
-            "icon": "🥣",
+            "icon": "",
             "description": "Healthy acai and smoothie bowls with toppings",
         },
         {
             "id": "shots",
             "name": "Shots",
-            "icon": "💉",
+            "icon": "",
             "description": "Concentrated health shots for immune boost",
         },
     ]
@@ -65,7 +65,7 @@ def create_default_categories(db: Session) -> None:
         db.add(new_category)
         db.commit()
         
-        print(f"✅ Created category: {cat_data['name']} ({cat_data['icon']})")
+        print(f"Created category: {cat_data['name']}")
     
     print("\n")
 
@@ -272,41 +272,38 @@ def create_default_products(db: Session) -> None:
         db.add(new_product)
         db.commit()
         
-        print(f"✅ Created product: {prod_data['name']} (Rp {prod_data['base_price']:,})")
+        print(f"Created product: {prod_data['name']} (Rp {prod_data['base_price']:,})")
     
     print("\n")
 
 
 def main():
     """Main function to run the seeder."""
-    print("🌱 Starting product seeder...")
+    print("Starting product seeder...")
     print("="*50)
     
     db = SessionLocal()
     try:
-        # Create categories first
-        print("\n📁 Creating categories...")
+        print("\nCreating categories...")
         print("-"*50)
         create_default_categories(db)
         
-        # Then create products
-        print("🍹 Creating products...")
+        print("Creating products...")
         print("-"*50)
         create_default_products(db)
         
-        # Summary
         total_categories = db.query(ProductCategory).count()
         total_products = db.query(Product).count()
         
         print("="*50)
-        print("✨ Seeding completed successfully!")
+        print("Seeding completed successfully!")
         print("="*50)
         print(f"\nTotal categories: {total_categories}")
         print(f"Total products: {total_products}")
         print("-"*50)
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         db.rollback()
         raise
     finally:

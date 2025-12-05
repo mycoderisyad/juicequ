@@ -9,7 +9,6 @@ Usage:
 import sys
 from pathlib import Path
 
-# Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy.orm import Session
@@ -22,24 +21,19 @@ def check_image_exists(image_path: str | None, base_paths: list[Path]) -> bool:
     if not image_path:
         return False
     
-    # Skip color classes (bg-*)
     if image_path.startswith("bg-"):
-        return True  # Not an actual image, but valid for fallback
+        return True
     
-    # Skip external URLs
     if image_path.startswith("http://") or image_path.startswith("https://"):
-        return True  # Assume external URLs are valid
+        return True
     
-    # Check in each base path
     clean_path = image_path.lstrip("/")
     
     for base_path in base_paths:
-        # Try direct path
         full_path = base_path / clean_path
         if full_path.exists():
             return True
         
-        # Try without 'images/' prefix
         if clean_path.startswith("images/"):
             alt_path = base_path / clean_path[7:]
             if alt_path.exists():
@@ -51,7 +45,6 @@ def check_image_exists(image_path: str | None, base_paths: list[Path]) -> bool:
 def clean_invalid_images(db: Session, dry_run: bool = True) -> None:
     """Clean invalid image paths from products."""
     
-    # Define base paths to check for images
     base_paths = [
         Path(__file__).parent.parent.parent / "frontend" / "public",
         Path(__file__).parent.parent.parent / "frontend" / "public" / "images",
@@ -67,7 +60,6 @@ def clean_invalid_images(db: Session, dry_run: bool = True) -> None:
     for product in products:
         invalid_fields = []
         
-        # Check each image field
         image_fields = [
             ("thumbnail_image", product.thumbnail_image),
             ("hero_image", product.hero_image),
@@ -81,7 +73,7 @@ def clean_invalid_images(db: Session, dry_run: bool = True) -> None:
         
         if invalid_fields:
             invalid_count += 1
-            print(f"\n❌ Product: {product.name} (ID: {product.id})")
+            print(f"\nProduct: {product.name} (ID: {product.id})")
             for field_name, field_value in invalid_fields:
                 print(f"   - {field_name}: {field_value}")
                 
@@ -90,12 +82,12 @@ def clean_invalid_images(db: Session, dry_run: bool = True) -> None:
     
     if not dry_run and invalid_count > 0:
         db.commit()
-        print(f"\n✅ Cleaned {invalid_count} products with invalid images")
+        print(f"\nCleaned {invalid_count} products with invalid images")
     elif invalid_count > 0:
-        print(f"\n⚠️  Found {invalid_count} products with invalid images (dry run)")
+        print(f"\nFound {invalid_count} products with invalid images (dry run)")
         print("   Run with --apply to actually clean them")
     else:
-        print("\n✅ All product images are valid!")
+        print("\nAll product images are valid!")
 
 
 def main():
@@ -108,7 +100,7 @@ def main():
     
     dry_run = not args.apply
     
-    print("🔍 Checking product images...")
+    print("Checking product images...")
     if dry_run:
         print("   (Dry run mode - no changes will be made)")
     print("=" * 60)
@@ -117,7 +109,7 @@ def main():
     try:
         clean_invalid_images(db, dry_run=dry_run)
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         db.rollback()
         raise
     finally:

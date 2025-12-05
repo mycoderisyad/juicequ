@@ -49,10 +49,12 @@ export interface ChatResponse {
   session_id: string;
   context_used?: Array<{ text: string; metadata: Record<string, unknown> }>;
   response_time_ms: number;
-  intent?: "order" | "inquiry" | "greeting" | "recommendation";
+  intent?: "order" | "inquiry" | "greeting" | "recommendation" | "navigate" | "add_to_cart" | "off_topic" | "unknown";
   order_data?: ChatOrderData;
   show_checkout: boolean;
   featured_products?: FeaturedProduct[];
+  should_navigate?: boolean;
+  destination?: string;
 }
 
 export interface VoiceResponse {

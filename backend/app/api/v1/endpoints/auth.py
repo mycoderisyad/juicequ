@@ -3,7 +3,7 @@ Authentication API endpoints.
 """
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -15,6 +15,8 @@ from app.core.exceptions import (
 )
 from app.db.session import get_db
 from app.schemas.auth import (
+    GoogleAuthRequest,
+    GoogleAuthUrlResponse,
     LoginRequest,
     MessageResponse,
     RefreshTokenRequest,
@@ -23,6 +25,7 @@ from app.schemas.auth import (
 )
 from app.schemas.user import UserProfileResponse, UserUpdatePassword
 from app.services.auth_service import AuthService
+from app.services.google_oauth_service import GoogleOAuthService
 
 router = APIRouter()
 
@@ -187,3 +190,54 @@ async def logout(
     """
     clear_auth_cookies(response)
     return MessageResponse(message="Logged out successfully")
+
+
+# ============== Google OAuth Endpoints ==============
+
+
+@router.get(
+    "/google/url",
+    response_model=GoogleAuthUrlResponse,
+    summary="Get Google OAuth URL",
+    description="Generate Google OAuth authorization URL for login.",
+)
+async def get_google_auth_url(
+    db: Annotated[Session, Depends(get_db)],
+    redirect_uri: str | None = Query(None, description="Custom redirect URI"),
+):
+    """Get Google OAuth authorization URL."""
+    try:
+        service = GoogleOAuthService(db)
+        auth_url, state = service.generate_auth_url(redirect_uri)
+        return GoogleAuthUrlResponse(auth_url=auth_url, state=state)
+    except Exception as e:
+        raise BadRequestException(str(e))
+
+
+@router.post(
+    "/google/callback",
+    response_model=Token,
+    summary="Google OAuth callback",
+    description="Handle Google OAuth callback and authenticate user.",
+)
+async def google_auth_callback(
+    data: GoogleAuthRequest,
+    response: Response,
+    db: Annotated[Session, Depends(get_db)],
+    redirect_uri: str | None = Query(None, description="Redirect URI used in auth request"),
+):
+    """
+    Handle Google OAuth callback.
+    
+    Exchanges authorization code for tokens and creates/logs in user.
+    """
+    try:
+        service = GoogleOAuthService(db)
+        tokens = await service.authenticate_with_google(data.code, redirect_uri)
+        
+        # Set HttpOnly cookies for enhanced security
+        set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
+        
+        return tokens
+    except Exception as e:
+        raise CredentialsException(detail=str(e))

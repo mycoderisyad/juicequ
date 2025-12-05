@@ -1,0 +1,226 @@
+{
+  "common": {
+    "appName": "JuiceQu",
+    "loading": "Ngamuat...",
+    "error": "Aya kasalahan",
+    "success": "Hasil",
+    "cancel": "Batal",
+    "save": "Simpen",
+    "delete": "Hapus",
+    "edit": "Robih",
+    "add": "Tambih",
+    "search": "Milarian",
+    "filter": "Filter",
+    "all": "Sadaya",
+    "viewAll": "Tingali Sadaya",
+    "learnMore": "Diajar Langkung",
+    "close": "Tutup",
+    "back": "Balik",
+    "next": "Salajengna",
+    "previous": "Sateuacana",
+    "yes": "Muhun",
+    "no": "Henteu",
+    "or": "atanapi",
+    "starting": "Ti mimiti",
+    "cal": "kal",
+    "verified": "Terverifikasi",
+    "madeWithLove": "Didamel ku",
+    "inIndonesia": "di Indonesia",
+    "allRightsReserved": "Hak cipta dilindungi",
+    "secureCheckout": "Checkout Aman ku JuiceQu",
+    "secureEncrypted": "Aman & Terenkripsi",
+    "sslSecurity": "Kaamanan SSL 256-bit"
+  },
+  "nav": {
+    "home": "Beranda",
+    "menu": "Produk",
+    "aiChat": "AI Chat",
+    "about": "Ngeunaan",
+    "cart": "Karanjang",
+    "items": "barang",
+    "login": "Lebet",
+    "register": "Daptar",
+    "logout": "Kaluar",
+    "profile": "Profil",
+    "loginRegister": "Lebet / Daptar",
+    "openMenu": "Buka menu",
+    "closeMenu": "Tutup menu",
+    "mainNavigation": "Navigasi utama",
+    "mobileNavigation": "Navigasi mobile",
+    "selectLanguage": "Pilih bahasa"
+  },
+  "home": {
+    "hero": {
+      "badge": "Jus Seger",
+      "title": "Jus Seger Alami",
+      "subtitle": "Didamel tina buah-buahan pilihan kalawan resep tradisional",
+      "cta": "Pesan Ayeuna",
+      "explore": "Tingali Menu"
+    },
+    "features": {
+      "fresh": "Seger 100%",
+      "freshDesc": "Didamel tina buah-buahan seger unggal dinten",
+      "natural": "Alami",
+      "naturalDesc": "Tanpa pengawet sareng pewarna buatan",
+      "delivery": "Pangiriman Gancang",
+      "deliveryDesc": "Langsung dikirim ka lokasi anjeun"
+    },
+    "reviews": {
+      "badge": "Testimoni Palanggan",
+      "title": "Naon Ceuk Palanggan",
+      "subtitle": "Tingali review ti palanggan anu tos nyobian produk urang",
+      "averageRating": "Rating Rata-rata",
+      "happyCustomers": "Palanggan Senang",
+      "wouldRecommend": "Bakal Nyarankeun"
+    }
+  },
+  "menu": {
+    "title": "Menu Urang",
+    "subtitle": "Pilih jus favorit anjeun",
+    "search": "Milarian jus...",
+    "categories": "Kategori",
+    "allProducts": "Sadaya Produk",
+    "addToCart": "Tambih",
+    "outOfStock": "Seep",
+    "calories": "kalori",
+    "noProducts": "Teu aya produk anu kapendak",
+    "tryDifferent": "Cobian ganti filter atanapi kecap konci"
+  },
+  "product": {
+    "addToCart": "Tambih ka Karanjang",
+    "buyNow": "Meser Ayeuna",
+    "description": "Deskripsi",
+    "ingredients": "Bahan-bahan",
+    "nutrition": "Inpormasi Nutrisi",
+    "reviews": "Review",
+    "relatedProducts": "Produk Sejenna"
+  },
+  "cart": {
+    "title": "Karanjang Anjeun",
+    "empty": "Karanjang anjeun kosong",
+    "emptyDesc": "Tambih produk ti menu",
+    "continueShopping": "Teraskeun Balanja",
+    "checkout": "Checkout",
+    "subtotal": "Subtotal",
+    "tax": "Pajak",
+    "total": "Total",
+    "remove": "Hapus",
+    "quantity": "Jumlah"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "orderSummary": "Ringkesan Pesenan",
+    "paymentMethod": "Metode Pembayaran",
+    "cash": "Tunai",
+    "qris": "QRIS",
+    "transfer": "Transfer Bank",
+    "notes": "Catetan (Opsional)",
+    "notesPlaceholder": "Catetan khusus kanggo pesenan...",
+    "placeOrder": "Pesan Ayeuna",
+    "processing": "Ngolah..."
+  },
+  "orders": {
+    "title": "Pesenan Anjeun",
+    "empty": "Teu acan aya pesenan",
+    "emptyDesc": "Pesan jus ti menu",
+    "orderNumber": "Nomer Pesenan",
+    "status": "Status",
+    "date": "Tanggal",
+    "total": "Total",
+    "details": "Detail",
+    "cancel": "Batalkeun",
+    "reorder": "Pesan Deui"
+  },
+  "auth": {
+    "login": {
+      "title": "Wilujeng Sumping!",
+      "subtitle": "Lebet ka Akun",
+      "email": "Email",
+      "password": "Password",
+      "rememberMe": "Inget abdi",
+      "forgotPassword": "Hilap password?",
+      "submit": "Lebet",
+      "orContinueWith": "atanapi teraskeun nganggo",
+      "signUp": "daptar akun anyar"
+    },
+    "register": {
+      "title": "Jieun Akun",
+      "subtitle": "Daptar kanggo ngamimitian",
+      "fullName": "Nami Lengkep",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Konfirmasi Password",
+      "submit": "Daptar",
+      "orSignUpWith": "atanapi daptar nganggo",
+      "hasAccount": "Tos gaduh akun?",
+      "signIn": "Lebet",
+      "agreeTerms": "Abdi satuju sareng",
+      "termsLink": "Syarat sareng Katangtuan"
+    },
+    "errors": {
+      "invalidCredentials": "Email atanapi password salah",
+      "passwordMismatch": "Password teu cocog"
+    }
+  },
+  "voice": {
+    "listening": "Ngadangukeun...",
+    "processing": "Ngolah...",
+    "tapToSpeak": "Ketok kanggo nyarios",
+    "holdToSpeak": "Tahan kanggo nyarios",
+    "speakNow": "Nyarios ayeuna...",
+    "orderConfirmed": "Pesenan dikonfirmasi!",
+    "addedToCart": "Ditambihkeun ka karanjang",
+    "tryAgain": "Cobian deui",
+    "examples": {
+      "title": "Conto paréntah:",
+      "order": "Abdi hoyong meser Berry Blast dua",
+      "recommend": "Nu ngeunah naon?",
+      "cart": "Tingali karanjang",
+      "checkout": "Checkout ayeuna"
+    }
+  },
+  "chat": {
+    "title": "AI Assistant",
+    "placeholder": "Ketik pesen...",
+    "send": "Kirim",
+    "thinking": "Mikir...",
+    "welcome": "Wilujeng sumping! Abdi tiasa ngabantosan anjeun pesan jus atanapi masihan rekomendasi."
+  },
+  "footer": {
+    "tagline": "Jus Seger Alami",
+    "description": "Didamel tina buah-buahan pilihan kalawan resep tradisional Indonesia",
+    "quickLinks": "Link Gancang",
+    "contact": "Kontak",
+    "followUs": "Tuturkeun Urang",
+    "newsletter": "Newsletter",
+    "newsletterDesc": "Langganan kanggo promo sareng update",
+    "subscribe": "Langganan",
+    "emailPlaceholder": "Email anjeun"
+  },
+  "about": {
+    "title": "Ngeunaan JuiceQu",
+    "subtitle": "Carita urang",
+    "mission": "Misi Urang",
+    "missionDesc": "Nyadiakeun jus seger berkualitas luhur kanggo gaya hirup sehat",
+    "vision": "Visi Urang",
+    "visionDesc": "Janten merek jus paling dipercaya di Indonesia"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Halaman Teu Kapendak",
+      "description": "Halaman anu anjeun milarian teu aya",
+      "cta": "Balik ka Beranda"
+    },
+    "serverError": {
+      "title": "Kasalahan Server",
+      "description": "Aya masalah dina server urang",
+      "cta": "Cobian Deui"
+    },
+    "networkError": {
+      "title": "Kasalahan Jaringan",
+      "description": "Pariksa koneksi internet anjeun",
+      "cta": "Cobian Deui"
+    }
+  }
+}
+

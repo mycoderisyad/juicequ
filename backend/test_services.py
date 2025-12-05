@@ -6,7 +6,6 @@ import httpx
 import os
 import sys
 
-# Add the backend directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.config import settings
@@ -19,12 +18,12 @@ async def test_kolosal_api():
     print("="*50)
     
     if not settings.kolosal_api_key:
-        print("❌ KOLOSAL_API_KEY is not set")
+        print("[FAIL] KOLOSAL_API_KEY is not set")
         return False
     
-    print(f"✅ API Key: {settings.kolosal_api_key[:30]}...")
-    print(f"✅ API Base: {settings.kolosal_api_base}")
-    print(f"✅ Model: {settings.kolosal_model}")
+    print(f"[OK] API Key: {settings.kolosal_api_key[:30]}...")
+    print(f"[OK] API Base: {settings.kolosal_api_base}")
+    print(f"[OK] Model: {settings.kolosal_model}")
     
     try:
         async with httpx.AsyncClient(
@@ -48,9 +47,8 @@ async def test_kolosal_api():
             
             if response.status_code == 200:
                 data = response.json()
-                print("✅ Kolosal AI API is working!")
+                print("[OK] Kolosal AI API is working!")
                 
-                # Parse response
                 if "choices" in data and len(data["choices"]) > 0:
                     content = data["choices"][0].get("message", {}).get("content", "")
                     print(f"AI Response: {content[:200]}")
@@ -58,15 +56,15 @@ async def test_kolosal_api():
                     print(f"Response data: {data}")
                 return True
             else:
-                print(f"❌ API Error: {response.status_code}")
+                print(f"[FAIL] API Error: {response.status_code}")
                 print(f"Response: {response.text[:500]}")
                 return False
                 
     except httpx.RequestError as e:
-        print(f"❌ Request Error: {e}")
+        print(f"[FAIL] Request Error: {e}")
         return False
     except Exception as e:
-        print(f"❌ Unexpected Error: {e}")
+        print(f"[FAIL] Unexpected Error: {e}")
         return False
 
 
@@ -83,10 +81,9 @@ def test_database():
         from sqlalchemy import text
         
         with engine.connect() as conn:
-            result = conn.execute(text("SELECT 1"))
-            print("✅ Database connection successful!")
+            conn.execute(text("SELECT 1"))
+            print("[OK] Database connection successful!")
             
-            # Count products
             from app.models.product import Product
             from app.db.session import SessionLocal
             
@@ -94,14 +91,14 @@ def test_database():
             try:
                 product_count = db.query(Product).count()
                 available_count = db.query(Product).filter(Product.is_available == True).count()
-                print(f"✅ Total products: {product_count}")
-                print(f"✅ Available products: {available_count}")
+                print(f"[OK] Total products: {product_count}")
+                print(f"[OK] Available products: {available_count}")
             finally:
                 db.close()
             
             return True
     except Exception as e:
-        print(f"❌ Database Error: {e}")
+        print(f"[FAIL] Database Error: {e}")
         return False
 
 
@@ -116,24 +113,22 @@ def test_chromadb():
     try:
         import chromadb
         
-        # Use the new PersistentClient API
         client = chromadb.PersistentClient(path=settings.chroma_persist_directory)
         
-        # Create or get collection
         collection = client.get_or_create_collection(
             name="products",
             metadata={"description": "Product embeddings for semantic search"}
         )
         
-        print(f"✅ ChromaDB initialized successfully!")
-        print(f"✅ Collection 'products' count: {collection.count()}")
+        print("[OK] ChromaDB initialized successfully!")
+        print(f"[OK] Collection 'products' count: {collection.count()}")
         
         return True
     except ImportError:
-        print("⚠️ ChromaDB not installed. Install with: pip install chromadb")
+        print("[WARN] ChromaDB not installed. Install with: pip install chromadb")
         return False
     except Exception as e:
-        print(f"❌ ChromaDB Error: {e}")
+        print(f"[FAIL] ChromaDB Error: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -153,14 +148,13 @@ async def test_ai_service():
         try:
             ai_service = AIService(db)
             
-            # Test chat function
             print("Testing chat function...")
             result = await ai_service.chat(
                 user_input="Halo, rekomendasikan jus yang segar dong",
                 locale="id"
             )
             
-            print(f"✅ AI Service chat successful!")
+            print("[OK] AI Service chat successful!")
             print(f"Response: {result.get('response', '')[:200]}...")
             print(f"Intent: {result.get('intent')}")
             print(f"Response time: {result.get('response_time_ms')}ms")
@@ -172,7 +166,7 @@ async def test_ai_service():
             db.close()
             
     except Exception as e:
-        print(f"❌ AI Service Error: {e}")
+        print(f"[FAIL] AI Service Error: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -186,26 +180,18 @@ async def main():
     
     results = {}
     
-    # Test 1: Database
     results["database"] = test_database()
-    
-    # Test 2: Kolosal AI API
     results["kolosal_api"] = await test_kolosal_api()
-    
-    # Test 3: ChromaDB
     results["chromadb"] = test_chromadb()
-    
-    # Test 4: AI Service (full integration)
     results["ai_service"] = await test_ai_service()
     
-    # Summary
     print("\n" + "="*60)
     print("Test Summary")
     print("="*60)
     
     for service, status in results.items():
-        emoji = "✅" if status else "❌"
-        print(f"{emoji} {service}: {'PASS' if status else 'FAIL'}")
+        status_str = "[PASS]" if status else "[FAIL]"
+        print(f"{status_str} {service}")
     
     total_pass = sum(1 for s in results.values() if s)
     total_tests = len(results)

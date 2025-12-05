@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, Clock, CheckCircle, XCircle, ChefHat, ArrowRight } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
-import { api } from "@/lib/api";
+import apiClient from "@/lib/api/config";
 import { useCurrency } from "@/lib/hooks/use-store";
 
 interface OrderItem {
@@ -86,7 +86,7 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get("/customer/orders");
+      const response = await apiClient.get("/customer/orders");
       setOrders(response.data.orders || []);
     } catch (err) {
       console.error("Failed to fetch orders:", err);

@@ -10,7 +10,8 @@ import { Send, Sparkles, User, Bot, Mic, MicOff, Loader2, AlertCircle, ShoppingC
 import aiApi, { ChatResponse, ChatOrderData, ChatMessageHistory, FeaturedProduct } from "@/lib/api/ai";
 import { useAuthStore } from "@/store/auth-store";
 import { useTranslation } from "@/lib/i18n";
-import { useCartStore } from "@/store/cart-store";
+import { useCartStore } from "@/lib/store";
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 
 interface Message {
   id: number;
@@ -130,82 +131,11 @@ function useChat(locale: string) {
     }
   }, [input, isLoading, messages.length, sessionId, locale, getConversationHistory]);
 
-  const processVoice = useCallback(async (audioBlob: Blob) => {
-    const userMessageId = messages.length + 1;
-    const loadingMessageId = messages.length + 2;
-
-    addMessage({ id: userMessageId, role: "user", content: locale === "en" ? "🎤 Voice message..." : "🎤 Pesan suara...", isLoading: true });
-    addMessage({ id: loadingMessageId, role: "assistant", content: "", isLoading: true });
-    setIsLoading(true);
-
-    try {
-      const response = await aiApi.processVoice(audioBlob, sessionId);
-      setSessionId(response.session_id);
-      updateMessage(userMessageId, { content: `🎤 "${response.transcription}"`, isLoading: false });
-      updateMessage(loadingMessageId, {
-        content: response.response,
-        isLoading: false,
-        responseTimeMs: response.response_time_ms,
-      });
-    } catch (err) {
-      setMessages((prev) => prev.filter((msg) => msg.id !== userMessageId));
-      updateMessage(loadingMessageId, {
-        content: locale === "en" 
-          ? "Sorry, I couldn't process your voice message. Please try again."
-          : "Maaf, saya tidak bisa memproses pesan suara Anda. Silakan coba lagi.",
-        isLoading: false,
-        isError: true,
-      });
-      setError(err instanceof Error ? err.message : (locale === "en" ? "Failed to process voice" : "Gagal memproses suara"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [messages.length, sessionId, locale]);
-
-  return { messages, input, setInput, isLoading, error, setError, sendMessage, processVoice };
+  return { messages, input, setInput, isLoading, error, setError, sendMessage };
 }
 
-function useVoiceRecorder(onRecordingComplete: (blob: Blob) => void, locale: string) {
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingError, setRecordingError] = useState<string | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-
-  const startRecording = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
-
-      audioChunksRef.current = [];
-      mediaRecorder.ondataavailable = (e) => e.data.size > 0 && audioChunksRef.current.push(e.data);
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        stream.getTracks().forEach((track) => track.stop());
-        onRecordingComplete(audioBlob);
-      };
-
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
-      setIsRecording(true);
-      setRecordingError(null);
-    } catch {
-      setRecordingError(locale === "en" 
-        ? "Could not access microphone. Please check permissions."
-        : "Tidak dapat mengakses mikrofon. Silakan periksa izin.");
-    }
-  }, [onRecordingComplete, locale]);
-
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  }, [isRecording]);
-
-  return { isRecording, recordingError, startRecording, stopRecording };
-}
-
-function ChatHeader({ isAuthenticated, t }: { isAuthenticated: boolean; t: (key: string) => string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ChatHeader({ isAuthenticated, t }: { isAuthenticated: boolean; t: any }) {
   return (
     <div className="border-b border-gray-100 bg-white p-4 text-center">
       <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
@@ -535,21 +465,25 @@ function ChatInput({
   setInput,
   isLoading,
   isRecording,
+  isSpeechSupported = true,
   onSend,
   onStartRecording,
   onStopRecording,
   suggestions,
   t,
+  locale,
 }: {
   input: string;
   setInput: (v: string) => void;
   isLoading: boolean;
   isRecording: boolean;
+  isSpeechSupported?: boolean;
   onSend: () => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
   suggestions: string[];
-  t: (key: string) => string;
+  t: any;
+  locale: string;
 }) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -561,12 +495,20 @@ function ChatInput({
   return (
     <div className="border-t border-gray-100 bg-white p-4">
       <div className="relative flex items-center gap-2">
+        {/* Voice button - show different states */}
         <Button
           onClick={isRecording ? onStopRecording : onStartRecording}
           size="icon"
           variant={isRecording ? "destructive" : "outline"}
-          className={`h-10 w-10 rounded-full ${isRecording ? "animate-pulse" : ""}`}
-          disabled={isLoading && !isRecording}
+          className={`h-10 w-10 rounded-full ${isRecording ? "animate-pulse bg-red-500 hover:bg-red-600" : ""}`}
+          disabled={(isLoading && !isRecording) || !isSpeechSupported}
+          title={
+            !isSpeechSupported 
+              ? (locale === "id" ? "Browser tidak mendukung speech recognition" : "Browser does not support speech recognition")
+              : isRecording 
+                ? (locale === "id" ? "Klik untuk berhenti" : "Click to stop")
+                : (locale === "id" ? "Klik untuk bicara" : "Click to speak")
+          }
         >
           {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
         </Button>
@@ -575,8 +517,9 @@ function ChatInput({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={isRecording ? t("chat.recording") : t("chat.placeholder")}
-          className="pr-12"
-          disabled={isLoading || isRecording}
+          className={`pr-12 ${isRecording ? "bg-red-50 border-red-200" : ""}`}
+          disabled={isLoading}
+          readOnly={isRecording}
         />
         <Button
           onClick={onSend}
@@ -587,6 +530,16 @@ function ChatInput({
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </div>
+      {/* Voice recording indicator */}
+      {isRecording && (
+        <div className="mt-2 flex items-center justify-center gap-2 text-sm text-red-600">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+          </span>
+          <span>{t("chat.listening") || "Mendengarkan..."}</span>
+        </div>
+      )}
       <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
         {suggestions.map((suggestion) => (
           <button
@@ -607,10 +560,34 @@ export default function ChatPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const { t, locale } = useTranslation();
-  const { messages, input, setInput, isLoading, error, setError, sendMessage, processVoice } = useChat(locale);
-  const { isRecording, recordingError, startRecording, stopRecording } = useVoiceRecorder(processVoice, locale);
+  const { messages, input, setInput, isLoading, error, setError, sendMessage } = useChat(locale);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { addItem, clearCart } = useCartStore();
+  
+  // Use browser-based speech recognition (free, no API key needed)
+  const handleVoiceResult = useCallback((transcript: string) => {
+    if (transcript.trim()) {
+      setInput(transcript);
+    }
+  }, [setInput]);
+
+  const handleVoiceError = useCallback((errorMsg: string) => {
+    setError(errorMsg);
+  }, [setError]);
+
+  const {
+    isSupported: isSpeechSupported,
+    isListening,
+    transcript: interimTranscript,
+    error: speechError,
+    startListening,
+    stopListening,
+  } = useSpeechRecognition({
+    language: locale === "en" ? "en-US" : "id-ID",
+    interimResults: true,
+    onResult: handleVoiceResult,
+    onError: handleVoiceError,
+  });
   
   const suggestions = locale === "en" ? SUGGESTIONS_EN : SUGGESTIONS_ID;
 
@@ -618,7 +595,7 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const displayError = error || recordingError;
+  const displayError = error || speechError;
 
   // Handle checkout - add items to cart and redirect
   const handleCheckout = useCallback((orderData: ChatOrderData) => {
@@ -627,12 +604,11 @@ export default function ChatPage() {
     
     for (const item of orderData.items) {
       addItem({
-        product_id: item.product_id,
-        product_name: item.product_name,
-        unit_price: item.unit_price,
+        id: item.product_id,
+        name: item.product_name,
+        price: item.unit_price,
         quantity: item.quantity,
-        size: item.size as "small" | "medium" | "large",
-        image_url: item.image_url || undefined,
+        image: item.image_url || undefined,
       });
     }
     
@@ -669,15 +645,17 @@ export default function ChatPage() {
               <div ref={messagesEndRef} />
             </div>
             <ChatInput
-              input={input}
+              input={isListening ? interimTranscript || input : input}
               setInput={setInput}
               isLoading={isLoading}
-              isRecording={isRecording}
+              isRecording={isListening}
+              isSpeechSupported={isSpeechSupported}
               onSend={sendMessage}
-              onStartRecording={startRecording}
-              onStopRecording={stopRecording}
+              onStartRecording={startListening}
+              onStopRecording={stopListening}
               suggestions={suggestions}
               t={t}
+              locale={locale}
             />
           </div>
         </div>

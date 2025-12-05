@@ -9,7 +9,6 @@ Usage:
 import sys
 from pathlib import Path
 
-# Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy.orm import Session
@@ -43,14 +42,12 @@ def create_default_users(db: Session) -> None:
     ]
     
     for user_data in default_users:
-        # Check if user already exists
         existing_user = db.query(User).filter(User.email == user_data["email"]).first()
         
         if existing_user:
             print(f"User {user_data['email']} already exists, skipping...")
             continue
         
-        # Create new user
         new_user = User(
             email=user_data["email"],
             full_name=user_data["full_name"],
@@ -64,7 +61,7 @@ def create_default_users(db: Session) -> None:
         db.commit()
         db.refresh(new_user)
         
-        print(f"✅ Created user: {user_data['email']} (role: {user_data['role'].value})")
+        print(f"Created user: {user_data['email']} (role: {user_data['role'].value})")
     
     print("\n" + "="*50)
     print("Default users created successfully!")
@@ -87,14 +84,14 @@ def create_default_users(db: Session) -> None:
 
 def main():
     """Main function to run the seeder."""
-    print("🌱 Starting user seeder...")
+    print("Starting user seeder...")
     print("="*50)
     
     db = SessionLocal()
     try:
         create_default_users(db)
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         db.rollback()
         raise
     finally:

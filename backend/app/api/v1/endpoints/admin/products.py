@@ -104,6 +104,9 @@ async def get_products(
     """Get all products with full admin details."""
     query = db.query(Product)
     
+    # Exclude soft-deleted products
+    query = query.filter(Product.is_deleted == False)
+    
     # Apply filters
     if category:
         query = query.filter(Product.category_id == category)
@@ -140,7 +143,10 @@ async def get_product(
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
 ):
     """Get product by ID."""
-    product = db.query(Product).filter(Product.id == product_id).first()
+    product = db.query(Product).filter(
+        Product.id == product_id,
+        Product.is_deleted == False
+    ).first()
     
     if not product:
         from app.core.exceptions import NotFoundException
@@ -285,7 +291,7 @@ async def delete_product(
     db: Annotated[Session, Depends(get_db)],
     current_user: User = Depends(require_roles(UserRole.ADMIN)),
 ):
-    """Delete a product."""
+    """Delete a product (soft delete to preserve order history)."""
     from app.core.exceptions import NotFoundException
     
     product = db.query(Product).filter(Product.id == product_id).first()
@@ -293,8 +299,16 @@ async def delete_product(
     if not product:
         raise NotFoundException("Product", product_id)
     
+    if product.is_deleted:
+        raise NotFoundException("Product", product_id)
+    
     product_name = product.name
-    db.delete(product)
+    
+    # Soft delete - mark as deleted instead of actually deleting
+    # This preserves order history integrity
+    product.is_deleted = True
+    product.is_available = False
+    
     db.commit()
     
     return {

@@ -19,8 +19,8 @@ class StoreSettingsUpdate(BaseModel):
     store_longitude: Optional[float] = None
     store_city: Optional[str] = Field(None, max_length=100)
     store_province: Optional[str] = Field(None, max_length=100)
-    store_district: Optional[str] = Field(None, max_length=100)  # Kecamatan
-    store_village: Optional[str] = Field(None, max_length=100)   # Kelurahan/Desa
+    store_district: Optional[str] = Field(None, max_length=100)
+    store_village: Optional[str] = Field(None, max_length=100)
     store_postal_code: Optional[str] = Field(None, max_length=10)
     currency_code: Optional[str] = Field(None, max_length=5)
     currency_symbol: Optional[str] = Field(None, max_length=10)
@@ -40,8 +40,8 @@ class StoreSettingsResponse(BaseModel):
     store_longitude: float
     store_city: str
     store_province: str
-    store_district: str  # Kecamatan
-    store_village: str   # Kelurahan/Desa
+    store_district: str
+    store_village: str
     store_postal_code: str
     currency_code: str
     currency_symbol: str
@@ -152,8 +152,8 @@ class PublicStoreInfo(BaseModel):
     store_longitude: float
     store_city: str
     store_province: str
-    store_district: str  # Kecamatan
-    store_village: str   # Kelurahan/Desa
+    store_district: str
+    store_village: str
     store_postal_code: str
     currency_code: str
     currency_symbol: str

@@ -26,6 +26,12 @@ class UserRole(str, enum.Enum):
     ADMIN = "admin"
 
 
+class AuthProvider(str, enum.Enum):
+    """Authentication providers."""
+    LOCAL = "local"
+    GOOGLE = "google"
+
+
 class User(Base):
     """User model for authentication and profile management."""
     
@@ -45,9 +51,25 @@ class User(Base):
         index=True,
         nullable=False,
     )
-    hashed_password: Mapped[str] = mapped_column(
+    hashed_password: Mapped[str | None] = mapped_column(
         String(255),
+        nullable=True,  # Nullable for OAuth users
+    )
+    
+    # OAuth fields
+    auth_provider: Mapped[str] = mapped_column(
+        String(10),
+        default="local",
         nullable=False,
+    )
+    oauth_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        index=True,
+    )
+    avatar_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
     )
     
     # Profile fields

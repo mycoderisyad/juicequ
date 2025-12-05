@@ -87,8 +87,15 @@ class AuthService:
         if not user:
             raise AuthenticationError("Invalid email or password")
         
+        # Check if user uses OAuth (no password)
+        if user.auth_provider != "local":
+            raise AuthenticationError(
+                f"This account uses {user.auth_provider} login. "
+                "Please use the appropriate login method."
+            )
+        
         # Verify password
-        if not verify_password(data.password, user.hashed_password):
+        if not user.hashed_password or not verify_password(data.password, user.hashed_password):
             raise AuthenticationError("Invalid email or password")
         
         # Check if user is active

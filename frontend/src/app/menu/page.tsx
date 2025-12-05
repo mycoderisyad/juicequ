@@ -41,6 +41,22 @@ function getInitialCategory(searchParams: URLSearchParams): string {
   return "all";
 }
 
+function getInitialSort(searchParams: URLSearchParams): "default" | "low-high" | "high-low" {
+  const sortParam = searchParams.get("sort");
+  if (sortParam === "price_asc" || sortParam === "low-high") {
+    return "low-high";
+  } else if (sortParam === "price_desc" || sortParam === "high-low") {
+    return "high-low";
+  } else if (sortParam === "popular") {
+    return "default"; // Could implement popularity sort if needed
+  }
+  return "default";
+}
+
+function getInitialSearch(searchParams: URLSearchParams): string {
+  return searchParams.get("search") || "";
+}
+
 // Transform API product to display format
 function transformProduct(product: ApiProduct): DisplayProduct {
   // Use base_price as primary, fallback to price if available
@@ -106,7 +122,7 @@ function MenuContent() {
   const { t } = useTranslation();
   const { format: formatCurrency } = useCurrency();
   const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>(() => getInitialSearch(searchParams));
   const [activeCategory, setActiveCategory] = useState<string>(() => getInitialCategory(searchParams));
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   
@@ -114,7 +130,7 @@ function MenuContent() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isPriceOpen, setIsPriceOpen] = useState(false);
   const [priceRange, setPriceRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
-  const [sortOrder, setSortOrder] = useState<"default" | "low-high" | "high-low">("default");
+  const [sortOrder, setSortOrder] = useState<"default" | "low-high" | "high-low">(() => getInitialSort(searchParams));
   
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const priceDropdownRef = useRef<HTMLDivElement>(null);
@@ -138,6 +154,23 @@ function MenuContent() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Sync state with URL params when they change (e.g., from voice command)
+  useEffect(() => {
+    const urlCategory = getInitialCategory(searchParams);
+    const urlSort = getInitialSort(searchParams);
+    const urlSearch = getInitialSearch(searchParams);
+    
+    if (urlCategory !== activeCategory) {
+      setActiveCategory(urlCategory);
+    }
+    if (urlSort !== sortOrder) {
+      setSortOrder(urlSort);
+    }
+    if (urlSearch !== searchQuery) {
+      setSearchQuery(urlSearch);
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch products and categories from API
   const fetchData = useCallback(async () => {

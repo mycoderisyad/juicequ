@@ -6,6 +6,7 @@ import { useState, type ReactNode } from "react";
 import { I18nProvider } from "@/lib/i18n";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { StoreProvider } from "@/lib/hooks/use-store";
+import { VoiceCommandButton } from "@/components/VoiceCommandButton";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -32,6 +33,8 @@ export function Providers({ children }: ProvidersProps) {
         <I18nProvider>
           <StoreProvider>
             {children}
+            {/* Floating Voice Command Button - appears on all pages */}
+            <VoiceCommandButton />
           </StoreProvider>
         </I18nProvider>
         <ReactQueryDevtools initialIsOpen={false} />
