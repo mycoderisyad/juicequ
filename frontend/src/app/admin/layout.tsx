@@ -19,7 +19,9 @@ import {
   Bell,
   Menu,
   X,
-  ClipboardList
+  ClipboardList,
+  Percent,
+  Ticket
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -107,6 +109,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/orders", label: "Orders", icon: ClipboardList },
     { href: "/admin/products", label: "Products", icon: Package },
     { href: "/admin/categories", label: "Categories", icon: Tags },
+    { href: "/admin/promos", label: "Promos", icon: Percent },
+    { href: "/admin/vouchers", label: "Vouchers", icon: Ticket },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/admin/settings", label: "Settings", icon: Settings },

@@ -5,6 +5,18 @@
 import apiClient from "./config";
 
 // Types
+export interface ProductPromo {
+  has_promo: boolean;
+  promo_id?: string;
+  promo_name?: string;
+  promo_type?: "percentage" | "fixed";
+  discount_value?: number;
+  discount_percentage?: number;
+  original_price?: number;
+  discounted_price?: number;
+  promo_end_date?: string;
+}
+
 export interface Product {
   id: number | string;
   name: string;
@@ -39,6 +51,8 @@ export interface Product {
   prices?: { small: number; medium: number; large: number };
   volumes?: { small: number; medium: number; large: number };
   volume_unit?: string;
+  // Promo info
+  promo?: ProductPromo | null;
 }
 
 export interface BestsellerProduct {
@@ -246,11 +260,40 @@ export const profileApi = {
   },
 };
 
+// Voucher types
+export interface VoucherValidation {
+  valid: boolean;
+  voucher?: {
+    id: number;
+    code: string;
+    discount_type: "percentage" | "fixed_amount";
+    discount_value: number;
+  };
+  discount_amount: number;
+  final_total: number;
+  message: string;
+}
+
+// Voucher API
+export const vouchersApi = {
+  /**
+   * Validate a voucher code.
+   */
+  validate: async (code: string, cartTotal: number): Promise<VoucherValidation> => {
+    const response = await apiClient.post("/customer/vouchers/validate", {
+      code,
+      order_amount: cartTotal,
+    });
+    return response.data;
+  },
+};
+
 const customerApi = {
   products: productsApi,
   cart: cartApi,
   orders: ordersApi,
   profile: profileApi,
+  vouchers: vouchersApi,
 };
 
 export default customerApi;

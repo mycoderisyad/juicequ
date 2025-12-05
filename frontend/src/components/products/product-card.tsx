@@ -5,12 +5,24 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Plus, Minus, ShoppingCart, Heart } from "lucide-react";
+import { Plus, Minus, ShoppingCart, Heart, Percent } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore } from "@/lib/store";
 import { useCurrency } from "@/lib/hooks/use-store";
 import { getPlaceholderImage, getImageUrl } from "@/lib/image-utils";
+
+export interface ProductPromo {
+  has_promo: boolean;
+  promo_id?: string;
+  promo_name?: string;
+  promo_type?: "percentage" | "fixed";
+  discount_value?: number;
+  discount_percentage?: number;
+  original_price?: number;
+  discounted_price?: number;
+  promo_end_date?: string;
+}
 
 export interface Product {
   id: string;
@@ -47,6 +59,8 @@ export interface Product {
   };
   has_sizes?: boolean;
   volume_unit?: string;
+  // Promo info
+  promo?: ProductPromo | null;
 }
 
 interface ProductCardProps {
@@ -75,6 +89,41 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
     return Math.round(product.base_price * multipliers[selectedSize]);
   };
 
+  // Get promo discounted price for size
+  const getPromoPrice = () => {
+    if (!product.promo?.has_promo) return null;
+    const originalPrice = getPrice();
+    
+    // Use discounted_price from backend if available (for medium size)
+    if (selectedSize === "medium" && product.promo.discounted_price) {
+      return product.promo.discounted_price;
+    }
+    
+    // Calculate for other sizes
+    if (product.promo.promo_type === "percentage" && product.promo.discount_value) {
+      return Math.round(originalPrice * (1 - product.promo.discount_value / 100));
+    } else if (product.promo.discount_value) {
+      return Math.max(0, originalPrice - product.promo.discount_value);
+    }
+    return null;
+  };
+
+  // Get discount percentage for badge
+  const getDiscountPercent = () => {
+    if (!product.promo?.has_promo) return 0;
+    // Use discount_percentage from backend if available
+    if (product.promo.discount_percentage) {
+      return Math.round(product.promo.discount_percentage);
+    }
+    if (product.promo.promo_type === "percentage" && product.promo.discount_value) {
+      return Math.round(product.promo.discount_value);
+    } else if (product.promo.discount_value) {
+      const originalPrice = getPrice();
+      return Math.round((product.promo.discount_value / originalPrice) * 100);
+    }
+    return 0;
+  };
+
   // Get volume based on selected size
   const getVolume = () => {
     if (product.volumes && product.volumes[selectedSize]) {
@@ -85,6 +134,9 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
   };
 
   const displayPrice = getPrice();
+  const promoPrice = getPromoPrice();
+  const discountPercent = getDiscountPercent();
+  const hasPromo = product.promo?.has_promo && promoPrice !== null;
   const displayVolume = getVolume();
   const volumeUnit = product.volume_unit || "ml";
   const hasSizes = product.has_sizes !== false;
@@ -110,10 +162,11 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
     } else {
       // Use global cart store - pass quantity directly
       const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
+      const finalPrice = hasPromo && promoPrice !== null ? promoPrice : displayPrice;
       addItem({
         id: `${product.id}-${selectedSize}`,
         name: `${product.name} (${selectedSize.charAt(0).toUpperCase()})`,
-        price: displayPrice,
+        price: finalPrice,
         color: product.image_color,
         image: productImage,
         quantity: quantity,
@@ -213,8 +266,16 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
           </span>
         )}
 
+        {/* Promo discount badge */}
+        {hasPromo && discountPercent > 0 && (
+          <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-1 text-white shadow-lg">
+            <Percent className="h-3 w-3" aria-hidden="true" />
+            <span className="text-xs font-bold">{discountPercent}% OFF</span>
+          </div>
+        )}
+
         {/* Featured badge */}
-        {product.is_featured && (
+        {product.is_featured && !hasPromo && (
           <Badge
             variant="warning"
             className="absolute left-3 bottom-3"
@@ -263,9 +324,22 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
               )}
             </div>
           </div>
-          <span className="shrink-0 text-lg font-bold text-green-600">
-            {formatCurrency(displayPrice)}
-          </span>
+          <div className="shrink-0 text-right">
+            {hasPromo && promoPrice !== null ? (
+              <>
+                <span className="text-sm text-gray-400 line-through">
+                  {formatCurrency(displayPrice)}
+                </span>
+                <span className="block text-lg font-bold text-red-500">
+                  {formatCurrency(promoPrice)}
+                </span>
+              </>
+            ) : (
+              <span className="text-lg font-bold text-green-600">
+                {formatCurrency(displayPrice)}
+              </span>
+            )}
+          </div>
         </div>
 
         <p className="mb-3 line-clamp-2 text-sm text-gray-600">

@@ -1,22 +1,78 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Trash2, ArrowRight, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ArrowRight, ShoppingBag, Ticket, Check, X, Loader2 } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/hooks/use-store";
 import { getImageUrl } from "@/lib/image-utils";
+import { vouchersApi } from "@/lib/api/customer";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, total } = useCartStore();
   const { t } = useTranslation();
   const { format: formatCurrency } = useCurrency();
+  
+  // Voucher state
+  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [voucherError, setVoucherError] = useState<string | null>(null);
+  const [appliedVoucher, setAppliedVoucher] = useState<{
+    id: number;
+    code: string;
+    discount_type: "percentage" | "fixed_amount";
+    discount_value: number;
+    discount_amount: number;
+  } | null>(null);
+  
   const cartTotal = total();
   const tax = cartTotal * 0.1; // 10% tax
-  const finalTotal = cartTotal + tax;
+  const voucherDiscount = appliedVoucher?.discount_amount || 0;
+  const finalTotal = Math.max(0, cartTotal + tax - voucherDiscount);
+
+  // Apply voucher
+  const handleApplyVoucher = async () => {
+    if (!voucherCode.trim()) {
+      setVoucherError("Masukkan kode voucher");
+      return;
+    }
+
+    setVoucherLoading(true);
+    setVoucherError(null);
+
+    try {
+      const result = await vouchersApi.validate(voucherCode.trim(), cartTotal);
+      
+      if (result.valid && result.voucher) {
+        setAppliedVoucher({
+          ...result.voucher,
+          discount_amount: result.discount_amount,
+        });
+        setVoucherCode("");
+      } else {
+        setVoucherError(result.message || "Voucher tidak valid");
+      }
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { data?: { detail?: string } } };
+        setVoucherError(axiosError.response?.data?.detail || "Gagal memvalidasi voucher");
+      } else {
+        setVoucherError("Gagal memvalidasi voucher");
+      }
+    } finally {
+      setVoucherLoading(false);
+    }
+  };
+
+  // Remove voucher
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherError(null);
+  };
 
   // Helper to get image URL from item (check image, then color if it's a URL)
   const getItemImage = (item: { image?: string; color?: string }) => {
@@ -118,6 +174,65 @@ export default function CartPage() {
                 <div className="sticky top-24 rounded-3xl bg-white p-6 shadow-xl shadow-gray-200/50">
                   <h2 className="text-xl font-bold text-gray-900">{t("cart.summary.title")}</h2>
                   
+                  {/* Voucher Input */}
+                  <div className="mt-6 border-b border-gray-100 pb-6">
+                    <div className="flex items-center gap-2 text-gray-700 mb-3">
+                      <Ticket className="h-4 w-4" />
+                      <span className="text-sm font-medium">Punya Voucher?</span>
+                    </div>
+                    
+                    {appliedVoucher ? (
+                      <div className="flex items-center justify-between rounded-xl bg-green-50 px-4 py-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <span className="font-semibold text-green-700">{appliedVoucher.code}</span>
+                          </div>
+                          <span className="text-sm text-green-600">
+                            {appliedVoucher.discount_type === "percentage" 
+                              ? `Diskon ${appliedVoucher.discount_value}%`
+                              : `Diskon ${formatCurrency(appliedVoucher.discount_value)}`
+                            }
+                          </span>
+                        </div>
+                        <button
+                          onClick={handleRemoveVoucher}
+                          className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={voucherCode}
+                          onChange={(e) => {
+                            setVoucherCode(e.target.value.toUpperCase());
+                            setVoucherError(null);
+                          }}
+                          placeholder="Masukkan kode voucher"
+                          className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                        />
+                        <Button
+                          onClick={handleApplyVoucher}
+                          disabled={voucherLoading || !voucherCode.trim()}
+                          className="rounded-xl bg-green-600 px-4 hover:bg-green-700 disabled:bg-gray-300"
+                        >
+                          {voucherLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Pakai"
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {voucherError && (
+                      <p className="mt-2 text-sm text-red-500">{voucherError}</p>
+                    )}
+                  </div>
+                  
                   <div className="mt-6 space-y-4 border-b border-gray-100 pb-6">
                     <div className="flex justify-between text-gray-600">
                       <span>{t("cart.summary.subtotal")}</span>
@@ -127,6 +242,12 @@ export default function CartPage() {
                       <span>{t("cart.summary.tax")}</span>
                       <span>{formatCurrency(tax)}</span>
                     </div>
+                    {appliedVoucher && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Diskon Voucher</span>
+                        <span>-{formatCurrency(voucherDiscount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-gray-600">
                       <span>{t("cart.summary.deliveryFee")}</span>
                       <span className="text-green-600">{t("cart.summary.free")}</span>

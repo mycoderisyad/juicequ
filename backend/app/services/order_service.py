@@ -19,6 +19,7 @@ from app.schemas.order import (
     OrderItemCreate,
 )
 from app.services.product_service import ProductService
+from app.services.promo_service import PromoService
 
 
 class OrderService:
@@ -93,7 +94,35 @@ class OrderService:
         
         # Calculate tax and total
         tax = round(subtotal * OrderService.TAX_RATE, 2)
-        total = round(subtotal + tax, 2)
+        
+        # Apply voucher discount if provided
+        voucher_discount = 0.0
+        if order_data.voucher_id and order_data.voucher_code:
+            voucher_discount = order_data.voucher_discount or 0.0
+            # Record voucher usage
+            if user:
+                try:
+                    PromoService.use_voucher(
+                        db=db,
+                        voucher_id=order_data.voucher_id,
+                        user_id=user.id,
+                        order_total=subtotal,
+                    )
+                except ValueError:
+                    # Voucher validation failed, ignore discount
+                    voucher_discount = 0.0
+        
+        total = round(subtotal + tax - voucher_discount, 2)
+        
+        # Parse scheduled pickup date if pre-order
+        scheduled_pickup_date = None
+        if order_data.is_preorder and order_data.scheduled_pickup_date:
+            try:
+                scheduled_pickup_date = datetime.strptime(
+                    order_data.scheduled_pickup_date, "%Y-%m-%d"
+                )
+            except ValueError:
+                pass
         
         # Create order
         order = Order(
@@ -103,11 +132,19 @@ class OrderService:
             guest_phone=order_data.guest_phone if not user else None,
             status=OrderStatus.PENDING,
             subtotal=subtotal,
-            discount=0.0,
+            discount=voucher_discount,
             tax=tax,
             total=total,
             payment_method=PaymentMethod(order_data.payment_method.value),
             customer_notes=order_data.customer_notes,
+            # Pre-order fields
+            is_preorder=order_data.is_preorder,
+            scheduled_pickup_date=scheduled_pickup_date,
+            scheduled_pickup_time=order_data.scheduled_pickup_time,
+            # Voucher fields
+            voucher_id=order_data.voucher_id if voucher_discount > 0 else None,
+            voucher_code=order_data.voucher_code if voucher_discount > 0 else None,
+            voucher_discount=voucher_discount,
             items=order_items,
         )
         

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     Enum,
     Float,
@@ -134,6 +135,37 @@ class Order(Base):
     ai_session_id: Mapped[str | None] = mapped_column(
         String(100),  # Reference to AI chat session that created this order
         nullable=True,
+    )
+    
+    # Pre-order / Scheduling
+    is_preorder: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+    scheduled_pickup_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,  # Date when customer will pick up
+    )
+    scheduled_pickup_time: Mapped[str | None] = mapped_column(
+        String(10),  # Time slot like "09:00", "14:30"
+        nullable=True,
+    )
+    
+    # Voucher reference
+    voucher_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("vouchers.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    voucher_code: Mapped[str | None] = mapped_column(
+        String(50),  # Store code for reference even if voucher deleted
+        nullable=True,
+    )
+    voucher_discount: Mapped[float] = mapped_column(
+        Float,
+        default=0.0,
+        nullable=False,  # Amount discounted by voucher
     )
     
     # Timestamps

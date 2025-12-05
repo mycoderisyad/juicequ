@@ -77,6 +77,14 @@ class OrderCreate(BaseModel):
     # For guest orders
     guest_name: Optional[str] = None
     guest_phone: Optional[str] = None
+    # Pre-order scheduling
+    is_preorder: bool = False
+    scheduled_pickup_date: Optional[str] = None  # YYYY-MM-DD format
+    scheduled_pickup_time: Optional[str] = None  # HH:MM format
+    # Voucher
+    voucher_id: Optional[int] = None
+    voucher_code: Optional[str] = None
+    voucher_discount: float = 0
 
 
 class OrderUpdate(BaseModel):
@@ -104,6 +112,14 @@ class OrderResponse(BaseModel):
     paid_at: Optional[datetime] = None
     customer_notes: Optional[str] = None
     internal_notes: Optional[str] = None
+    # Pre-order info
+    is_preorder: bool = False
+    scheduled_pickup_date: Optional[datetime] = None
+    scheduled_pickup_time: Optional[str] = None
+    # Voucher info
+    voucher_id: Optional[int] = None
+    voucher_code: Optional[str] = None
+    voucher_discount: float = 0
     items: list[OrderItemResponse] = []
     created_at: datetime
     updated_at: datetime
