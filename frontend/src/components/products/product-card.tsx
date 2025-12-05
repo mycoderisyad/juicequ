@@ -184,6 +184,17 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
           </Badge>
         )}
 
+        {/* Low stock badge */}
+        {product.is_available && product.stock_quantity !== undefined && 
+         product.stock_quantity > 0 && product.stock_quantity <= 10 && (
+          <Badge
+            variant="destructive"
+            className="absolute left-3 bottom-3"
+          >
+            Stok Terbatas
+          </Badge>
+        )}
+
         {/* Out of stock overlay */}
         {!product.is_available && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -201,11 +212,21 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
             <h3 className="truncate text-lg font-bold text-gray-900">
               {product.name}
             </h3>
-            {product.calories && (
-              <p className="text-sm text-gray-500">
-                {product.calories} cal
-              </p>
-            )}
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              {product.calories !== undefined && product.calories > 0 && (
+                <span>{product.calories} kal</span>
+              )}
+              {product.stock_quantity !== undefined && product.stock_quantity > 0 && (
+                <>
+                  {product.calories !== undefined && product.calories > 0 && (
+                    <span className="text-gray-300">|</span>
+                  )}
+                  <span className={product.stock_quantity <= 10 ? "text-orange-500 font-medium" : ""}>
+                    Stok: {product.stock_quantity}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
           <span className="shrink-0 text-lg font-bold text-green-600">
             {formatCurrency(displayPrice)}

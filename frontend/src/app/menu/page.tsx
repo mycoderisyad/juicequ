@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, Suspense, useRef } from "react";
+import type React from "react";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Plus, Minus, ShoppingCart, RefreshCw, AlertCircle, ChevronDown, SlidersHorizontal, X, Check, ListFilter, Tag, SearchX } from "lucide-react";
+import { Search, Plus, Minus, ShoppingCart, RefreshCw, AlertCircle, ChevronDown, SlidersHorizontal, X, Check, ListFilter, Tag, SearchX, Star } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
 import { productsApi, type Product as ApiProduct, type Category } from "@/lib/api/customer";
@@ -25,6 +26,10 @@ interface DisplayProduct {
   category_name: string;
   color: string;
   thumbnail_image?: string;
+  stock_quantity?: number;
+  is_available?: boolean;
+  rating?: number;
+  reviews?: number;
 }
 
 interface DisplayCategory {
@@ -48,7 +53,7 @@ function getInitialSort(searchParams: URLSearchParams): "default" | "low-high" |
   } else if (sortParam === "price_desc" || sortParam === "high-low") {
     return "high-low";
   } else if (sortParam === "popular") {
-    return "default"; // Could implement popularity sort if needed
+    return "default";
   }
   return "default";
 }
@@ -71,6 +76,10 @@ function transformProduct(product: ApiProduct): DisplayProduct {
     category_name: product.category_name || product.category || "Uncategorized",
     color: product.image_color || product.image_url || "bg-green-500",
     thumbnail_image: product.thumbnail_image || product.bottle_image || product.hero_image,
+    stock_quantity: product.stock_quantity,
+    is_available: product.is_available ?? true,
+    rating: product.rating,
+    reviews: product.reviews,
   };
 }
 
@@ -515,98 +524,97 @@ function MenuContent() {
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredItems.map((item) => (
-                <Link href={`/products/${item.id}`} key={item.id} className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
-                  {/* Product Image */}
-                  <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl bg-gray-50">
+                <div key={item.id} className="group relative flex flex-col overflow-hidden rounded-3xl border border-stone-100 bg-white shadow-sm">
+                  
+                  {/* Product Image & Badges */}
+                  <Link href={`/products/${item.id}`} className="relative aspect-square overflow-hidden bg-stone-50">
                     {item.thumbnail_image && !item.thumbnail_image.startsWith('bg-') ? (
-                      <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={getImageUrl(item.thumbnail_image)}
-                          alt={item.name}
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          onError={(e) => {
-                            // Hide image on error, fallback will show
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      </>
+                      <img
+                        src={getImageUrl(item.thumbnail_image)}
+                        alt={item.name}
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
                     ) : (
-                      <>
-                        <div className={`absolute inset-0 ${item.color} opacity-20 transition-opacity group-hover:opacity-30`}></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className={`h-32 w-32 rounded-full ${item.color} opacity-80 shadow-lg transition-transform duration-500 group-hover:scale-110`}></div>
-                        </div>
-                      </>
+                      <div className="flex h-full w-full items-center justify-center">
+                        <div className={`h-32 w-32 rounded-full ${item.color} opacity-80 shadow-lg transition-transform duration-500 group-hover:scale-110`}></div>
+                      </div>
                     )}
-                    <button 
-                      onClick={(e) => e.preventDefault()}
-                      className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-gray-900 backdrop-blur-sm transition-colors hover:bg-red-50 hover:text-red-500"
-                    >
-                      <span className="sr-only">{t("menu.addToFavorites")}</span>
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </button>
-                    {/* Category Badge */}
-                    <span className="absolute left-3 top-3 z-10 rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-gray-700 backdrop-blur-sm">
-                      {item.category_name}
-                    </span>
-                  </div>
+                    
+                    {/* Badges Container */}
+                    <div className="absolute left-3 top-3 right-3 flex justify-between items-start z-10">
+                      {/* Category Badge */}
+                      <span className="inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-emerald-800 backdrop-blur-sm shadow-sm">
+                        {item.category_name}
+                      </span>
+
+                      {/* Best Seller Badge (if rating >= 4.5) */}
+                      {(item.rating && item.rating >= 4.5) && (
+                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                           <Star className="h-3 w-3 fill-current" />
+                           Best Seller
+                         </span>
+                      )}
+                    </div>
+                  </Link>
 
                   {/* Content */}
-                  <div className="flex flex-1 flex-col">
-                    <div className="mb-2 flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
-                        <p className="text-sm text-gray-500">{item.calories} {t("common.cal")}</p>
-                      </div>
-                      <span className="text-lg font-bold text-green-600">{formatCurrency(parseInt(item.price))}</span>
-                    </div>
+                  <div className="flex flex-1 flex-col p-4">
+                    <Link href={`/products/${item.id}`}>
+                      <h3 className="font-serif text-lg font-bold text-emerald-950 line-clamp-1 mb-1 group-hover:text-emerald-600 transition-colors">
+                        {item.name}
+                      </h3>
+                    </Link>
                     
-                    <p className="mb-4 line-clamp-2 text-sm text-gray-600">
-                      {item.description}
-                    </p>
+                    <div className="mb-3 flex items-center justify-between">
+                       <span className="text-xs font-medium text-stone-500">
+                         Stok: <span className={item.stock_quantity && item.stock_quantity <= 10 ? "text-orange-500" : "text-stone-700"}>
+                           {item.stock_quantity || 0}
+                         </span>
+                       </span>
+                       {/* Price */}
+                       <span className="text-lg font-bold text-emerald-600">
+                         {formatCurrency(parseInt(item.price))}
+                       </span>
+                    </div>
 
-                    {/* Quantity Controls and Add to Cart */}
-                    <div className="mt-auto flex items-center justify-between">
+                    {/* Controls */}
+                    <div className="mt-auto flex items-center gap-3">
                       {/* Quantity Selector */}
-                      <div className="flex items-center gap-1" role="group" aria-label={`${t("menu.quantityFor")} ${item.name}`}>
+                      <div className="flex items-center rounded-full border border-stone-200 bg-stone-50 px-1 py-1">
                         <button
                           onClick={(e) => decrementQuantity(e, item.id)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-stone-600 shadow-sm transition-colors hover:bg-stone-100 hover:text-emerald-600 focus:outline-none"
                           aria-label={t("menu.decreaseQuantity")}
                         >
-                          <Minus className="h-4 w-4" aria-hidden="true" />
+                          <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
                         </button>
-                        <span 
-                          className="w-8 text-center font-semibold text-gray-900"
-                          aria-live="polite"
-                          aria-atomic="true"
-                        >
+                        <span className="w-8 text-center text-sm font-bold text-stone-900">
                           {getQuantity(item.id)}
                         </span>
                         <button
                           onClick={(e) => incrementQuantity(e, item.id)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-stone-600 shadow-sm transition-colors hover:bg-stone-100 hover:text-emerald-600 focus:outline-none"
                           aria-label={t("menu.increaseQuantity")}
                         >
-                          <Plus className="h-4 w-4" aria-hidden="true" />
+                          <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
                         </button>
                       </div>
 
                       {/* Add to Cart Button */}
                       <button
                         onClick={(e) => handleAddToCart(e, item)}
-                        className="flex h-10 items-center justify-center gap-2 rounded-full bg-green-600 px-4 text-sm text-white font-medium transition-all hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                        aria-label={`${t("menu.addToCartFor")} ${item.name}, ${formatCurrency(parseFloat(item.price) * getQuantity(item.id))}`}
+                        className="flex flex-1 h-10 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 hover:shadow-emerald-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!item.is_available || (item.stock_quantity !== undefined && item.stock_quantity <= 0)}
                       >
-                        <ShoppingCart className="h-4 w-4" aria-hidden="true" />
-                        <span aria-hidden="true">{formatCurrency(parseFloat(item.price) * getQuantity(item.id))}</span>
+                        <ShoppingCart className="h-4 w-4" />
+                        <span>{formatCurrency(parseFloat(item.price) * getQuantity(item.id))}</span>
                       </button>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}
