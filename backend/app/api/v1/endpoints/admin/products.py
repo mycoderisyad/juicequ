@@ -42,6 +42,11 @@ class CreateProductRequest(BaseModel):
     stock: int = Field(default=100, ge=0)
     ingredients: list[str] = []
     nutrition: dict | None = None
+    # Size variants
+    has_sizes: bool = True
+    size_prices: dict | None = None  # {"small": 10000, "medium": 15000, "large": 20000}
+    size_volumes: dict | None = None  # {"small": 250, "medium": 350, "large": 500}
+    volume_unit: str = "ml"
 
 
 class UpdateProductRequest(BaseModel):
@@ -58,6 +63,11 @@ class UpdateProductRequest(BaseModel):
     stock: int | None = Field(None, ge=0)
     ingredients: list[str] | None = None
     nutrition: dict | None = None
+    # Size variants
+    has_sizes: bool | None = None
+    size_prices: dict | None = None
+    size_volumes: dict | None = None
+    volume_unit: str | None = None
 
 
 def product_to_dict(product: Product) -> dict:
@@ -68,6 +78,24 @@ def product_to_dict(product: Product) -> dict:
             ingredients = json.loads(product.ingredients)
         except json.JSONDecodeError:
             ingredients = []
+    
+    # Get size prices and volumes
+    prices = product.get_all_prices()
+    volumes = product.get_all_volumes()
+    
+    # Parse stored size data
+    size_prices = None
+    size_volumes = None
+    if product.size_prices:
+        try:
+            size_prices = json.loads(product.size_prices)
+        except json.JSONDecodeError:
+            pass
+    if product.size_volumes:
+        try:
+            size_volumes = json.loads(product.size_volumes)
+        except json.JSONDecodeError:
+            pass
     
     return {
         "id": product.id,
@@ -91,6 +119,13 @@ def product_to_dict(product: Product) -> dict:
         "rating": product.average_rating,
         "reviews": product.order_count,
         "order_count": product.order_count,
+        # Size variants
+        "has_sizes": product.has_sizes,
+        "size_prices": size_prices,
+        "size_volumes": size_volumes,
+        "volume_unit": product.volume_unit,
+        "prices": prices,  # Computed prices for all sizes
+        "volumes": volumes,  # Computed volumes for all sizes
         "created_at": product.created_at.isoformat() if product.created_at else None,
         "updated_at": product.updated_at.isoformat() if product.updated_at else None,
     }
@@ -273,6 +308,11 @@ async def create_product(
         is_available=request.is_available,
         stock_quantity=request.stock,
         ingredients=json.dumps(request.ingredients) if request.ingredients else None,
+        # Size variants
+        has_sizes=request.has_sizes,
+        size_prices=json.dumps(request.size_prices) if request.size_prices else None,
+        size_volumes=json.dumps(request.size_volumes) if request.size_volumes else None,
+        volume_unit=request.volume_unit,
     )
     
     db.add(new_product)
@@ -349,6 +389,19 @@ async def update_product(
     
     if request.ingredients is not None:
         product.ingredients = json.dumps(request.ingredients)
+    
+    # Size variants
+    if request.has_sizes is not None:
+        product.has_sizes = request.has_sizes
+    
+    if request.size_prices is not None:
+        product.size_prices = json.dumps(request.size_prices)
+    
+    if request.size_volumes is not None:
+        product.size_volumes = json.dumps(request.size_volumes)
+    
+    if request.volume_unit is not None:
+        product.volume_unit = request.volume_unit
     
     db.commit()
     db.refresh(product)

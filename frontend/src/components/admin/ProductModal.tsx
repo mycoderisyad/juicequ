@@ -25,6 +25,11 @@ interface Product {
   stock?: number;
   stock_quantity?: number;
   ingredients?: string[];
+  // Size variants
+  has_sizes?: boolean;
+  size_prices?: { small?: number; medium?: number; large?: number };
+  size_volumes?: { small?: number; medium?: number; large?: number };
+  volume_unit?: string;
 }
 
 interface Category {
@@ -54,14 +59,20 @@ interface FormData {
   hero_image: string;
   bottle_image: string;
   thumbnail_image: string;
+  // Size variants
+  has_sizes: boolean;
+  size_prices: { small: number; medium: number; large: number };
+  size_volumes: { small: number; medium: number; large: number };
+  volume_unit: string;
 }
 
 function getInitialFormData(product: Product | null, categories: Category[]): FormData {
   if (product) {
+    const basePrice = product.price || product.base_price || 0;
     return {
       name: product.name,
       description: product.description,
-      price: product.price || product.base_price || 0,
+      price: basePrice,
       category: product.category || product.category_id || "",
       is_available: product.is_available,
       stock: product.stock ?? 100,
@@ -70,6 +81,19 @@ function getInitialFormData(product: Product | null, categories: Category[]): Fo
       hero_image: product.hero_image || "",
       bottle_image: product.bottle_image || "",
       thumbnail_image: product.thumbnail_image || "",
+      // Size variants
+      has_sizes: product.has_sizes ?? true,
+      size_prices: {
+        small: product.size_prices?.small ?? Math.round(basePrice * 0.8),
+        medium: product.size_prices?.medium ?? basePrice,
+        large: product.size_prices?.large ?? Math.round(basePrice * 1.3),
+      },
+      size_volumes: {
+        small: product.size_volumes?.small ?? 250,
+        medium: product.size_volumes?.medium ?? 350,
+        large: product.size_volumes?.large ?? 500,
+      },
+      volume_unit: product.volume_unit || "ml",
     };
   }
   return {
@@ -84,6 +108,11 @@ function getInitialFormData(product: Product | null, categories: Category[]): Fo
     hero_image: "",
     bottle_image: "",
     thumbnail_image: "",
+    // Size variants
+    has_sizes: true,
+    size_prices: { small: 0, medium: 0, large: 0 },
+    size_volumes: { small: 250, medium: 350, large: 500 },
+    volume_unit: "ml",
   };
 }
 
@@ -245,6 +274,144 @@ export function ProductModal({
               value={formData.image}
               onChange={(v) => updateField("image", v)}
             />
+          </div>
+
+          {/* Size Pricing Section */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-medium text-gray-900">Size Variants</span>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={formData.has_sizes}
+                  onChange={(e) => updateField("has_sizes", e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <span className="text-gray-700">Enable multiple sizes</span>
+              </label>
+            </div>
+            
+            {formData.has_sizes && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="text-sm font-medium text-gray-700">Volume Unit:</label>
+                  <select
+                    value={formData.volume_unit}
+                    onChange={(e) => updateField("volume_unit", e.target.value)}
+                    className="rounded-md border border-gray-300 px-3 py-1 text-sm"
+                  >
+                    <option value="ml">ml (milliliter)</option>
+                    <option value="oz">oz (ounce)</option>
+                    <option value="L">L (liter)</option>
+                  </select>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Small Size */}
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <h4 className="font-medium text-gray-800 mb-2 text-center">Small (S)</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-gray-500">Price (Rp)</label>
+                        <Input
+                          type="number"
+                          value={formData.size_prices.small || ""}
+                          onChange={(e) => updateField("size_prices", {
+                            ...formData.size_prices,
+                            small: Number(e.target.value) || 0
+                          })}
+                          placeholder="10000"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Volume ({formData.volume_unit})</label>
+                        <Input
+                          type="number"
+                          value={formData.size_volumes.small || ""}
+                          onChange={(e) => updateField("size_volumes", {
+                            ...formData.size_volumes,
+                            small: Number(e.target.value) || 0
+                          })}
+                          placeholder="250"
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Medium Size */}
+                  <div className="rounded-lg border-2 border-green-200 bg-green-50/50 p-3">
+                    <h4 className="font-medium text-gray-800 mb-2 text-center">Medium (M)</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-gray-500">Price (Rp)</label>
+                        <Input
+                          type="number"
+                          value={formData.size_prices.medium || ""}
+                          onChange={(e) => updateField("size_prices", {
+                            ...formData.size_prices,
+                            medium: Number(e.target.value) || 0
+                          })}
+                          placeholder="15000"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Volume ({formData.volume_unit})</label>
+                        <Input
+                          type="number"
+                          value={formData.size_volumes.medium || ""}
+                          onChange={(e) => updateField("size_volumes", {
+                            ...formData.size_volumes,
+                            medium: Number(e.target.value) || 0
+                          })}
+                          placeholder="350"
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Large Size */}
+                  <div className="rounded-lg border border-gray-200 p-3">
+                    <h4 className="font-medium text-gray-800 mb-2 text-center">Large (L)</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-gray-500">Price (Rp)</label>
+                        <Input
+                          type="number"
+                          value={formData.size_prices.large || ""}
+                          onChange={(e) => updateField("size_prices", {
+                            ...formData.size_prices,
+                            large: Number(e.target.value) || 0
+                          })}
+                          placeholder="20000"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Volume ({formData.volume_unit})</label>
+                        <Input
+                          type="number"
+                          value={formData.size_volumes.large || ""}
+                          onChange={(e) => updateField("size_volumes", {
+                            ...formData.size_volumes,
+                            large: Number(e.target.value) || 0
+                          })}
+                          placeholder="500"
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-xs text-gray-400 text-center">
+                  Tip: Base price above is used as fallback when size prices are not set
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Image Upload Section */}

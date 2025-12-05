@@ -31,11 +31,16 @@ class ImportResult(BaseModel):
 
 
 # CSV Export Headers
+# Required: name, price, category_id
+# Optional: description, stock, is_available, ingredients, calories, image_url, hero_image, bottle_image, thumbnail_image
 EXPORT_HEADERS = [
     "name", "description", "price", "category_id", "stock",
     "is_available", "ingredients", "calories", "image_url",
     "hero_image", "bottle_image", "thumbnail_image"
 ]
+
+# Minimum required headers for import (images are optional)
+REQUIRED_IMPORT_HEADERS = ["name", "price", "category_id"]
 
 
 def _get_product_ingredients_str(product: Product) -> str:
@@ -101,14 +106,23 @@ def export_products_to_csv(products: list[Product]) -> StreamingResponse:
 
 
 def generate_csv_template() -> StreamingResponse:
-    """Generate CSV template for product import."""
+    """Generate CSV template for product import.
+    
+    Required columns: name, price, category_id
+    Optional columns: description, stock, is_available, ingredients, calories,
+                     image_url, hero_image, bottle_image, thumbnail_image
+    
+    Note: All image columns are optional. Products can be imported without images,
+    and images can be added manually later through the admin panel.
+    """
     output = io.StringIO()
     writer = csv.writer(output)
     
     # Write header
     writer.writerow(EXPORT_HEADERS)
     
-    # Write example row
+    # Write example rows showing required vs optional fields
+    # Example 1: Full data with images
     writer.writerow([
         "Contoh Jus Jeruk",
         "Jus jeruk segar yang menyegarkan dan kaya vitamin C",
@@ -122,6 +136,22 @@ def generate_csv_template() -> StreamingResponse:
         "",
         "",
         ""
+    ])
+    
+    # Example 2: Minimal data without images (images can be added later via admin panel)
+    writer.writerow([
+        "Contoh Jus Apel",
+        "Jus apel segar",
+        12000,
+        "fruit-juices",
+        50,
+        "true",
+        "Apel;Air",
+        90,
+        "",  # image_url - kosong, bisa diisi nanti di admin panel
+        "",  # hero_image - opsional
+        "",  # bottle_image - opsional
+        "",  # thumbnail_image - opsional
     ])
     
     output.seek(0)
@@ -281,18 +311,24 @@ def _validate_and_process_row(
             existing.ingredients = ingredients
         if calories:
             existing.calories = calories
-        if row.get("image_url"):
-            existing.image_url = str(row.get("image_url"))
-        if row.get("hero_image"):
-            existing.hero_image = str(row.get("hero_image"))
-        if row.get("bottle_image"):
-            existing.bottle_image = str(row.get("bottle_image"))
-        if row.get("thumbnail_image"):
-            existing.thumbnail_image = str(row.get("thumbnail_image"))
+        # Only update image fields if they have non-empty values
+        # This allows importing data without images (images can be added manually later)
+        if row.get("image_url") and str(row.get("image_url")).strip():
+            existing.image_url = str(row.get("image_url")).strip()
+        if row.get("hero_image") and str(row.get("hero_image")).strip():
+            existing.hero_image = str(row.get("hero_image")).strip()
+        if row.get("bottle_image") and str(row.get("bottle_image")).strip():
+            existing.bottle_image = str(row.get("bottle_image")).strip()
+        if row.get("thumbnail_image") and str(row.get("thumbnail_image")).strip():
+            existing.thumbnail_image = str(row.get("thumbnail_image")).strip()
         result["updated"] += 1
         return existing
     else:
         # Create new product
+        # Note: All image fields are optional
+        # - image_url defaults to "bg-green-500" (placeholder color) if not provided
+        # - hero_image, bottle_image, thumbnail_image default to None if not provided
+        # Images can be uploaded later through the admin panel
         new_product = Product(
             id=str(uuid.uuid4()),
             name=name,
@@ -303,10 +339,10 @@ def _validate_and_process_row(
             is_available=is_available,
             ingredients=ingredients,
             calories=calories,
-            image_url=str(row.get("image_url") or "bg-green-500"),
-            hero_image=str(row.get("hero_image") or "") if row.get("hero_image") else None,
-            bottle_image=str(row.get("bottle_image") or "") if row.get("bottle_image") else None,
-            thumbnail_image=str(row.get("thumbnail_image") or "") if row.get("thumbnail_image") else None,
+            image_url=str(row.get("image_url")).strip() if row.get("image_url") and str(row.get("image_url")).strip() else "bg-green-500",
+            hero_image=str(row.get("hero_image")).strip() if row.get("hero_image") and str(row.get("hero_image")).strip() else None,
+            bottle_image=str(row.get("bottle_image")).strip() if row.get("bottle_image") and str(row.get("bottle_image")).strip() else None,
+            thumbnail_image=str(row.get("thumbnail_image")).strip() if row.get("thumbnail_image") and str(row.get("thumbnail_image")).strip() else None,
         )
         db.add(new_product)
         result["imported"] += 1

@@ -335,13 +335,16 @@ class ProductService:
     def get_all_prices(
         product: Product,
     ) -> dict[str, float]:
-        """Get product prices for all sizes."""
-        return {
-            size.value: round(
-                product.base_price * ProductService.SIZE_MULTIPLIERS[size], 2
-            )
-            for size in ProductSize
-        }
+        """Get product prices for all sizes, using custom prices if set."""
+        # Use model's get_all_prices which handles custom size_prices
+        return product.get_all_prices()
+    
+    @staticmethod
+    def get_all_volumes(
+        product: Product,
+    ) -> dict[str, int]:
+        """Get product volumes for all sizes."""
+        return product.get_all_volumes()
     
     # ==========================================================================
     # Nutrition Info

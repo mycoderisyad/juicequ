@@ -30,6 +30,11 @@ interface DisplayProduct {
   is_available?: boolean;
   rating?: number;
   reviews?: number;
+  // Size variants
+  has_sizes?: boolean;
+  prices?: { small: number; medium: number; large: number };
+  volumes?: { small: number; medium: number; large: number };
+  volume_unit?: string;
 }
 
 interface DisplayCategory {
@@ -80,6 +85,11 @@ function transformProduct(product: ApiProduct): DisplayProduct {
     is_available: product.is_available ?? true,
     rating: product.rating,
     reviews: product.reviews,
+    // Size variants
+    has_sizes: product.has_sizes ?? true,
+    prices: product.prices,
+    volumes: product.volumes,
+    volume_unit: product.volume_unit || "ml",
   };
 }
 
@@ -140,6 +150,9 @@ function MenuContent() {
   const [isPriceOpen, setIsPriceOpen] = useState(false);
   const [priceRange, setPriceRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
   const [sortOrder, setSortOrder] = useState<"default" | "low-high" | "high-low">(() => getInitialSort(searchParams));
+  
+  // Size selector state: item_id -> selected size
+  const [selectedSizes, setSelectedSizes] = useState<Record<string, "small" | "medium" | "large">>({});
   
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const priceDropdownRef = useRef<HTMLDivElement>(null);
@@ -223,6 +236,31 @@ function MenuContent() {
   }, [fetchData]);
 
   const getQuantity = (id: string) => quantities[id] || 1;
+  
+  const getSelectedSize = (id: string): "small" | "medium" | "large" => selectedSizes[id] || "medium";
+  
+  const setSelectedSize = (id: string, size: "small" | "medium" | "large") => {
+    setSelectedSizes(prev => ({ ...prev, [id]: size }));
+  };
+  
+  const getItemPrice = (item: DisplayProduct, size: "small" | "medium" | "large"): number => {
+    if (item.prices && item.prices[size]) {
+      return item.prices[size];
+    }
+    // Default calculation based on base price
+    const basePrice = parseFloat(item.price) || 0;
+    const multipliers = { small: 0.8, medium: 1.0, large: 1.2 };
+    return Math.round(basePrice * multipliers[size]);
+  };
+  
+  const getItemVolume = (item: DisplayProduct, size: "small" | "medium" | "large"): number => {
+    if (item.volumes && item.volumes[size]) {
+      return item.volumes[size];
+    }
+    // Default volumes
+    const defaultVolumes = { small: 250, medium: 350, large: 500 };
+    return defaultVolumes[size];
+  };
 
   const incrementQuantity = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -285,13 +323,23 @@ function MenuContent() {
     e.preventDefault();
     e.stopPropagation();
     const qty = getQuantity(item.id);
+    const size = getSelectedSize(item.id);
+    const hasSizes = item.has_sizes ?? true;
+    const price = hasSizes ? getItemPrice(item, size) : parseFloat(item.price);
+    const volume = hasSizes ? getItemVolume(item, size) : undefined;
+    const cartItemId = hasSizes ? `${item.id}-${size}` : item.id;
+    const itemName = hasSizes ? `${item.name} (${size === "small" ? "S" : size === "medium" ? "M" : "L"})` : item.name;
+    
     for (let i = 0; i < qty; i++) {
       addItem({
-        id: item.id,
-        name: item.name,
-        price: parseFloat(item.price),
+        id: cartItemId,
+        name: itemName,
+        price: price,
         color: item.color,
         image: item.thumbnail_image,
+        size: hasSizes ? size : undefined,
+        volume: volume,
+        volumeUnit: hasSizes ? item.volume_unit : undefined,
       });
     }
     // Reset quantity after adding
@@ -570,15 +618,46 @@ function MenuContent() {
                     
                     <div className="mb-3 flex items-center justify-between">
                        <span className="text-xs font-medium text-stone-500">
-                         Stok: <span className={item.stock_quantity && item.stock_quantity <= 10 ? "text-orange-500" : "text-stone-700"}>
-                           {item.stock_quantity || 0}
-                         </span>
+                         {(item.has_sizes ?? true) && (
+                           <span className="text-emerald-600">
+                             {getItemVolume(item, getSelectedSize(item.id))} {item.volume_unit || "ml"}
+                           </span>
+                         )}
+                         {!(item.has_sizes ?? true) && (
+                           <>Stok: <span className={item.stock_quantity && item.stock_quantity <= 10 ? "text-orange-500" : "text-stone-700"}>
+                             {item.stock_quantity || 0}
+                           </span></>
+                         )}
                        </span>
                        {/* Price */}
                        <span className="text-lg font-bold text-emerald-600">
-                         {formatCurrency(parseInt(item.price))}
+                         {formatCurrency((item.has_sizes ?? true) ? getItemPrice(item, getSelectedSize(item.id)) : parseInt(item.price))}
                        </span>
                     </div>
+                    
+                    {/* Size Selector */}
+                    {(item.has_sizes ?? true) && (
+                      <div className="mb-3 flex items-center justify-center gap-1" role="group" aria-label="Size selector">
+                        {(["small", "medium", "large"] as const).map((size) => (
+                          <button
+                            key={size}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedSize(item.id, size);
+                            }}
+                            className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-lg transition-all ${
+                              getSelectedSize(item.id) === size
+                                ? "bg-emerald-600 text-white shadow-sm"
+                                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                            }`}
+                            aria-pressed={getSelectedSize(item.id) === size}
+                          >
+                            {size === "small" ? "S" : size === "medium" ? "M" : "L"}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Controls */}
                     <div className="mt-auto flex items-center gap-3">
@@ -610,7 +689,7 @@ function MenuContent() {
                         disabled={!item.is_available || (item.stock_quantity !== undefined && item.stock_quantity <= 0)}
                       >
                         <ShoppingCart className="h-4 w-4" />
-                        <span>{formatCurrency(parseFloat(item.price) * getQuantity(item.id))}</span>
+                        <span>{formatCurrency(((item.has_sizes ?? true) ? getItemPrice(item, getSelectedSize(item.id)) : parseFloat(item.price)) * getQuantity(item.id))}</span>
                       </button>
                     </div>
                   </div>

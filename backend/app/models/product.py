@@ -2,6 +2,7 @@
 Product and ProductCategory models for the juice menu.
 """
 import enum
+import json
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import uuid4
@@ -146,6 +147,34 @@ class Product(Base):
         nullable=False,
     )
     
+    # Size-specific pricing (JSON: {"small": 10000, "medium": 15000, "large": 20000})
+    size_prices: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="JSON object with price per size (small, medium, large)",
+    )
+    
+    # Size-specific volume in ml (JSON: {"small": 250, "medium": 350, "large": 500})
+    size_volumes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="JSON object with volume per size in ml",
+    )
+    
+    # Volume unit (ml, oz, etc.)
+    volume_unit: Mapped[str] = mapped_column(
+        String(20),
+        default="ml",
+        nullable=False,
+    )
+    
+    # Whether product has multiple sizes
+    has_sizes: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+    )
+    
     # Nutrition info (for AI recommendations)
     calories: Mapped[int | None] = mapped_column(
         Integer,
@@ -244,12 +273,71 @@ class Product(Base):
     
     def get_price(self, size: ProductSize = ProductSize.MEDIUM) -> float:
         """Get price based on size."""
+        # First check if we have custom size prices
+        if self.size_prices:
+            try:
+                prices = json.loads(self.size_prices)
+                size_key = size.value if isinstance(size, ProductSize) else size
+                if size_key in prices:
+                    return float(prices[size_key])
+            except (json.JSONDecodeError, ValueError, TypeError):
+                pass
+        
+        # Fall back to multiplier-based pricing
         multipliers = {
             ProductSize.SMALL: 0.8,
             ProductSize.MEDIUM: 1.0,
             ProductSize.LARGE: 1.3,
         }
         return self.base_price * multipliers.get(size, 1.0)
+    
+    def get_volume(self, size: ProductSize = ProductSize.MEDIUM) -> int | None:
+        """Get volume based on size."""
+        if self.size_volumes:
+            try:
+                volumes = json.loads(self.size_volumes)
+                size_key = size.value if isinstance(size, ProductSize) else size
+                if size_key in volumes:
+                    return int(volumes[size_key])
+            except (json.JSONDecodeError, ValueError, TypeError):
+                pass
+        
+        # Default volumes if not specified
+        default_volumes = {
+            ProductSize.SMALL: 250,
+            ProductSize.MEDIUM: 350,
+            ProductSize.LARGE: 500,
+        }
+        return default_volumes.get(size)
+    
+    def get_all_prices(self) -> dict:
+        """Get all size prices."""
+        if self.size_prices:
+            try:
+                return json.loads(self.size_prices)
+            except (json.JSONDecodeError, ValueError, TypeError):
+                pass
+        
+        # Calculate from base price
+        return {
+            "small": round(self.base_price * 0.8),
+            "medium": round(self.base_price),
+            "large": round(self.base_price * 1.3),
+        }
+    
+    def get_all_volumes(self) -> dict:
+        """Get all size volumes."""
+        if self.size_volumes:
+            try:
+                return json.loads(self.size_volumes)
+            except (json.JSONDecodeError, ValueError, TypeError):
+                pass
+        
+        return {
+            "small": 250,
+            "medium": 350,
+            "large": 500,
+        }
     
     def is_in_stock(self, quantity: int = 1) -> bool:
         """Check if product is in stock."""

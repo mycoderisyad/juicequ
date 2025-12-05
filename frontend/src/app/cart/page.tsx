@@ -75,7 +75,12 @@ export default function CartPage() {
                       <div className="flex flex-1 flex-col justify-between sm:flex-row sm:items-center">
                         <div>
                           <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
-                          <p className="text-green-600 font-medium">{formatCurrency(item.price)}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-green-600 font-medium">{formatCurrency(item.price)}</p>
+                            {item.volume && item.volumeUnit && (
+                              <span className="text-sm text-gray-500">({item.volume} {item.volumeUnit})</span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="mt-4 flex items-center gap-6 sm:mt-0">

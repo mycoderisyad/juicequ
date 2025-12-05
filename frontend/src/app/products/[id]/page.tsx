@@ -13,6 +13,9 @@ import { useCurrency } from "@/lib/hooks/use-store";
 import { AIFotobooth } from "@/components/products";
 import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+
+type SizeType = "small" | "medium" | "large";
 
 interface DisplayProduct {
   id: string;
@@ -32,6 +35,11 @@ interface DisplayProduct {
     carbs: number;
     fat: number;
   };
+  // Size variants
+  has_sizes?: boolean;
+  prices?: { small: number; medium: number; large: number };
+  volumes?: { small: number; medium: number; large: number };
+  volume_unit?: string;
 }
 
 // Transform API product to display format
@@ -50,6 +58,11 @@ function transformProduct(product: ApiProduct): DisplayProduct {
     hero_image: product.hero_image,
     bottle_image: product.bottle_image,
     nutrition: product.nutrition,
+    // Size variants
+    has_sizes: product.has_sizes ?? true,
+    prices: product.prices,
+    volumes: product.volumes,
+    volume_unit: product.volume_unit || "ml",
   };
 }
 
@@ -61,9 +74,38 @@ export default function ProductPage() {
   const [product, setProduct] = useState<DisplayProduct | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<SizeType>("medium");
   
   const idParam = params?.id;
   const idString = Array.isArray(idParam) ? idParam[0] : idParam;
+
+  // Helper functions for size-based pricing
+  const hasSizes = product?.has_sizes ?? true;
+  
+  const getPrice = useCallback((size: SizeType): number => {
+    if (!product) return 0;
+    if (product.prices && product.prices[size]) {
+      return product.prices[size];
+    }
+    // Default calculation based on base price
+    const basePrice = parseFloat(product.price) || 0;
+    const multipliers = { small: 0.8, medium: 1.0, large: 1.2 };
+    return Math.round(basePrice * multipliers[size]);
+  }, [product]);
+
+  const getVolume = useCallback((size: SizeType): number => {
+    if (!product) return 0;
+    if (product.volumes && product.volumes[size]) {
+      return product.volumes[size];
+    }
+    // Default volumes
+    const defaultVolumes = { small: 250, medium: 350, large: 500 };
+    return defaultVolumes[size];
+  }, [product]);
+
+  const displayPrice = getPrice(selectedSize);
+  const displayVolume = getVolume(selectedSize);
+  const volumeUnit = product?.volume_unit || "ml";
 
   const fetchProduct = useCallback(async () => {
     if (!idString) return;
@@ -89,13 +131,17 @@ export default function ProductPage() {
   const handleAddToCart = () => {
     if (!product) return;
     const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
+    const cartItemId = hasSizes ? `${product.id}-${selectedSize}` : product.id;
     addItem({
-      id: product.id,
-      name: product.name,
-      price: parseFloat(product.price),
+      id: cartItemId,
+      name: hasSizes ? `${product.name} (${selectedSize === "small" ? "S" : selectedSize === "medium" ? "M" : "L"})` : product.name,
+      price: displayPrice,
       color: product.color,
       image: productImage,
-      quantity: quantity
+      quantity: quantity,
+      size: hasSizes ? selectedSize : undefined,
+      volume: hasSizes ? displayVolume : undefined,
+      volumeUnit: hasSizes ? volumeUnit : undefined,
     });
   };
 
@@ -188,7 +234,12 @@ export default function ProductPage() {
               <div className="mb-6">
                 <h1 className="mb-2 text-4xl font-bold text-gray-900">{product.name}</h1>
                 <div className="flex items-center gap-4">
-                  <span className="text-3xl font-bold text-green-600">{format(parseInt(product.price))}</span>
+                  <span className="text-3xl font-bold text-green-600">{format(displayPrice)}</span>
+                  {hasSizes && (
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+                      {displayVolume} {volumeUnit}
+                    </span>
+                  )}
                   <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
                     {product.calories} cal
                   </span>
@@ -198,6 +249,38 @@ export default function ProductPage() {
               <p className="mb-8 text-lg leading-relaxed text-gray-600">
                 {product.description}
               </p>
+
+              {/* Size Selector */}
+              {hasSizes && (
+                <div className="mb-8">
+                  <h3 className="mb-3 font-semibold text-gray-900">Select Size</h3>
+                  <div className="flex gap-3" role="group" aria-label="Size selector">
+                    {(["small", "medium", "large"] as SizeType[]).map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={cn(
+                          "flex-1 py-3 px-4 rounded-xl border-2 transition-all",
+                          selectedSize === size
+                            ? "border-green-600 bg-green-50 text-green-700"
+                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                        )}
+                        aria-pressed={selectedSize === size}
+                      >
+                        <div className="text-lg font-bold">
+                          {size === "small" ? "S" : size === "medium" ? "M" : "L"}
+                        </div>
+                        <div className="text-sm opacity-75">
+                          {getVolume(size)} {volumeUnit}
+                        </div>
+                        <div className="text-sm font-medium mt-1">
+                          {format(getPrice(size))}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Ingredients (Mock) */}
               <div className="mb-8">
@@ -234,7 +317,7 @@ export default function ProductPage() {
                   className="h-12 flex-1 rounded-full bg-green-600 text-lg font-medium text-white hover:bg-green-700"
                 >
                   <ShoppingBag className="mr-2 h-5 w-5" />
-                  Add to Cart - {format(parseFloat(product.price) * quantity)}
+                  Add to Cart - {format(displayPrice * quantity)}
                 </Button>
               </div>
 
