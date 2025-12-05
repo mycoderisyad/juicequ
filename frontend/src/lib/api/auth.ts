@@ -32,6 +32,11 @@ export interface User {
   role: string;
 }
 
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+}
+
 export const authApi = {
   /**
    * Login user.
@@ -55,6 +60,37 @@ export const authApi = {
   getProfile: async (): Promise<User> => {
     const response = await apiClient.get<User>("/auth/me");
     return response.data;
+  },
+
+  /**
+   * Request password reset email.
+   */
+  requestPasswordReset: async (email: string): Promise<void> => {
+    await apiClient.post("/auth/password/forgot", { email });
+  },
+
+  /**
+   * Reset password using token.
+   */
+  resetPassword: async ({ token, newPassword }: ResetPasswordPayload): Promise<void> => {
+    await apiClient.post("/auth/password/reset", {
+      token,
+      new_password: newPassword,
+    });
+  },
+
+  /**
+   * Send email verification link.
+   */
+  sendVerification: async (email: string): Promise<void> => {
+    await apiClient.post("/auth/verify-email/send", { email });
+  },
+
+  /**
+   * Confirm email verification.
+   */
+  confirmVerification: async (token: string): Promise<void> => {
+    await apiClient.post("/auth/verify-email/confirm", { token });
   },
 
   /**

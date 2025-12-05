@@ -51,115 +51,432 @@
   },
   "home": {
     "hero": {
-      "badge": "Jus Seger",
-      "title": "Jus Seger Alami",
-      "subtitle": "Digawe saka woh-wohan pilihan kanthi resep tradisional",
-      "cta": "Pesen Saiki",
-      "explore": "Deleng Menu"
+      "badge": "Layanan Jus Cepet & Seger",
+      "badgeBestseller": "Paling Laris",
+      "title1": "Smoothies kanggo",
+      "title2": "gawe dinamu",
+      "title3": "dadi luwih nyaman",
+      "titleFresh": "Seger &",
+      "titleHealthy": "Sehat",
+      "subtitle": "Temokake jus lokal seger, pesen online lan njupuk ing outlet paling cedhak.",
+      "subtitleBestseller": "Pilihan jus seger paling apik kanggo kesehatanmu",
+      "orderNow": "Pesen Saiki",
+      "viewMenu": "Deleng Menu"
     },
-    "features": {
-      "fresh": "Seger 100%",
-      "freshDesc": "Digawe saka woh-wohan seger saben dina",
-      "natural": "Alami",
-      "naturalDesc": "Tanpa pengawet lan pewarna buatan",
-      "delivery": "Pengiriman Cepet",
-      "deliveryDesc": "Langsung dikirim menyang lokasi sampeyan"
+    "promo": {
+      "firstOrder": "Diskon Pesenan Pertama!",
+      "getDiscount": "Entuk diskon 20% kanggo pesenan pertama",
+      "buy2get1": "Tuku 2 Gratis 1!",
+      "allSmoothies": "Kanggo kabeh smoothie akhir minggu iki",
+      "freeDelivery": "Gratis Ongkir!",
+      "minOrder": "Kanggo pesenan ndhuwur Rp 100.000",
+      "orderNow": "Pesen Saiki"
+    },
+    "featuredProducts": {
+      "title": "Menu Smoothie Kita",
+      "subtitle": "Jus seger digawe kanthi tresna",
+      "viewAll": "Deleng Kabeh Produk"
+    },
+    "categories": {
+      "all": "Kabeh",
+      "smoothies": "Smoothies",
+      "juices": "Jus",
+      "bowls": "Bowls",
+      "snacks": "Jajanan"
+    },
+    "browseCategories": {
+      "badge": "Jelajah Menu",
+      "title": "Temokake",
+      "titleAccent": "Favoritmu",
+      "subtitle": "Pilih kategori menu sing cocog karo mood lan kebutuhan nutrisimu dina iki.",
+      "browseCategory": "Jelajah",
+      "viewMenu": "Deleng Menu",
+      "defaultDescription": "Nikmati pilihan menu seger lan sehat saka kategori iki."
+    },
+    "whyChooseUs": {
+      "title": "Kenapa Kudu Milih Kita?",
+      "subtitle": "JuiceQu komitmen menehi produk paling apik kanthi standar kualitas paling dhuwur",
+      "features": {
+        "fresh": {
+          "title": "100% Seger & Alami",
+          "description": "Tanpa pengawet, pewarna, utawa pemanis buatan. Mung woh-wohan lan sayuran seger."
+        },
+        "preOrder": {
+          "title": "Pre-Order & Njupuk",
+          "description": "Pesen saka omah, njupuk ing outlet. Ngirit wektu tanpa ngantri!"
+        },
+        "healthy": {
+          "title": "Pilihan Sehat",
+          "description": "Dikayakake vitamin lan nutrisi kanggo nyengkuyung gaya urip sehat sampeyan."
+        },
+        "freshDaily": {
+          "title": "Digawe Seger Saben Dina",
+          "description": "Saben jus digawe seger nalika sampeyan pesen, ora tau di-stock."
+        },
+        "quality": {
+          "title": "Jaminan Kualitas",
+          "description": "Jaminan kualitas paling apik. Ora puas? Dhuwit bali 100%."
+        },
+        "eco": {
+          "title": "Ramah Lingkungan",
+          "description": "Kemasan ramah lingkungan lan bisa didaur ulang."
+        }
+      }
     },
     "reviews": {
-      "badge": "Testimoni Pelanggan",
-      "title": "Apa Kata Pelanggan",
-      "subtitle": "Deleng review saka pelanggan sing wis nyoba produk kita",
+      "badge": "Pelanggan Seneng",
+      "title": "Apa Kata Pelanggan Kita",
+      "subtitle": "Ewonan pelanggan wis ngrasakake kesegaran JuiceQu. Iki ujare bab produk kita.",
       "averageRating": "Rating Rata-rata",
       "happyCustomers": "Pelanggan Seneng",
       "wouldRecommend": "Bakal Nyaranke"
+    },
+    "stats": {
+      "happyCustomers": "Pelanggan Seneng",
+      "juicesDelivered": "Jus Dikirim",
+      "menuVarieties": "Variasi Menu",
+      "averageRating": "Rating Rata-rata"
+    },
+    "cta": {
+      "title": "Siap kanggo Urip Luwih Sehat?",
+      "subtitle": "Mulai perjalanan urip sehat sampeyan karo JuiceQu. Entuk diskon 20% kanggo pesenan pertama sampeyan!",
+      "orderNow": "Pesen Saiki",
+      "chatWithAI": "Chat karo AI"
+    },
+    "locations": {
+      "title": "Lokasi",
+      "subtitle": "Mampir menyang toko kita lan nikmati jus seger langsung",
+      "visitUs": "Mampir Menyang Kita",
+      "openHours": "Jam Operasional",
+      "weekdays": "Senin - Jumat",
+      "weekend": "Sabtu - Minggu",
+      "closed": "Tutup",
+      "open": "Buka",
+      "address": "Alamat",
+      "openInGoogleMaps": "Buka ing Google Maps",
+      "openEveryDay": "Buka saben dina",
+      "openDays": "Buka"
+    },
+    "newsletter": {
+      "title": "Entuk Info Paling Anyar",
+      "subtitle": "Langganan newsletter kita kanggo promo lan menu anyar",
+      "placeholder": "Lebokna email sampeyan",
+      "subscribe": "Langganan",
+      "privacy": "Kita ngajeni privasi sampeyan"
     }
   },
   "menu": {
     "title": "Menu Kita",
-    "subtitle": "Pilih jus favoritmu",
-    "search": "Goleki jus...",
-    "categories": "Kategori",
-    "allProducts": "Kabeh Produk",
-    "addToCart": "Tambah",
-    "outOfStock": "Entek",
-    "calories": "kalori",
-    "noProducts": "Ora ana produk sing ditemokake",
-    "tryDifferent": "Coba ganti filter utawa kata kunci"
+    "subtitle": "Digawe seger kanggo sampeyan",
+    "searchPlaceholder": "Goleki smoothie, jus...",
+    "noResults": {
+      "title": "Ora ditemokake",
+      "description": "Coba sesuaikan panelusuran utawa filter sampeyan kanggo nemokake sing sampeyan goleki.",
+      "clearFilters": "Busak filter"
+    },
+    "categories": {
+      "all": "Kabeh",
+      "juices": "Jus",
+      "smoothies": "Smoothie",
+      "detox": "Detox",
+      "energy": "Energi"
+    },
+    "addToFavorites": "Tambah menyang favorit",
+    "decreaseQuantity": "Kurangi jumlah",
+    "increaseQuantity": "Tambah jumlah",
+    "quantityFor": "Jumlah kanggo",
+    "addToCartFor": "Tambah menyang keranjang"
   },
   "product": {
     "addToCart": "Tambah menyang Keranjang",
-    "buyNow": "Tuku Saiki",
+    "quantity": "Jumlah",
+    "price": "Rega",
     "description": "Deskripsi",
     "ingredients": "Bahan-bahan",
-    "nutrition": "Informasi Nutrisi",
-    "reviews": "Review",
-    "relatedProducts": "Produk Liyane"
+    "nutrition": "Informasi Gizi",
+    "reviews": "Ulasan",
+    "relatedProducts": "Produk Liyane",
+    "outOfStock": "Stok Entek",
+    "inStock": "Ana Stok"
   },
   "cart": {
-    "title": "Keranjang Sampeyan",
-    "empty": "Keranjang sampeyan kosong",
-    "emptyDesc": "Tambah produk saka menu",
-    "continueShopping": "Terus Blanja",
+    "title": "Keranjang Belanja",
+    "yourCart": "Keranjang Sampeyan",
+    "empty": {
+      "title": "Keranjang Kosong",
+      "description": "Kayane sampeyan durung nambah apa-apa.",
+      "cta": "Mulai Blanja",
+      "startShopping": "Mulai Blanja"
+    },
+    "summary": {
+      "title": "Ringkasan Pesenan",
+      "subtotal": "Subtotal",
+      "discount": "Diskon",
+      "tax": "Pajak (10%)",
+      "deliveryFee": "Ongkos Kirim",
+      "free": "Gratis",
+      "total": "Total",
+      "checkout": "Checkout"
+    },
+    "item": {
+      "remove": "Busak",
+      "quantity": "Jumlah"
+    },
+    "promoCode": {
+      "placeholder": "Kode promo",
+      "apply": "Terapake"
+    },
     "checkout": "Checkout",
-    "subtotal": "Subtotal",
-    "tax": "Pajak",
-    "total": "Total",
-    "remove": "Busak",
-    "quantity": "Jumlah"
+    "secureCheckout": "Checkout Aman dening JuiceQu"
   },
   "checkout": {
-    "title": "Checkout",
-    "orderSummary": "Ringkasan Pesenan",
-    "paymentMethod": "Metode Pembayaran",
-    "cash": "Tunai",
-    "qris": "QRIS",
-    "transfer": "Transfer Bank",
-    "notes": "Cathetan (Opsional)",
-    "notesPlaceholder": "Cathetan khusus kanggo pesenan...",
-    "placeOrder": "Pesen Saiki",
+    "title": "Pembayaran",
+    "steps": {
+      "cart": "Keranjang",
+      "details": "Detail",
+      "payment": "Pembayaran",
+      "confirmation": "Konfirmasi"
+    },
+    "customerInfo": {
+      "title": "Informasi Pelanggan",
+      "name": "Jeneng Lengkap",
+      "email": "Email",
+      "phone": "Nomer Telepon"
+    },
+    "pickupInfo": {
+      "title": "Informasi Pangambilan",
+      "date": "Tanggal Pangambilan",
+      "time": "Wektu Pangambilan",
+      "notes": "Cathetan Tambahan"
+    },
+    "payment": {
+      "title": "Metode Pembayaran",
+      "cash": "Tunai",
+      "transfer": "Transfer Bank",
+      "ewallet": "E-Wallet"
+    },
+    "placeOrder": "Gawe Pesenan",
     "processing": "Memproses..."
-  },
-  "orders": {
-    "title": "Pesenan Sampeyan",
-    "empty": "Durung ana pesenan",
-    "emptyDesc": "Pesen jus saka menu",
-    "orderNumber": "Nomer Pesenan",
-    "status": "Status",
-    "date": "Tanggal",
-    "total": "Total",
-    "details": "Detail",
-    "cancel": "Batalke",
-    "reorder": "Pesen Maneh"
   },
   "auth": {
     "login": {
-      "title": "Sugeng Rawuh!",
-      "subtitle": "Mlebu menyang Akun",
+      "title": "Mlebu menyang Akun",
+      "subtitle": "Sugeng rawuh maneh!",
       "email": "Email",
-      "password": "Password",
+      "password": "Sandhi",
       "rememberMe": "Eling aku",
-      "forgotPassword": "Lali password?",
+      "forgotPassword": "Lali sandhi?",
       "submit": "Mlebu",
-      "orContinueWith": "utawa terus nganggo",
-      "signUp": "daftar akun anyar"
+      "noAccount": "Durung duwe akun?",
+      "signUp": "Daftar saiki",
+      "orContinueWith": "Utawa terus nganggo"
     },
     "register": {
-      "title": "Gawe Akun",
-      "subtitle": "Daftar kanggo miwiti",
+      "title": "Gawe Akun Anyar",
+      "subtitle": "Gabung karo JuiceQu",
       "fullName": "Jeneng Lengkap",
       "email": "Email",
-      "password": "Password",
-      "confirmPassword": "Konfirmasi Password",
+      "phone": "Nomer Telepon",
+      "password": "Sandhi",
+      "confirmPassword": "Konfirmasi Sandhi",
+      "agreeTerms": "Aku setuju karo",
+      "termsLink": "Syarat & Ketentuan",
       "submit": "Daftar",
-      "orSignUpWith": "utawa daftar nganggo",
       "hasAccount": "Wis duwe akun?",
       "signIn": "Mlebu",
-      "agreeTerms": "Aku setuju karo",
-      "termsLink": "Syarat lan Ketentuan"
+      "orSignUpWith": "Utawa daftar nganggo"
     },
     "errors": {
-      "invalidCredentials": "Email utawa password salah",
-      "passwordMismatch": "Password ora cocok"
+      "invalidEmail": "Format email ora valid",
+      "passwordTooShort": "Sandhi minimal 8 karakter",
+      "passwordMismatch": "Sandhi ora cocog",
+      "invalidCredentials": "Email utawa sandhi salah",
+      "emailExists": "Email wis kadaftar"
+    },
+    "verifyEmail": {
+      "title": "Verifikasi email sampeyan",
+      "validating": "Kita lagi validasi tautan verifikasi sampeyan.",
+      "enterEmail": "Lebokake email sampeyan kanggo nampa tautan verifikasi anyar.",
+      "success": "Email wis kasil diverifikasi. Sampeyan bisa mlebu saiki.",
+      "invalidLink": "Tautan verifikasi ora valid utawa wis kadaluwarsa.",
+      "sendFailed": "Gagal ngirim email verifikasi.",
+      "sentLink": "Yen email kasebut ana, kita wis ngirim tautan verifikasi.",
+      "sendVerification": "Kirim email verifikasi",
+      "goToLogin": "Menyang halaman login",
+      "backToLogin": "Bali menyang login",
+      "willSendLink": "Kita bakal ngirim tautan verifikasi."
+    },
+    "resetPassword": {
+      "title": "Atur ulang sandhi",
+      "subtitle": "Pilih sandhi anyar kanggo ngamanake akun sampeyan.",
+      "newPassword": "Sandhi anyar",
+      "confirmPassword": "Konfirmasi sandhi",
+      "missingToken": "Token reset ora ketemu. Mangga nganggo tautan saka email sampeyan.",
+      "passwordMismatch": "Sandhi ora cocog.",
+      "success": "Sandhi wis kasil diatur ulang. Sampeyan bisa mlebu saiki.",
+      "failed": "Gagal ngatur ulang sandhi.",
+      "backToLogin": "Bali menyang login",
+      "passwordRequirement": "Sandhi minimal 8 karakter.",
+      "updatePassword": "Perbarui sandhi"
+    }
+  },
+  "orders": {
+    "title": "Pesenan Saya",
+    "empty": {
+      "title": "Durung Ana Pesenan",
+      "description": "Sampeyan durung duwe riwayat pesenan",
+      "cta": "Mulai Mesen"
+    },
+    "status": {
+      "pending": "Ngenteni",
+      "confirmed": "Dikonfirmasi",
+      "processing": "Diproses",
+      "ready": "Siap Dijupuk",
+      "completed": "Rampung",
+      "cancelled": "Dibatalake"
+    },
+    "details": {
+      "orderId": "ID Pesenan",
+      "orderDate": "Tanggal Pesenan",
+      "pickupTime": "Wektu Pangambilan",
+      "totalAmount": "Total Pembayaran",
+      "items": "Item Pesenan"
+    }
+  },
+  "chat": {
+    "title": "Asisten AI Chat",
+    "subtitle": "Takon apa wae babagan menu kita",
+    "placeholder": "Ketik pesen sampeyan...",
+    "recording": "Ngrekam...",
+    "listening": "Ngrungokake... Ngomong saiki",
+    "send": "Kirim",
+    "loginForPersonalized": "Mlebu kanggo rekomendasi sing dipersonalisasi",
+    "suggestions": {
+      "title": "Saran Pitakonan",
+      "items": [
+        "Rekomendasi jus kanggo diet",
+        "Jus apa sing dhuwur vitamin C?",
+        "Menu favorit pelanggan",
+        "Jus kanggo nambah energi"
+      ]
+    },
+    "welcome": "Halo! Aku asisten AI JuiceQu. Ana sing bisa dibantu dina iki?"
+  },
+  "footer": {
+    "description": "Jus seger lan sehat kanthi 100% bahan alami. Dosis vitamin saben dina sampeyan.",
+    "menuTitle": "Menu",
+    "companyTitle": "Perusahaan",
+    "supportTitle": "Dhukungan",
+    "legalTitle": "Legal",
+    "menu": {
+      "allProducts": "Kabeh Produk",
+      "smoothies": "Smoothies",
+      "freshJuices": "Jus Seger",
+      "acaiBowls": "Acai Bowls",
+      "healthySnacks": "Jajanan Sehat"
+    },
+    "company": {
+      "aboutUs": "Babagan Kita",
+      "careers": "Karir",
+      "franchise": "Waralaba",
+      "blog": "Blog",
+      "pressKit": "Press Kit"
+    },
+    "support": {
+      "helpCenter": "Pusat Bantuan",
+      "contactUs": "Hubungi Kita",
+      "faq": "FAQ",
+      "deliveryInfo": "Info Pengiriman",
+      "trackOrder": "Lacak Pesenan"
+    },
+    "legal": {
+      "privacyPolicy": "Kabijakan Privasi",
+      "termsOfService": "Syarat Layanan",
+      "cookiePolicy": "Kabijakan Cookie",
+      "refundPolicy": "Kabijakan Refund"
+    },
+    "paymentMethods": "Metode Pembayaran sing Ditampa",
+    "followUsOn": "Tindakake kita ing",
+    "secureEncrypted": "Aman & Terenkripsi",
+    "sslSecurity": "Keamanan SSL 256-bit",
+    "copyright": "© 2025 JuiceQu. Hak cipta dilindungi.",
+    "madeWith": "Digawe kanthi",
+    "inIndonesia": "ing Indonesia"
+  },
+  "about": {
+    "badge": "Cerita Kita",
+    "hero": {
+      "title": "Jus Seger, Urip Sehat",
+      "description": "JuiceQu lahir saka keyakinan prasaja: kabeh wong berhak entuk akses menyang minuman seger, enak, lan bergizi. Kita duwe misi kanggo nggawe urip sehat dadi gampang, terjangkau, lan nyenengake kanggo kabeh wong."
+    },
+    "stats": {
+      "customers": "Pelanggan Seneng",
+      "products": "Variasi Produk",
+      "outlets": "Outlet Nasional",
+      "rating": "Rating Rata-rata"
+    },
+    "mission": {
+      "badge": "Misi Kita",
+      "title": "Nggawe Urip Sehat Dadi Gampang",
+      "description": "Ing JuiceQu, kita percaya yen kesehatan ora kudu rumit. Mulane kita dedikasi kanggo nyiptakake jus lan smoothie enak sing sugih nutrisi lan cocog karo gaya urip sibuk sampeyan.",
+      "description2": "Saben minuman sing kita gawe digawe kanthi bahan-bahan pilihan sing dipasok saka lokal. Kita kerja bareng karo petani lokal kanggo mastikake produk paling seger tekan gelas sampeyan.",
+      "noPreservatives": "Tanpa pengawet"
+    },
+    "values": {
+      "title": "Nilai Inti Kita",
+      "subtitle": "Prinsip-prinsip iki mbimbing kabeh sing kita lakoni ing JuiceQu",
+      "fresh": {
+        "title": "Tansah Seger",
+        "description": "Kita mung nggunakake bahan-bahan paling seger, dipasok saben dina saka petani lokal."
+      },
+      "health": {
+        "title": "Kesehatan Utama",
+        "description": "Kesejahteraan sampeyan yaiku prioritas kita. Tanpa bahan tambahan buatan, salawase."
+      },
+      "quality": {
+        "title": "Kualitas Premium",
+        "description": "Kita ora tau kompromi babagan kualitas, saka bahan nganti layanan."
+      },
+      "community": {
+        "title": "Fokus Komunitas",
+        "description": "Kita komitmen kanggo nyengkuyung petani lan komunitas lokal."
+      }
+    },
+    "story": {
+      "title": "Perjalanan Kita",
+      "paragraph1": "JuiceQu diwiwiti taun 2020 minangka gerobak jus cilik ing Jakarta. Pendiri kita, Sarah, nyadar yen nemokake minuman seger lan sehat nalika lelungan ternyata angel banget. Akeh-akehe pilihan sing ana kebak gula utawa kurang nilai gizi.",
+      "paragraph2": "Kanthi semangat kanggo kesehatan lan latar belakang ing bidang nutrisi, Sarah mulai eksperimen nganggo kombinasi jus sing enak sekaligus bener-bener sehat. Kabar nyebar cepet, lan sing diwiwiti minangka gerobak tunggal tuwuh dadi merek sing ditresnani.",
+      "paragraph3": "Dina iki, JuiceQu nglayani ewonan pelanggan saben dina ing pirang-pirang lokasi. Nanging komitmen kita tetep padha: nyediakake minuman seger, sehat, lan enak sing mbantu sampeyan rumangsa paling apik, saben dina."
+    },
+    "team": {
+      "title": "Tim Kita",
+      "subtitle": "Wong-wong sing semangat ing mburi JuiceQu",
+      "founder": "Pangadeg & CEO",
+      "headChef": "Kepala Produk",
+      "operations": "Direktur Operasional"
+    },
+    "cta": {
+      "title": "Siap Nyoba JuiceQu?",
+      "description": "Rasakake kesegaran dhewe. Pesen saiki lan rasakake bedane!",
+      "viewMenu": "Deleng Menu",
+      "chatWithUs": "Chat Karo Kita"
+    }
+  },
+  "errors": {
+    "notFound": {
+      "title": "Halaman Ora Ditemokake",
+      "description": "Nuwun sewu, halaman sing sampeyan goleki ora ana",
+      "cta": "Bali menyang Beranda"
+    },
+    "serverError": {
+      "title": "Ana Masalah",
+      "description": "Nuwun sewu, ana kesalahan ing server kita",
+      "cta": "Coba Maneh"
+    },
+    "networkError": {
+      "title": "Masalah Koneksi",
+      "description": "Mangga priksa koneksi internet sampeyan",
+      "cta": "Muat Maneh"
     }
   },
   "voice": {
@@ -179,48 +496,105 @@
       "checkout": "Checkout saiki"
     }
   },
-  "chat": {
-    "title": "AI Assistant",
-    "placeholder": "Ketik pesen...",
-    "send": "Kirim",
-    "thinking": "Mikir...",
-    "welcome": "Sugeng rawuh! Aku bisa mbantu sampeyan pesen jus utawa menehi rekomendasi."
+  "admin": {
+    "dashboard": "Dasbor",
+    "title": "Dasbor Admin",
+    "welcome": "Sugeng rawuh maneh",
+    "overview": "Ringkasan",
+    "totalRevenue": "Total Penghasilan",
+    "totalOrders": "Total Pesenan",
+    "totalProducts": "Total Produk",
+    "totalUsers": "Total Pengguna",
+    "recentOrders": "Pesenan Paling Anyar",
+    "topProducts": "Produk Paling Laris",
+    "salesAnalytics": "Analitik Penjualan",
+    "orderManagement": "Manajemen Pesenan",
+    "productManagement": "Manajemen Produk",
+    "categoryManagement": "Manajemen Kategori",
+    "userManagement": "Manajemen Pengguna",
+    "settings": "Setelan",
+    "viewAll": "Deleng Kabeh",
+    "today": "Dina Iki",
+    "thisWeek": "Minggu Iki",
+    "thisMonth": "Sasi Iki",
+    "revenue": "Penghasilan",
+    "orders": "Pesenan",
+    "products": "Produk",
+    "users": "Pengguna",
+    "pending": "Ngenteni",
+    "processing": "Diproses",
+    "completed": "Rampung",
+    "cancelled": "Dibatalake",
+    "noData": "Ora ana data",
+    "loading": "Ngunggah...",
+    "error": "Gagal ngunggah data",
+    "retry": "Coba Maneh",
+    "actions": "Aksi",
+    "edit": "Owahi",
+    "delete": "Busak",
+    "save": "Simpen",
+    "cancel": "Batal",
+    "confirm": "Konfirmasi",
+    "search": "Goleki",
+    "filter": "Filter",
+    "export": "Ekspor",
+    "refresh": "Segerake"
   },
-  "footer": {
-    "tagline": "Jus Seger Alami",
-    "description": "Digawe saka woh-wohan pilihan kanthi resep tradisional Indonesia",
-    "quickLinks": "Link Cepet",
-    "contact": "Kontak",
-    "followUs": "Tindakake Kita",
-    "newsletter": "Newsletter",
-    "newsletterDesc": "Langganan kanggo promo lan update",
-    "subscribe": "Langganan",
-    "emailPlaceholder": "Email sampeyan"
+  "profile": {
+    "title": "Profil",
+    "myProfile": "Profil Saya",
+    "editProfile": "Owahi Profil",
+    "saveChanges": "Simpen Owahan",
+    "cancel": "Batal",
+    "fullName": "Jeneng Lengkap",
+    "email": "Email",
+    "phone": "Nomer Telepon",
+    "address": "Alamat",
+    "role": "Peran",
+    "customer": "Pelanggan",
+    "admin": "Admin",
+    "cashier": "Kasir",
+    "viewOrders": "Deleng Pesenan",
+    "logout": "Metu",
+    "memberSince": "Gabung wiwit",
+    "lastLogin": "Pungkasan mlebu"
   },
-  "about": {
-    "title": "Babagan JuiceQu",
-    "subtitle": "Cerita kita",
-    "mission": "Misi Kita",
-    "missionDesc": "Nyediakake jus seger berkualitas tinggi kanggo gaya urip sehat",
-    "vision": "Visi Kita",
-    "visionDesc": "Dadi merek jus paling dipercaya ing Indonesia"
-  },
-  "errors": {
-    "notFound": {
-      "title": "Halaman Ora Ditemokake",
-      "description": "Halaman sing sampeyan goleki ora ana",
-      "cta": "Bali menyang Beranda"
-    },
-    "serverError": {
-      "title": "Kesalahan Server",
-      "description": "Ana masalah ing server kita",
-      "cta": "Coba Maneh"
-    },
-    "networkError": {
-      "title": "Kesalahan Jaringan",
-      "description": "Priksa koneksi internet sampeyan",
-      "cta": "Coba Maneh"
-    }
+  "cashier": {
+    "dashboard": "Dasbor Kasir",
+    "title": "Panel Kasir",
+    "welcome": "Sugeng rawuh, Kasir",
+    "pos": "Point of Sale",
+    "newOrder": "Pesenan Anyar",
+    "pendingOrders": "Pesenan Ngenteni",
+    "todaySales": "Penjualan Dina Iki",
+    "todayTransactions": "Transaksi Dina Iki",
+    "processOrder": "Proses Pesenan",
+    "completeOrder": "Rampungake Pesenan",
+    "cancelOrder": "Batalake Pesenan",
+    "printReceipt": "Cetak Struk",
+    "orderDetails": "Detail Pesenan",
+    "customer": "Pelanggan",
+    "items": "Item",
+    "subtotal": "Subtotal",
+    "tax": "Pajak",
+    "total": "Total",
+    "paymentMethod": "Metode Pembayaran",
+    "cash": "Tunai",
+    "transfer": "Transfer Bank",
+    "ewallet": "E-Wallet",
+    "qris": "QRIS",
+    "changeAmount": "Kembalian",
+    "paidAmount": "Jumlah Dibayar",
+    "orderPlaced": "Pesenan sukses digawe",
+    "orderCompleted": "Pesenan rampung",
+    "orderCancelled": "Pesenan dibatalake",
+    "failedProcess": "Gagal proses pesenan. Mangga coba maneh.",
+    "failedUpdate": "Gagal ngowahi status pesenan",
+    "failedRefund": "Gagal proses refund",
+    "noOrders": "Ora ana pesenan ngenteni",
+    "transactions": "Transaksi",
+    "reports": "Laporan",
+    "dailyReport": "Laporan Harian",
+    "salesReport": "Laporan Penjualan"
   }
 }
-

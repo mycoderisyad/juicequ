@@ -98,6 +98,22 @@ class User(Base):
         default=False,
         nullable=False,
     )
+    verification_token: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    verification_token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    reset_token_hash: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    reset_token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     
     # Preferences (for AI personalization)
     preferences: Mapped[str | None] = mapped_column(

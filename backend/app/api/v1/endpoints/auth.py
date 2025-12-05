@@ -19,9 +19,13 @@ from app.schemas.auth import (
     GoogleAuthUrlResponse,
     LoginRequest,
     MessageResponse,
+    PasswordResetConfirm,
+    PasswordResetRequest,
     RefreshTokenRequest,
     RegisterRequest,
     Token,
+    VerifyEmailConfirm,
+    VerifyEmailRequest,
 )
 from app.schemas.user import UserProfileResponse, UserUpdatePassword
 from app.services.auth_service import AuthService
@@ -168,6 +172,82 @@ async def change_password(
             new_password=data.new_password,
         )
         return MessageResponse(message="Password changed successfully")
+    except Exception as e:
+        raise BadRequestException(str(e))
+
+
+@router.post(
+    "/password/forgot",
+    response_model=MessageResponse,
+    summary="Request password reset",
+    description="Send password reset link to email.",
+)
+async def forgot_password(
+    data: PasswordResetRequest,
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Send password reset link."""
+    try:
+        service = AuthService(db)
+        service.request_password_reset(data.email)
+        return MessageResponse(message="If the email exists, a reset link has been sent")
+    except Exception as e:
+        raise BadRequestException(str(e))
+
+
+@router.post(
+    "/password/reset",
+    response_model=MessageResponse,
+    summary="Reset password",
+    description="Reset password using token.",
+)
+async def reset_password(
+    data: PasswordResetConfirm,
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Reset password using token."""
+    try:
+        service = AuthService(db)
+        service.reset_password(token=data.token, new_password=data.new_password)
+        return MessageResponse(message="Password reset successfully")
+    except Exception as e:
+        raise BadRequestException(str(e))
+
+
+@router.post(
+    "/verify-email/send",
+    response_model=MessageResponse,
+    summary="Send verification email",
+    description="Send verification link to email.",
+)
+async def send_verification_email(
+    data: VerifyEmailRequest,
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Send verification email."""
+    try:
+        service = AuthService(db)
+        service.send_verification(data.email)
+        return MessageResponse(message="Verification email sent if account exists")
+    except Exception as e:
+        raise BadRequestException(str(e))
+
+
+@router.post(
+    "/verify-email/confirm",
+    response_model=MessageResponse,
+    summary="Confirm email verification",
+    description="Verify email using token from email link.",
+)
+async def confirm_verification(
+    data: VerifyEmailConfirm,
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Confirm email verification."""
+    try:
+        service = AuthService(db)
+        service.confirm_verification(data.token)
+        return MessageResponse(message="Email verified successfully")
     except Exception as e:
         raise BadRequestException(str(e))
 
