@@ -7,6 +7,7 @@ from app.models.order import Order, OrderItem, OrderStatus, PaymentMethod
 from app.models.cart import Cart, CartItem
 from app.models.ai_interaction import AIInteraction, InteractionType, InteractionStatus
 from app.models.settings import StoreSetting, DEFAULT_SETTINGS
+from app.models.promo import ProductPromo, Voucher, VoucherUsage, PromoType, VoucherType
 
 __all__ = [
     # User
@@ -31,4 +32,10 @@ __all__ = [
     # Settings
     "StoreSetting",
     "DEFAULT_SETTINGS",
+    # Promo
+    "ProductPromo",
+    "Voucher",
+    "VoucherUsage",
+    "PromoType",
+    "VoucherType",
 ]

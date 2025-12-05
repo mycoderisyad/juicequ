@@ -8,11 +8,12 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CartSummary } from "@/components/cart";
-import { ArrowLeft, CreditCard, Banknote, Smartphone, ShoppingBag, CheckCircle } from "lucide-react";
+import { ArrowLeft, CreditCard, Banknote, Smartphone, ShoppingBag, CheckCircle, Calendar, Clock, Ticket, Check, X, Loader2 } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/lib/store";
 import apiClient from "@/lib/api/config";
 import { useCurrency } from "@/lib/hooks/use-store";
 import { getImageUrl } from "@/lib/image-utils";
+import { vouchersApi } from "@/lib/api/customer";
 
 type PaymentMethod = "cash" | "qris" | "transfer";
 
@@ -28,8 +29,89 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [notes, setNotes] = useState("");
   
+  // Pre-order scheduling state
+  const [isPreorder, setIsPreorder] = useState(false);
+  const [pickupDate, setPickupDate] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+  
+  // Voucher state
+  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [voucherError, setVoucherError] = useState<string | null>(null);
+  const [appliedVoucher, setAppliedVoucher] = useState<{
+    id: number;
+    code: string;
+    discount_type: "percentage" | "fixed_amount";
+    discount_value: number;
+    discount_amount: number;
+  } | null>(null);
+  
   const cartTotal = total();
   const tax = cartTotal * 0.1;
+  const voucherDiscount = appliedVoucher?.discount_amount || 0;
+  const finalTotal = Math.max(0, cartTotal + tax - voucherDiscount);
+
+  // Get minimum date for pre-order (tomorrow)
+  const getMinDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split("T")[0];
+  };
+
+  // Get maximum date for pre-order (7 days from now)
+  const getMaxDate = () => {
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 7);
+    return maxDate.toISOString().split("T")[0];
+  };
+
+  // Available pickup time slots
+  const timeSlots = [
+    "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
+    "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
+    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+    "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00",
+  ];
+
+  // Apply voucher
+  const handleApplyVoucher = async () => {
+    if (!voucherCode.trim()) {
+      setVoucherError("Masukkan kode voucher");
+      return;
+    }
+
+    setVoucherLoading(true);
+    setVoucherError(null);
+
+    try {
+      const result = await vouchersApi.validate(voucherCode.trim(), cartTotal);
+      
+      if (result.valid && result.voucher) {
+        setAppliedVoucher({
+          ...result.voucher,
+          discount_amount: result.discount_amount,
+        });
+        setVoucherCode("");
+      } else {
+        setVoucherError(result.message || "Voucher tidak valid");
+      }
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosError = err as { response?: { data?: { detail?: string } } };
+        setVoucherError(axiosError.response?.data?.detail || "Gagal memvalidasi voucher");
+      } else {
+        setVoucherError("Gagal memvalidasi voucher");
+      }
+    } finally {
+      setVoucherLoading(false);
+    }
+  };
+
+  // Remove voucher
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherError(null);
+  };
 
   // Helper to ensure price is valid number
   const getValidPrice = (price: number | string | undefined): number => {
@@ -62,6 +144,18 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Validate pre-order fields if enabled
+    if (isPreorder) {
+      if (!pickupDate) {
+        setError("Pilih tanggal pengambilan untuk pre-order");
+        return;
+      }
+      if (!pickupTime) {
+        setError("Pilih waktu pengambilan untuk pre-order");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -75,6 +169,14 @@ export default function CheckoutPage() {
         })),
         notes: notes || undefined,
         payment_method: paymentMethod,
+        // Pre-order fields
+        is_preorder: isPreorder,
+        scheduled_pickup_date: isPreorder ? pickupDate : undefined,
+        scheduled_pickup_time: isPreorder ? pickupTime : undefined,
+        // Voucher fields
+        voucher_id: appliedVoucher?.id,
+        voucher_code: appliedVoucher?.code,
+        voucher_discount: voucherDiscount,
       };
 
       const response = await apiClient.post("/customer/orders", orderData);
@@ -254,6 +356,148 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {/* Pre-order Scheduling */}
+              <div className="rounded-3xl bg-white p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-green-600" />
+                    Jadwal Pengambilan
+                  </h2>
+                  <label className="relative inline-flex cursor-pointer items-center">
+                    <input
+                      type="checkbox"
+                      checked={isPreorder}
+                      onChange={(e) => {
+                        setIsPreorder(e.target.checked);
+                        if (!e.target.checked) {
+                          setPickupDate("");
+                          setPickupTime("");
+                        }
+                      }}
+                      className="peer sr-only"
+                    />
+                    <div className="h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-2 peer-focus:ring-green-300"></div>
+                    <span className="ml-2 text-sm text-gray-600">Pre-order</span>
+                  </label>
+                </div>
+                
+                {isPreorder ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-500">
+                      Pesan sekarang, ambil sesuai jadwal yang dipilih. Pre-order tersedia untuk 1-7 hari ke depan.
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Tanggal Pengambilan
+                        </label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="date"
+                            value={pickupDate}
+                            onChange={(e) => setPickupDate(e.target.value)}
+                            min={getMinDate()}
+                            max={getMaxDate()}
+                            className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-gray-900 focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-600/20"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Waktu Pengambilan
+                        </label>
+                        <div className="relative">
+                          <Clock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                          <select
+                            value={pickupTime}
+                            onChange={(e) => setPickupTime(e.target.value)}
+                            className="w-full appearance-none rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-gray-900 focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-600/20"
+                          >
+                            <option value="">Pilih waktu</option>
+                            {timeSlots.map((slot) => (
+                              <option key={slot} value={slot}>
+                                {slot}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    {pickupDate && pickupTime && (
+                      <div className="rounded-xl bg-green-50 p-4">
+                        <p className="text-sm text-green-700">
+                          <span className="font-semibold">Jadwal Pickup:</span> {new Date(pickupDate).toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} pukul {pickupTime}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    Pesanan akan diproses segera setelah pembayaran dikonfirmasi. Aktifkan pre-order untuk menjadwalkan pengambilan.
+                  </p>
+                )}
+              </div>
+
+              {/* Voucher */}
+              <div className="rounded-3xl bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Ticket className="h-5 w-5 text-green-600" />
+                  Kode Voucher
+                </h2>
+                
+                {appliedVoucher ? (
+                  <div className="flex items-center justify-between rounded-xl bg-green-50 px-4 py-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span className="font-semibold text-green-700">{appliedVoucher.code}</span>
+                      </div>
+                      <span className="text-sm text-green-600">
+                        {appliedVoucher.discount_type === "percentage" 
+                          ? `Diskon ${appliedVoucher.discount_value}%`
+                          : `Diskon ${formatCurrency(appliedVoucher.discount_value)}`
+                        } (-{formatCurrency(appliedVoucher.discount_amount)})
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleRemoveVoucher}
+                      className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-500"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={voucherCode}
+                      onChange={(e) => {
+                        setVoucherCode(e.target.value.toUpperCase());
+                        setVoucherError(null);
+                      }}
+                      placeholder="Masukkan kode voucher"
+                      className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                    />
+                    <Button
+                      onClick={handleApplyVoucher}
+                      disabled={voucherLoading || !voucherCode.trim()}
+                      className="rounded-xl bg-green-600 px-4 hover:bg-green-700 disabled:bg-gray-300"
+                    >
+                      {voucherLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Pakai"
+                      )}
+                    </Button>
+                  </div>
+                )}
+                
+                {voucherError && (
+                  <p className="mt-2 text-sm text-red-500">{voucherError}</p>
+                )}
+              </div>
+
               {/* Special Instructions */}
               <div className="rounded-3xl bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
@@ -298,13 +542,16 @@ export default function CheckoutPage() {
                 <CartSummary
                   subtotal={cartTotal}
                   tax={tax}
+                  discount={voucherDiscount}
                   onCheckout={handleSubmitOrder}
-                  isCheckoutDisabled={isSubmitting || !isAuthenticated}
+                  isCheckoutDisabled={isSubmitting || !isAuthenticated || (isPreorder && (!pickupDate || !pickupTime))}
                   checkoutLabel={
                     !isAuthenticated
                       ? "Login to Order"
                       : isSubmitting
                       ? "Placing Order..."
+                      : isPreorder
+                      ? "Place Pre-order"
                       : "Place Order"
                   }
                 />

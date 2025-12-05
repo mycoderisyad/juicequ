@@ -25,6 +25,7 @@ from app.db.database import Base
 if TYPE_CHECKING:
     from app.models.order import OrderItem
     from app.models.cart import CartItem
+    from app.models.promo import ProductPromo
 
 
 class ProductCategory(Base):
@@ -266,6 +267,11 @@ class Product(Base):
     cart_items: Mapped[list["CartItem"]] = relationship(
         "CartItem",
         back_populates="product",
+    )
+    promos: Mapped[list["ProductPromo"]] = relationship(
+        "ProductPromo",
+        back_populates="product",
+        cascade="all, delete-orphan",
     )
     
     def __repr__(self) -> str:

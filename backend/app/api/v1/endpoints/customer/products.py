@@ -11,12 +11,13 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.dependencies import OptionalUser
 from app.services.product_service import ProductService
+from app.services.promo_service import PromoService
 from app.schemas.product import ProductListResponse, ProductResponse, CategoryListResponse
 
 router = APIRouter()
 
 
-def product_to_response(product) -> dict:
+def product_to_response(product, db: Session = None) -> dict:
     """Convert Product model to response format."""
     ingredients = []
     if product.ingredients:
@@ -24,6 +25,23 @@ def product_to_response(product) -> dict:
             ingredients = json.loads(product.ingredients) if isinstance(product.ingredients, str) else product.ingredients
         except (json.JSONDecodeError, TypeError):
             ingredients = []
+    
+    # Get promo info if db session available
+    promo_info = None
+    if db:
+        promo_data = PromoService.get_product_promo_info(db, product)
+        if promo_data.has_promo:
+            promo_info = {
+                "has_promo": True,
+                "promo_id": promo_data.promo_id,
+                "promo_name": promo_data.promo_name,
+                "promo_type": promo_data.promo_type,
+                "discount_value": promo_data.discount_value,
+                "discount_percentage": promo_data.discount_percentage,
+                "original_price": promo_data.original_price,
+                "discounted_price": promo_data.discounted_price,
+                "promo_end_date": promo_data.promo_end_date.isoformat() if promo_data.promo_end_date else None,
+            }
     
     return {
         "id": product.id,
@@ -54,6 +72,8 @@ def product_to_response(product) -> dict:
         "prices": ProductService.get_all_prices(product) if hasattr(ProductService, 'get_all_prices') else {},
         "volumes": ProductService.get_all_volumes(product) if hasattr(ProductService, 'get_all_volumes') else {},
         "volume_unit": product.volume_unit if hasattr(product, 'volume_unit') else "ml",
+        # Promo info
+        "promo": promo_info,
     }
 
 
@@ -89,7 +109,7 @@ async def get_products(
         page_size=page_size,
     )
     
-    items = [product_to_response(p) for p in products]
+    items = [product_to_response(p, db) for p in products]
     
     return {
         "items": items,
@@ -134,7 +154,7 @@ async def get_featured_products(
 ):
     """Get featured products."""
     products = ProductService.get_featured(db, limit=limit)
-    items = [product_to_response(p) for p in products]
+    items = [product_to_response(p, db) for p in products]
     return {"items": items, "total": len(items)}
 
 
@@ -149,7 +169,7 @@ async def get_popular_products(
 ):
     """Get popular products."""
     products = ProductService.get_popular(db, limit=limit)
-    items = [product_to_response(p) for p in products]
+    items = [product_to_response(p, db) for p in products]
     return {"items": items, "total": len(items)}
 
 
@@ -245,7 +265,7 @@ async def get_product(
             detail=f"Product with ID {product_id} not found"
         )
     
-    response = product_to_response(product)
+    response = product_to_response(product, db)
     # Add extra details for single product
     response.update({
         "sugar_grams": product.sugar_grams,
