@@ -63,11 +63,12 @@ class IntentRouterAgent(BaseAgent):
         },
         Intent.RECOMMENDATION: {
             "id": ["rekomendasi", "saran", "pilihan", "favorit", "terlaris", "bestseller", 
-                   "populer", "top", "terbaik", "enak", "murah", "termurah", "mahal", "termahal",
-                   "sehat", "segar", "rendah kalori", "rendah gula", "diet"],
-            "en": ["recommend", "suggestion", "favorite", "bestseller", "popular", "top", 
-                   "best", "delicious", "cheap", "cheapest", "expensive", "healthy", "fresh",
-                   "low calorie", "low sugar", "diet"],
+                   "best seller", "populer", "top", "terbaik", "enak", "murah", "termurah", 
+                   "mahal", "termahal", "sehat", "segar", "rendah kalori", "rendah gula", 
+                   "diet", "laris", "paling laku"],
+            "en": ["recommend", "suggestion", "favorite", "bestseller", "best seller", 
+                   "popular", "top", "best", "delicious", "cheap", "cheapest", "expensive", 
+                   "healthy", "fresh", "low calorie", "low sugar", "diet"],
         },
         Intent.PRODUCT_INFO: {
             "id": ["apa itu", "jelaskan", "info", "detail", "bahan", "kandungan", "kalori", 
@@ -233,7 +234,9 @@ class IntentRouterAgent(BaseAgent):
         # Extract category preference
         if any(c in user_lower for c in ["sehat", "healthy", "diet", "rendah kalori", "low calorie"]):
             entities["category_preference"] = "healthy"
-        elif any(c in user_lower for c in ["terlaris", "bestseller", "populer", "popular", "favorit"]):
+        elif any(c in user_lower for c in ["terlaris", "bestseller", "best seller", "best-seller", 
+                                            "populer", "popular", "favorit", "favorite", "laris",
+                                            "paling laku", "top", "terbaik"]):
             entities["category_preference"] = "bestseller"
         elif any(c in user_lower for c in ["segar", "fresh", "dingin", "cold"]):
             entities["category_preference"] = "fresh"
