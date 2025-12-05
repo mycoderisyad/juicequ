@@ -50,6 +50,24 @@ class CategoryListResponse(BaseModel):
 
 
 # =============================================================================
+# Product Size Schemas
+# =============================================================================
+
+class SizePricing(BaseModel):
+    """Schema for product size pricing."""
+    small: Optional[float] = None
+    medium: Optional[float] = None
+    large: Optional[float] = None
+
+
+class SizeVolume(BaseModel):
+    """Schema for product size volume."""
+    small: Optional[int] = None
+    medium: Optional[int] = None
+    large: Optional[int] = None
+
+
+# =============================================================================
 # Nutrition Schemas
 # =============================================================================
 
@@ -83,6 +101,11 @@ class ProductBase(BaseModel):
     is_available: bool = True
     is_featured: bool = False
     display_order: int = 0
+    # Size variants
+    has_sizes: bool = True
+    size_prices: Optional[SizePricing] = None
+    size_volumes: Optional[SizeVolume] = None
+    volume_unit: str = "ml"
 
 
 class ProductCreate(ProductBase):
@@ -105,6 +128,11 @@ class ProductUpdate(BaseModel):
     is_available: Optional[bool] = None
     is_featured: Optional[bool] = None
     display_order: Optional[int] = None
+    # Size variants
+    has_sizes: Optional[bool] = None
+    size_prices: Optional[SizePricing] = None
+    size_volumes: Optional[SizeVolume] = None
+    volume_unit: Optional[str] = None
 
 
 class ProductResponse(ProductBase):
@@ -121,6 +149,10 @@ class ProductResponse(ProductBase):
     
     # Parsed nutrition info
     nutrition: Optional[NutritionInfo] = None
+    
+    # Computed size data (for convenience)
+    prices: Optional[dict] = None  # {"small": 8000, "medium": 10000, "large": 13000}
+    volumes: Optional[dict] = None  # {"small": 250, "medium": 350, "large": 500}
     
     model_config = ConfigDict(from_attributes=True)
 

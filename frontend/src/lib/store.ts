@@ -16,6 +16,9 @@ export interface CartItem {
   quantity: number;
   image?: string;
   color?: string;
+  size?: "small" | "medium" | "large";
+  volume?: number;
+  volumeUnit?: string;
 }
 
 type CartItemInput = Omit<CartItem, "quantity" | "id"> & { 

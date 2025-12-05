@@ -34,6 +34,11 @@ export interface Product {
   hero_image?: string;
   bottle_image?: string;
   thumbnail_image?: string;
+  // Size variants
+  has_sizes?: boolean;
+  prices?: { small: number; medium: number; large: number };
+  volumes?: { small: number; medium: number; large: number };
+  volume_unit?: string;
 }
 
 export interface BestsellerProduct {

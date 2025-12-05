@@ -40,20 +40,54 @@ export interface Product {
     medium?: number;
     large?: number;
   };
+  volumes?: {
+    small?: number;
+    medium?: number;
+    large?: number;
+  };
+  has_sizes?: boolean;
+  volume_unit?: string;
 }
 
 interface ProductCardProps {
   product: Product;
   className?: string;
-  onAddToCart?: (product: Product, quantity: number) => void;
+  onAddToCart?: (product: Product, quantity: number, size: string) => void;
 }
+
+type SizeType = "small" | "medium" | "large";
 
 export function ProductCard({ product, className, onAddToCart }: ProductCardProps) {
   const [quantity, setQuantity] = React.useState(1);
+  const [selectedSize, setSelectedSize] = React.useState<SizeType>("medium");
   const [isFavorite, setIsFavorite] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const { format: formatCurrency } = useCurrency();
+
+  // Get price based on selected size
+  const getPrice = () => {
+    if (product.prices && product.prices[selectedSize]) {
+      return product.prices[selectedSize];
+    }
+    // Fallback to base_price with multiplier
+    const multipliers = { small: 0.8, medium: 1.0, large: 1.3 };
+    return Math.round(product.base_price * multipliers[selectedSize]);
+  };
+
+  // Get volume based on selected size
+  const getVolume = () => {
+    if (product.volumes && product.volumes[selectedSize]) {
+      return product.volumes[selectedSize];
+    }
+    const defaultVolumes = { small: 250, medium: 350, large: 500 };
+    return defaultVolumes[selectedSize];
+  };
+
+  const displayPrice = getPrice();
+  const displayVolume = getVolume();
+  const volumeUnit = product.volume_unit || "ml";
+  const hasSizes = product.has_sizes !== false;
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,14 +106,14 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
     e.stopPropagation();
     
     if (onAddToCart) {
-      onAddToCart(product, quantity);
+      onAddToCart(product, quantity, selectedSize);
     } else {
       // Use global cart store - pass quantity directly
       const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
       addItem({
-        id: product.id,
-        name: product.name,
-        price: product.base_price,
+        id: `${product.id}-${selectedSize}`,
+        name: `${product.name} (${selectedSize.charAt(0).toUpperCase()})`,
+        price: displayPrice,
         color: product.image_color,
         image: productImage,
         quantity: quantity,
@@ -90,6 +124,12 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
     setQuantity(1);
   };
 
+  const handleSizeChange = (e: React.MouseEvent, size: SizeType) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedSize(size);
+  };
+
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -97,7 +137,6 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
   };
 
   const imageColor = product.image_color || "bg-gray-200";
-  const displayPrice = product.base_price;
   const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
   
   // Check if productImage is a color class (bg-*) rather than actual image
@@ -213,17 +252,13 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
               {product.name}
             </h3>
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              {product.calories !== undefined && product.calories > 0 && (
-                <span>{product.calories} kal</span>
+              {hasSizes && (
+                <span className="text-green-600 font-medium">{displayVolume} {volumeUnit}</span>
               )}
-              {product.stock_quantity !== undefined && product.stock_quantity > 0 && (
+              {product.calories !== undefined && product.calories > 0 && (
                 <>
-                  {product.calories !== undefined && product.calories > 0 && (
-                    <span className="text-gray-300">|</span>
-                  )}
-                  <span className={product.stock_quantity <= 10 ? "text-orange-500 font-medium" : ""}>
-                    Stok: {product.stock_quantity}
-                  </span>
+                  {hasSizes && <span className="text-gray-300">|</span>}
+                  <span>{product.calories} kal</span>
                 </>
               )}
             </div>
@@ -233,9 +268,30 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
           </span>
         </div>
 
-        <p className="mb-4 line-clamp-2 text-sm text-gray-600">
+        <p className="mb-3 line-clamp-2 text-sm text-gray-600">
           {product.description}
         </p>
+
+        {/* Size selector */}
+        {hasSizes && (
+          <div className="mb-3 flex items-center justify-center gap-1" role="group" aria-label="Size selector">
+            {(["small", "medium", "large"] as SizeType[]).map((size) => (
+              <button
+                key={size}
+                onClick={(e) => handleSizeChange(e, size)}
+                className={cn(
+                  "flex-1 py-1.5 px-2 text-xs font-medium rounded-lg transition-all",
+                  selectedSize === size
+                    ? "bg-green-600 text-white shadow-sm"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                )}
+                aria-pressed={selectedSize === size}
+              >
+                {size === "small" ? "S" : size === "medium" ? "M" : "L"}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="mt-auto flex items-center justify-between">

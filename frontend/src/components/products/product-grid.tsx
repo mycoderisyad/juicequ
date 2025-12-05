@@ -13,7 +13,7 @@ interface ProductGridProps {
   isLoading?: boolean;
   className?: string;
   emptyMessage?: string;
-  onAddToCart?: (product: Product, quantity: number) => void;
+  onAddToCart?: (product: Product, quantity: number, size: string) => void;
 }
 
 export function ProductGrid({

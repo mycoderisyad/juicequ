@@ -49,7 +49,11 @@ def product_to_response(product) -> dict:
         "rating": product.average_rating or 0,
         "reviews": product.order_count or 0,
         "nutrition": ProductService.get_nutrition_info(product).model_dump() if hasattr(ProductService, 'get_nutrition_info') else {},
+        # Size variants
+        "has_sizes": product.has_sizes if hasattr(product, 'has_sizes') else True,
         "prices": ProductService.get_all_prices(product) if hasattr(ProductService, 'get_all_prices') else {},
+        "volumes": ProductService.get_all_volumes(product) if hasattr(ProductService, 'get_all_volumes') else {},
+        "volume_unit": product.volume_unit if hasattr(product, 'volume_unit') else "ml",
     }
 
 
