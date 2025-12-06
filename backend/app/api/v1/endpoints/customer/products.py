@@ -226,6 +226,7 @@ async def get_bestseller_products(
             "description": product.description,
             "rating": product.average_rating or 5,
             "order_count": product.order_count or 0,
+            "prices": product.get_all_prices(),
             # Hero styling
             "color": color["bg"],
             "gradient_from": color["gradient_from"],

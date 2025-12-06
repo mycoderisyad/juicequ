@@ -733,6 +733,190 @@ export const adminOrdersApi = {
   },
 };
 
+// Product Promos API
+export interface ProductPromo {
+  id: string;
+  product_id: string;
+  name: string;
+  description: string | null;
+  promo_type: "percentage" | "fixed";
+  discount_value: number;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  is_valid: boolean;
+  discount_display: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const promosApi = {
+  /**
+   * Get all product promos.
+   */
+  getAll: async (params?: {
+    product_id?: number;
+    is_active?: boolean;
+    page?: number;
+    page_size?: number;
+  }): Promise<{ items: ProductPromo[]; total: number; page: number; page_size: number }> => {
+    const response = await apiClient.get("/admin/promos", { params });
+    return response.data;
+  },
+
+  /**
+   * Get promo by ID.
+   */
+  getById: async (promoId: string): Promise<ProductPromo> => {
+    const response = await apiClient.get(`/admin/promos/${promoId}`);
+    return response.data;
+  },
+
+  /**
+   * Create promo.
+   */
+  create: async (data: {
+    product_id: string;
+    name: string;
+    description?: string;
+    promo_type: "percentage" | "fixed";
+    discount_value: number;
+    start_date: string;
+    end_date: string;
+    is_active?: boolean;
+  }): Promise<ProductPromo> => {
+    const response = await apiClient.post("/admin/promos", data);
+    return response.data;
+  },
+
+  /**
+   * Update promo.
+   */
+  update: async (
+    promoId: string,
+    data: Partial<{
+      name: string;
+      description: string;
+      promo_type: "percentage" | "fixed";
+      discount_value: number;
+      start_date: string;
+      end_date: string;
+      is_active: boolean;
+      product_id: string;
+    }>
+  ): Promise<ProductPromo> => {
+    const response = await apiClient.put(`/admin/promos/${promoId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete promo.
+   */
+  delete: async (promoId: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/admin/promos/${promoId}`);
+    return response.data;
+  },
+};
+
+// Vouchers API
+export interface Voucher {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  voucher_type: "percentage" | "fixed" | "free_shipping";
+  discount_value: number;
+  min_order_amount: number;
+  max_discount: number | null;
+  usage_limit: number | null;
+  usage_count: number;
+  per_user_limit: number;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  is_valid: boolean;
+  usage_remaining: number | null;
+  discount_display: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const vouchersApi = {
+  /**
+   * Get all vouchers.
+   */
+  getAll: async (params?: {
+    is_active?: boolean;
+    search?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<{ items: Voucher[]; total: number; page: number; page_size: number }> => {
+    const response = await apiClient.get("/admin/vouchers", { params });
+    return response.data;
+  },
+
+  /**
+   * Get voucher by ID.
+   */
+  getById: async (voucherId: string): Promise<Voucher> => {
+    const response = await apiClient.get(`/admin/vouchers/${voucherId}`);
+    return response.data;
+  },
+
+  /**
+   * Create voucher.
+   */
+  create: async (data: {
+    code: string;
+    name: string;
+    description?: string;
+    voucher_type: "percentage" | "fixed" | "free_shipping";
+    discount_value: number;
+    min_order_amount?: number;
+    max_discount?: number;
+    usage_limit?: number;
+    per_user_limit?: number;
+    start_date: string;
+    end_date: string;
+    is_active?: boolean;
+  }): Promise<Voucher> => {
+    const response = await apiClient.post("/admin/vouchers", data);
+    return response.data;
+  },
+
+  /**
+   * Update voucher.
+   */
+  update: async (
+    voucherId: string,
+    data: Partial<{
+      code: string;
+      name: string;
+      description: string;
+      voucher_type: "percentage" | "fixed" | "free_shipping";
+      discount_value: number;
+      min_order_amount: number;
+      max_discount: number;
+      usage_limit: number;
+      per_user_limit: number;
+      start_date: string;
+      end_date: string;
+      is_active: boolean;
+    }>
+  ): Promise<Voucher> => {
+    const response = await apiClient.put(`/admin/vouchers/${voucherId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete voucher.
+   */
+  delete: async (voucherId: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/admin/vouchers/${voucherId}`);
+    return response.data;
+  },
+};
+
 const adminApi = {
   users: usersApi,
   products: adminProductsApi,
@@ -741,6 +925,8 @@ const adminApi = {
   settings: settingsApi,
   upload: uploadApi,
   orders: adminOrdersApi,
+  promos: promosApi,
+  vouchers: vouchersApi,
 };
 
 export default adminApi;

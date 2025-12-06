@@ -165,6 +165,7 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
       const finalPrice = hasPromo && promoPrice !== null ? promoPrice : displayPrice;
       addItem({
         id: `${product.id}-${selectedSize}`,
+        productId: product.id,
         name: `${product.name} (${selectedSize.charAt(0).toUpperCase()})`,
         price: finalPrice,
         color: product.image_color,

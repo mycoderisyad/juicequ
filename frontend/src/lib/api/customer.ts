@@ -59,6 +59,11 @@ export interface BestsellerProduct {
   id: string;
   name: string;
   price: string;
+  prices?: {
+    small?: number;
+    medium?: number;
+    large?: number;
+  };
   description: string;
   rating: number;
   order_count: number;
@@ -89,10 +94,14 @@ export interface Category {
 export interface CartItem {
   product_id: number;
   name: string;
+  product_name?: string;
   price: number;
+  unit_price?: number;
   quantity: number;
   subtotal: number;
   image_color?: string;
+  size?: string;
+  notes?: string;
 }
 
 export interface Cart {
@@ -106,11 +115,14 @@ export interface Order {
   order_number?: string;
   items: CartItem[];
   subtotal: number;
+  discount?: number;
   tax?: number;
   total: number;
   status: string;
   payment_status?: string;
+  payment_method?: string;
   notes?: string;
+  customer_notes?: string;
   created_at: string;
 }
 
@@ -264,7 +276,7 @@ export const profileApi = {
 export interface VoucherValidation {
   valid: boolean;
   voucher?: {
-    id: number;
+    id: string;
     code: string;
     discount_type: "percentage" | "fixed_amount";
     discount_value: number;

@@ -140,9 +140,6 @@ export function ProductFilter({
             aria-selected={filters.category === category.id}
             aria-controls="product-list"
           >
-            {category.icon && (
-              <span aria-hidden="true">{category.icon}</span>
-            )}
             {category.name}
           </button>
         ))}

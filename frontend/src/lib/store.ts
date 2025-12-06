@@ -11,6 +11,7 @@ export type { User } from "@/store/auth-store";
 
 export interface CartItem {
   id: string;
+  productId?: string;
   name: string;
   price: number;
   quantity: number;
@@ -47,6 +48,9 @@ export const useCartStore = create<CartState>()(
       addItem: (item) => {
         const currentItems = get().items;
         const itemId = normalizeId(item.id);
+        const normalizedProductId = item.productId
+          ? normalizeId(item.productId)
+          : itemId.replace(/-(small|medium|large)$/i, "");
         const existingItem = currentItems.find((i) => i.id === itemId);
         const quantityToAdd = item.quantity || 1;
         
@@ -61,7 +65,7 @@ export const useCartStore = create<CartState>()(
           set({
             items: currentItems.map((i) =>
               i.id === itemId
-                ? { ...i, quantity: i.quantity + quantityToAdd, price: validPrice }
+                ? { ...i, quantity: i.quantity + quantityToAdd, price: validPrice, productId: i.productId || normalizedProductId }
                 : i
             ),
           });
@@ -71,6 +75,7 @@ export const useCartStore = create<CartState>()(
             items: [...currentItems, { 
               ...rest, 
               id: itemId, 
+              productId: rest.productId ? normalizeId(rest.productId) : normalizedProductId,
               price: validPrice, 
               quantity: quantityToAdd 
             }],

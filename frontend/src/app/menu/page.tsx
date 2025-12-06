@@ -7,7 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Plus, Minus, ShoppingCart, RefreshCw, AlertCircle, ChevronDown, SlidersHorizontal, X, Check, ListFilter, Tag, SearchX, Star } from "lucide-react";
+import { Search, Plus, Minus, ShoppingBag, RefreshCw, AlertCircle, ChevronDown, SlidersHorizontal, X, Check, ListFilter, Tag, SearchX, Star } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
 import { productsApi, type Product as ApiProduct, type Category } from "@/lib/api/customer";
@@ -306,7 +306,6 @@ function MenuContent() {
 
   // Get active category name
   const activeCategoryName = categories.find(c => c.id.toLowerCase() === activeCategory.toLowerCase())?.name || "All";
-  const activeCategoryIcon = categories.find(c => c.id.toLowerCase() === activeCategory.toLowerCase())?.icon;
   
   // Check if any filter is active
   const hasActiveFilters = activeCategory !== "all" || priceRange.min !== null || priceRange.max !== null || sortOrder !== "default";
@@ -333,6 +332,7 @@ function MenuContent() {
     for (let i = 0; i < qty; i++) {
       addItem({
         id: cartItemId,
+        productId: item.id,
         name: itemName,
         price: price,
         color: item.color,
@@ -405,7 +405,6 @@ function MenuContent() {
                       : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
                   }`}
                 >
-                  {activeCategoryIcon && <span>{activeCategoryIcon}</span>}
                   <span className="font-medium">{activeCategoryName}</span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${isCategoryOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -426,7 +425,6 @@ function MenuContent() {
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            {category.icon && <span>{category.icon}</span>}
                             <span className="font-medium">{category.name}</span>
                           </div>
                           {isActive && <Check className="h-4 w-4 text-green-600" />}
@@ -688,8 +686,11 @@ function MenuContent() {
                         className="flex flex-1 h-10 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 hover:shadow-emerald-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={!item.is_available || (item.stock_quantity !== undefined && item.stock_quantity <= 0)}
                       >
-                        <ShoppingCart className="h-4 w-4" />
-                        <span>{formatCurrency(((item.has_sizes ?? true) ? getItemPrice(item, getSelectedSize(item.id)) : parseFloat(item.price)) * getQuantity(item.id))}</span>
+                        <ShoppingBag className="h-5 w-5" />
+                        <span>
+                          {t("product.addToCart")} -{" "}
+                          {formatCurrency(((item.has_sizes ?? true) ? getItemPrice(item, getSelectedSize(item.id)) : parseFloat(item.price)) * getQuantity(item.id))}
+                        </span>
                       </button>
                     </div>
                   </div>

@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Phone, Mail, Instagram, Facebook, Twitter, Youtube, Heart } from "lucide-react";
+import { MapPin, Phone, Mail, Instagram, Facebook, Youtube, Heart } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
 const socialLinks = [
   { icon: Instagram, href: "https://instagram.com/juicequ", label: "Instagram" },
   { icon: Facebook, href: "https://facebook.com/juicequ", label: "Facebook" },
-  { icon: Twitter, href: "https://twitter.com/juicequ", label: "Twitter" },
   { icon: Youtube, href: "https://youtube.com/juicequ", label: "Youtube" },
 ];
 
@@ -22,27 +21,26 @@ export function Footer() {
       { label: t("footer.menu.smoothies"), href: "/menu?category=smoothies" },
       { label: t("footer.menu.freshJuices"), href: "/menu?category=juices" },
       { label: t("footer.menu.acaiBowls"), href: "/menu?category=bowls" },
-      { label: t("footer.menu.healthySnacks"), href: "/menu?category=snacks" },
     ],
     company: [
       { label: t("footer.company.aboutUs"), href: "/about" },
-      { label: t("footer.company.careers"), href: "/careers" },
-      { label: t("footer.company.franchise"), href: "/franchise" },
-      { label: t("footer.company.blog"), href: "/blog" },
-      { label: t("footer.company.pressKit"), href: "/press" },
+      { label: t("footer.company.careers"), href: "/#" },
+      { label: t("footer.company.franchise"), href: "/#" },
+      { label: t("footer.company.blog"), href: "/#" },
+      { label: t("footer.company.pressKit"), href: "/#" },
     ],
     support: [
-      { label: t("footer.support.helpCenter"), href: "/help" },
-      { label: t("footer.support.contactUs"), href: "/contact" },
-      { label: t("footer.support.faq"), href: "/faq" },
-      { label: t("footer.support.deliveryInfo"), href: "/delivery" },
-      { label: t("footer.support.trackOrder"), href: "/track" },
+      { label: t("footer.support.helpCenter"), href: "/#" },
+      { label: t("footer.support.contactUs"), href: "/#" },
+      { label: t("footer.support.faq"), href: "/#" },
+      { label: t("footer.support.deliveryInfo"), href: "/#" },
+      { label: t("footer.support.trackOrder"), href: "/#" },
     ],
     legal: [
-      { label: t("footer.legal.privacyPolicy"), href: "/privacy" },
-      { label: t("footer.legal.termsOfService"), href: "/terms" },
-      { label: t("footer.legal.cookiePolicy"), href: "/cookies" },
-      { label: t("footer.legal.refundPolicy"), href: "/refund" },
+      { label: t("footer.legal.privacyPolicy"), href: "/#" },
+      { label: t("footer.legal.termsOfService"), href: "/#" },
+      { label: t("footer.legal.cookiePolicy"), href: "/#" },
+      { label: t("footer.legal.refundPolicy"), href: "/#" },
     ],
   };
 

@@ -212,7 +212,7 @@ export default function CartPage() {
                             setVoucherError(null);
                           }}
                           placeholder="Masukkan kode voucher"
-                          className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                          className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                         />
                         <Button
                           onClick={handleApplyVoucher}

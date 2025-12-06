@@ -16,11 +16,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuthStore } from "@/lib/store";
+import { promosApi, adminProductsApi } from "@/lib/api/admin";
 
 interface ProductPromo {
   id: string;
-  product_id: number;
+  product_id: string;
   name: string;
   description: string | null;
   promo_type: "percentage" | "fixed";
@@ -35,7 +35,7 @@ interface ProductPromo {
 }
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   base_price: number;
 }
@@ -48,7 +48,6 @@ export default function PromosPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingPromo, setEditingPromo] = useState<ProductPromo | null>(null);
-  const { token } = useAuthStore();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -65,31 +64,28 @@ export default function PromosPage() {
   const fetchPromos = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/v1/admin/promos", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch promos");
-      const data = await res.json();
+      setError(null);
+      const data = await promosApi.getAll();
       setPromos(data.items || []);
     } catch {
       setError("Gagal memuat data promo");
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     try {
-      const res = await fetch("/api/v1/admin/products", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch products");
-      const data = await res.json();
-      setProducts(data.items || []);
+      const data = await adminProductsApi.getAll();
+      setProducts((data.products || []).map((p: { id: number | string; name: string; base_price?: number; price?: number }) => ({
+        id: String(p.id),
+        name: p.name,
+        base_price: p.base_price || p.price || 0,
+      })));
     } catch (err) {
       console.error("Failed to fetch products:", err);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchPromos();
@@ -99,46 +95,36 @@ export default function PromosPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = editingPromo 
-        ? `/api/v1/admin/promos/${editingPromo.id}`
-        : "/api/v1/admin/promos";
-      
-      const res = await fetch(url, {
-        method: editingPromo ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...formData,
-          product_id: parseInt(formData.product_id),
-          discount_value: parseFloat(formData.discount_value),
-          start_date: new Date(formData.start_date).toISOString(),
-          end_date: new Date(formData.end_date).toISOString(),
-        }),
-      });
+      const payload = {
+        product_id: formData.product_id,
+        name: formData.name,
+        description: formData.description || undefined,
+        promo_type: formData.promo_type,
+        discount_value: parseFloat(formData.discount_value),
+        start_date: new Date(formData.start_date).toISOString(),
+        end_date: new Date(formData.end_date).toISOString(),
+        is_active: formData.is_active,
+      };
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || "Failed to save promo");
+      if (editingPromo) {
+        await promosApi.update(editingPromo.id, payload);
+      } else {
+        await promosApi.create(payload);
       }
 
       setShowModal(false);
       resetForm();
       fetchPromos();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to save promo");
+      const errorMsg = err instanceof Error ? err.message : "Failed to save promo";
+      alert(errorMsg);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Hapus promo ini?")) return;
     try {
-      const res = await fetch(`/api/v1/admin/promos/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to delete");
+      await promosApi.delete(id);
       fetchPromos();
     } catch {
       alert("Gagal menghapus promo");
@@ -147,21 +133,11 @@ export default function PromosPage() {
 
   const handleToggleActive = async (promo: ProductPromo) => {
     try {
-      const res = await fetch(`/api/v1/admin/promos/${promo.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ is_active: !promo.is_active }),
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || "Failed to update");
-      }
+      await promosApi.update(promo.id, { is_active: !promo.is_active });
       fetchPromos();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to update");
+      const errorMsg = err instanceof Error ? err.message : "Failed to update";
+      alert(errorMsg);
     }
   };
 
@@ -182,7 +158,7 @@ export default function PromosPage() {
   const openEditModal = (promo: ProductPromo) => {
     setEditingPromo(promo);
     setFormData({
-      product_id: promo.product_id.toString(),
+      product_id: promo.product_id,
       name: promo.name,
       description: promo.description || "",
       promo_type: promo.promo_type,
@@ -194,7 +170,7 @@ export default function PromosPage() {
     setShowModal(true);
   };
 
-  const getProductName = (productId: number) => {
+  const getProductName = (productId: string) => {
     return products.find(p => p.id === productId)?.name || `Product #${productId}`;
   };
 

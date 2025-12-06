@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { categoriesApi, uploadApi } from "@/lib/api/admin";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface Category {
   id: string;
@@ -608,15 +609,25 @@ export default function AdminCategoriesPage() {
                   className="group flex items-center justify-between rounded-2xl border border-stone-200 p-4 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl overflow-hidden">
-                      {isCustomIcon ? (
-                        <img 
-                          src={category.icon} 
-                          alt={category.name} 
-                          className="h-full w-full object-contain"
-                        />
+                    <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl overflow-hidden">
+                      {isCustomIcon && category.icon ? (
+                        <>
+                          <img 
+                            src={getImageUrl(category.icon)} 
+                            alt={category.name} 
+                            className="h-full w-full object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              const fallback = e.currentTarget.parentElement?.querySelector("[data-fallback]");
+                              if (fallback instanceof HTMLElement) fallback.classList.remove("hidden");
+                            }}
+                          />
+                          <span data-fallback className="hidden">
+                            {category.icon || "🍹"}
+                          </span>
+                        </>
                       ) : (
-                        category.icon || "🍹"
+                        <span>{category.icon || "🍹"}</span>
                       )}
                     </div>
                     <div>

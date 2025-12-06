@@ -2,7 +2,7 @@
 Promo and Voucher models for discount management.
 """
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
@@ -52,8 +52,8 @@ class ProductPromo(Base):
     )
     
     # Product relationship
-    product_id: Mapped[int] = mapped_column(
-        Integer,
+    product_id: Mapped[str] = mapped_column(
+        String(36),
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -118,11 +118,20 @@ class ProductPromo(Base):
     
     def __repr__(self) -> str:
         return f"<ProductPromo {self.name} ({self.discount_value}{'%' if self.promo_type == PromoType.PERCENTAGE else ''})>"
+
+    @staticmethod
+    def _ensure_aware(dt: datetime) -> datetime:
+        """Return timezone-aware datetime (defaults to UTC)."""
+        if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
     
     def is_valid(self) -> bool:
         """Check if promo is currently valid."""
-        now = datetime.now(self.start_date.tzinfo) if self.start_date.tzinfo else datetime.utcnow()
-        return self.is_active and self.start_date <= now <= self.end_date
+        now = datetime.now(self.start_date.tzinfo or timezone.utc)
+        start = self._ensure_aware(self.start_date)
+        end = self._ensure_aware(self.end_date)
+        return self.is_active and start <= now <= end
     
     def calculate_discount(self, original_price: float) -> float:
         """Calculate discount amount for a given price."""
@@ -246,11 +255,20 @@ class Voucher(Base):
     
     def __repr__(self) -> str:
         return f"<Voucher {self.code} ({self.discount_value}{'%' if self.voucher_type == VoucherType.PERCENTAGE else ''})>"
+
+    @staticmethod
+    def _ensure_aware(dt: datetime) -> datetime:
+        """Return timezone-aware datetime (defaults to UTC)."""
+        if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
     
     def is_valid(self) -> bool:
         """Check if voucher is currently valid (not considering usage limits)."""
-        now = datetime.now(self.start_date.tzinfo) if self.start_date.tzinfo else datetime.utcnow()
-        return self.is_active and self.start_date <= now <= self.end_date
+        now = datetime.now(self.start_date.tzinfo or timezone.utc)
+        start = self._ensure_aware(self.start_date)
+        end = self._ensure_aware(self.end_date)
+        return self.is_active and start <= now <= end
     
     def has_usage_remaining(self) -> bool:
         """Check if voucher has usage remaining."""

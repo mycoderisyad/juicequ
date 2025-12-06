@@ -27,6 +27,7 @@ class OrderItemRequest(BaseModel):
     name: str
     price: float
     quantity: int
+    size: str | None = Field("medium", description="Product size")
 
 
 class CreateOrderRequest(BaseModel):
@@ -34,6 +35,14 @@ class CreateOrderRequest(BaseModel):
     items: list[OrderItemRequest] = Field(..., min_length=1, description="Order items")
     notes: str | None = Field(None, max_length=500, description="Special instructions")
     payment_method: str = Field("cash", description="Payment method")
+    # Pre-order fields
+    is_preorder: bool = Field(False, description="Whether this is a pre-order")
+    scheduled_pickup_date: str | None = Field(None, description="Scheduled pickup date (YYYY-MM-DD)")
+    scheduled_pickup_time: str | None = Field(None, description="Scheduled pickup time (HH:MM)")
+    # Voucher fields
+    voucher_id: str | None = Field(None, description="Voucher ID (UUID)")
+    voucher_code: str | None = Field(None, description="Voucher code")
+    voucher_discount: float = Field(0, description="Voucher discount amount")
 
 
 @router.get(
@@ -124,11 +133,18 @@ async def create_order(
     try:
         from app.schemas.order import OrderCreate as OrderCreateSchema, OrderItemCreate, ProductSize
         
+        # Map size string to ProductSize enum
+        size_map = {
+            "small": ProductSize.SMALL,
+            "medium": ProductSize.MEDIUM,
+            "large": ProductSize.LARGE,
+        }
+        
         order_items = [
             OrderItemCreate(
                 product_id=item.product_id,
                 quantity=item.quantity,
-                size=ProductSize.MEDIUM,
+                size=size_map.get(item.size or "medium", ProductSize.MEDIUM),
             )
             for item in request.items
         ]
@@ -147,6 +163,14 @@ async def create_order(
             items=order_items,
             customer_notes=request.notes,
             payment_method=mapped_payment,
+            # Pre-order fields
+            is_preorder=request.is_preorder,
+            scheduled_pickup_date=request.scheduled_pickup_date,
+            scheduled_pickup_time=request.scheduled_pickup_time,
+            # Voucher fields
+            voucher_id=request.voucher_id,
+            voucher_code=request.voucher_code,
+            voucher_discount=request.voucher_discount,
         )
         
         order = OrderService.create_order(db, order_data, user)
@@ -174,9 +198,18 @@ async def create_order(
             "success": True,
         }
     except ValueError as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Order creation failed: {str(e)}"
         )
 
 

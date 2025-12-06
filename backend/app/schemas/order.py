@@ -82,7 +82,7 @@ class OrderCreate(BaseModel):
     scheduled_pickup_date: Optional[str] = None  # YYYY-MM-DD format
     scheduled_pickup_time: Optional[str] = None  # HH:MM format
     # Voucher
-    voucher_id: Optional[int] = None
+    voucher_id: Optional[str] = None
     voucher_code: Optional[str] = None
     voucher_discount: float = 0
 

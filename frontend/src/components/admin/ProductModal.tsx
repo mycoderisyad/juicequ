@@ -122,6 +122,13 @@ function useProductForm(product: Product | null, categories: Category[]) {
   const [ingredientInput, setIngredientInput] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Sync form when product or categories change (e.g., open edit modal)
+  useEffect(() => {
+    setFormData(initialData);
+    setIngredientInput("");
+    setValidationError(null);
+  }, [initialData]);
+
   const resetForm = () => {
     setFormData(getInitialFormData(product, categories));
     setIngredientInput("");
@@ -257,7 +264,7 @@ export function ProductModal({
               label="Category"
               value={formData.category}
               onChange={(v) => updateField("category", v)}
-              options={categories.map((c) => ({ value: c.id, label: `${c.icon || ""} ${c.name}` }))}
+              options={categories.map((c) => ({ value: c.id, label: c.name }))}
               required
             />
           </div>

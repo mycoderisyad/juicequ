@@ -18,6 +18,8 @@ import {
   Banknote,
   Smartphone,
   CreditCard,
+  Star,
+  StarHalf,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import apiClient from "@/lib/api/config";
@@ -76,6 +78,16 @@ export default function OrderDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [ratings, setRatings] = useState<Record<string, { rating: number; review: string }>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const stored = localStorage.getItem("order-ratings");
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const orderId = params?.id as string;
 
@@ -130,6 +142,59 @@ export default function OrderDetailPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const persistRatings = (next: Record<string, { rating: number; review: string }>) => {
+    setRatings(next);
+    try {
+      localStorage.setItem("order-ratings", JSON.stringify(next));
+    } catch {
+      // ignore write failures
+    }
+  };
+
+  const getRatingKey = (productId?: string) => `${orderId || "order"}:${productId || "unknown"}`;
+
+  const handleRatingChange = (productId?: string, value?: number) => {
+    if (!productId || !value) return;
+    const key = getRatingKey(productId);
+    const next = { ...ratings, [key]: { rating: value, review: ratings[key]?.review || "" } };
+    persistRatings(next);
+    setSaveMessage("Rating disimpan (local).");
+    setTimeout(() => setSaveMessage(null), 2000);
+  };
+
+  const handleReviewChange = (productId?: string, text?: string) => {
+    if (!productId) return;
+    const key = getRatingKey(productId);
+    const next = { ...ratings, [key]: { rating: ratings[key]?.rating || 0, review: text || "" } };
+    persistRatings(next);
+  };
+
+  const renderStars = (productId?: string) => {
+    if (!productId) return null;
+    const key = getRatingKey(productId);
+    const current = ratings[key]?.rating || 0;
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((value) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => handleRatingChange(productId, value)}
+            className="group"
+            aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
+          >
+            <Star
+              className={`h-5 w-5 transition-colors ${
+                value <= current ? "text-amber-500" : "text-gray-300 group-hover:text-amber-400"
+              }`}
+              fill={value <= current ? "#f59e0b" : "none"}
+            />
+          </button>
+        ))}
+      </div>
+    );
   };
 
   if (!isAuthenticated) {
@@ -226,30 +291,78 @@ export default function OrderDetailPage() {
                     const itemName = item.product_name || item.name || "Unknown Product";
                     const itemPrice = item.unit_price || item.price || 0;
                     const itemSubtotal = item.subtotal || itemPrice * item.quantity;
+                    const ratingKey = getRatingKey(item.product_id);
+                    const userRating = ratings[ratingKey]?.rating || 0;
+                    const userReview = ratings[ratingKey]?.review || "";
                     
                     return (
-                      <div
-                        key={item.id || index}
-                        className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
-                            <span className="text-lg">🥤</span>
+                      <div key={item.id || index} className="space-y-3 py-4 border-b border-gray-100 last:border-0">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
+                              <span className="text-lg">🥤</span>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{itemName}</p>
+                              <p className="text-sm text-gray-500">
+                                {format(itemPrice)} × {item.quantity}
+                                {item.size && ` · ${item.size}`}
+                              </p>
+                              {item.notes && (
+                                <p className="text-xs text-gray-400 mt-1">{item.notes}</p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{itemName}</p>
-                            <p className="text-sm text-gray-500">
-                              {format(itemPrice)} × {item.quantity}
-                              {item.size && ` · ${item.size}`}
-                            </p>
-                            {item.notes && (
-                              <p className="text-xs text-gray-400 mt-1">{item.notes}</p>
-                            )}
-                          </div>
+                          <p className="font-semibold text-gray-900">
+                            {format(itemSubtotal)}
+                          </p>
                         </div>
-                        <p className="font-semibold text-gray-900">
-                          {format(itemSubtotal)}
-                        </p>
+                        {order.status === "completed" && (
+                          <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">Beri rating & ulasan</p>
+                                <p className="text-xs text-gray-500">Review akan tampil di AI Fotobooth & detail produk.</p>
+                              </div>
+                              {saveMessage && (
+                                <span className="text-xs text-emerald-600">{saveMessage}</span>
+                              )}
+                            </div>
+                            
+                            <div className="mt-3 flex items-center gap-2">
+                              {renderStars(item.product_id)}
+                              <span className="text-xs text-gray-500">{userRating ? `${userRating}/5` : "Belum dipilih"}</span>
+                            </div>
+                            
+                            <div className="mt-3">
+                              <textarea
+                                className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 focus:border-emerald-500 focus:ring-emerald-500"
+                                placeholder="Tulis pengalamanmu setelah beli produk ini..."
+                                value={userReview}
+                                onChange={(e) => handleReviewChange(item.product_id, e.target.value)}
+                                rows={3}
+                              />
+                              <p className="text-[11px] text-gray-500 mt-1">
+                                Disimpan di perangkat ini. Akan disinkronkan ke profil saat fitur review aktif.
+                              </p>
+                            </div>
+
+                          <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">AI Fotobooth (Coming Soon)</p>
+                                <p className="text-xs text-gray-600">Tambahkan momen foto AI untuk ulasan produkmu.</p>
+                              </div>
+                              <Button variant="outline" size="sm" className="text-emerald-700 border-emerald-200" disabled>
+                                Coming Soon
+                              </Button>
+                            </div>
+                            <p className="mt-2 text-[11px] text-gray-600">
+                              Saat fitur aktif, kamu bisa upload selfie dan AI akan membuat foto bersama produk ini. Hasilnya akan muncul di ulasan produk.
+                            </p>
+                          </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -278,8 +391,10 @@ export default function OrderDetailPage() {
                   
                   {order.payment_method && (
                     <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-                      {paymentIcons[order.payment_method] || <CreditCard className="h-5 w-5" />}
-                      <span className="capitalize font-medium">{order.payment_method}</span>
+                      {paymentIcons[order.payment_method] || <CreditCard className="h-5 w-5 text-gray-700" />}
+                      <span className="capitalize font-semibold text-gray-900">
+                        {order.payment_method}
+                      </span>
                     </div>
                   )}
 
