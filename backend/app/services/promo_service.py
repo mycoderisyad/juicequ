@@ -26,7 +26,7 @@ class PromoService:
     @staticmethod
     def get_all(
         db: Session,
-        product_id: Optional[int] = None,
+        product_id: Optional[str] = None,
         is_active: Optional[bool] = None,
         page: int = 1,
         page_size: int = 20,
@@ -55,7 +55,7 @@ class PromoService:
         return db.query(ProductPromo).filter(ProductPromo.id == promo_id).first()
     
     @staticmethod
-    def get_active_promo_for_product(db: Session, product_id: int) -> Optional[ProductPromo]:
+    def get_active_promo_for_product(db: Session, product_id: str) -> Optional[ProductPromo]:
         """Get the currently active promo for a product."""
         now = datetime.now(timezone.utc)
         return db.query(ProductPromo).filter(
@@ -124,7 +124,7 @@ class PromoService:
     @staticmethod
     def update(db: Session, promo: ProductPromo, data: ProductPromoUpdate) -> ProductPromo:
         """Update an existing product promo."""
-        update_data = data.dict(exclude_unset=True)
+        update_data = data.model_dump(exclude_unset=True)
         
         for field, value in update_data.items():
             if field == 'promo_type' and value:
@@ -255,7 +255,7 @@ class VoucherService:
     @staticmethod
     def update(db: Session, voucher: Voucher, data: VoucherUpdate) -> Voucher:
         """Update an existing voucher."""
-        update_data = data.dict(exclude_unset=True)
+        update_data = data.model_dump(exclude_unset=True)
         
         # Check if new code conflicts with existing
         if 'code' in update_data and update_data['code']:

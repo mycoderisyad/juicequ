@@ -134,6 +134,7 @@ export default function ProductPage() {
     const cartItemId = hasSizes ? `${product.id}-${selectedSize}` : product.id;
     addItem({
       id: cartItemId,
+      productId: product.id,
       name: hasSizes ? `${product.name} (${selectedSize === "small" ? "S" : selectedSize === "medium" ? "M" : "L"})` : product.name,
       price: displayPrice,
       color: product.color,
@@ -282,17 +283,18 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {/* Ingredients (Mock) */}
-              <div className="mb-8">
-                <h3 className="mb-3 font-semibold text-gray-900">Ingredients</h3>
-                <div className="flex flex-wrap gap-2">
-                  {["Organic", "Gluten-Free", "Vegan", "Non-GMO"].map((tag) => (
-                    <span key={tag} className="rounded-full border border-gray-200 px-4 py-1 text-sm text-gray-600">
-                      {tag}
-                    </span>
-                  ))}
+              {product.ingredients && product.ingredients.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="mb-3 font-semibold text-gray-900">Ingredients</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {product.ingredients.map((tag) => (
+                      <span key={tag} className="rounded-full border border-gray-200 px-4 py-1 text-sm text-gray-600">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Actions */}
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
@@ -314,17 +316,13 @@ export default function ProductPage() {
 
                 <Button 
                   onClick={handleAddToCart}
-                  className="h-12 flex-1 rounded-full bg-green-600 text-lg font-medium text-white hover:bg-green-700"
+                  className="h-12 flex-1 rounded-full bg-emerald-600 text-lg font-medium text-white hover:bg-emerald-700"
                 >
                   <ShoppingBag className="mr-2 h-5 w-5" />
                   Add to Cart - {format(displayPrice * quantity)}
                 </Button>
               </div>
 
-              {/* AI Fotobooth Section */}
-              <div className="mt-8 pt-8 border-t border-gray-200">
-                <AIFotobooth productId={product.id} productName={product.name} />
-              </div>
             </div>
           </div>
         </div>

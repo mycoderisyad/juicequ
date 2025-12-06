@@ -22,6 +22,7 @@ const fallbackBestsellerProducts: BestsellerProduct[] = [
     id: "1",
     name: "Berry Blast",
     price: "8.50",
+    prices: { small: 7.0, medium: 8.5, large: 10 },
     rating: 5,
     order_count: 100,
     description: "Fresh berries blended to perfection.",
@@ -41,6 +42,7 @@ const fallbackBestsellerProducts: BestsellerProduct[] = [
     id: "2",
     name: "Green Goddess",
     price: "9.00",
+    prices: { small: 7.5, medium: 9, large: 10.5 },
     rating: 5,
     order_count: 80,
     description: "Healthy green smoothie with spinach and apple.",
@@ -60,6 +62,7 @@ const fallbackBestsellerProducts: BestsellerProduct[] = [
     id: "3",
     name: "Tropical Paradise",
     price: "8.75",
+    prices: { small: 7.25, medium: 8.75, large: 10.25 },
     rating: 5,
     order_count: 75,
     description: "Refreshing blend of pineapple, mango, and coconut.",
@@ -76,6 +79,23 @@ const fallbackBestsellerProducts: BestsellerProduct[] = [
     thumbnail_image: "bg-yellow-500",
   },
 ];
+
+const sizeKeyMap: Record<'S' | 'M' | 'L', 'small' | 'medium' | 'large'> = {
+  S: "small",
+  M: "medium",
+  L: "large",
+};
+
+const getPriceBySize = (product: BestsellerProduct, size: 'S' | 'M' | 'L') => {
+  const key = sizeKeyMap[size];
+  if (product.prices && product.prices[key] !== undefined) {
+    return product.prices[key] as number;
+  }
+  const base = parseFloat(product.price);
+  if (Number.isNaN(base)) return 0;
+  const multipliers: Record<'S' | 'M' | 'L', number> = { S: 0.8, M: 1, L: 1.3 };
+  return Math.round(base * multipliers[size] * 100) / 100;
+};
 
 export default function HomePage() {
   const { format } = useCurrency();
@@ -249,7 +269,7 @@ export default function HomePage() {
                   {currentProduct?.name || 'Green Glow'}
                </h2>
                <p className="text-lg sm:text-xl font-bold mt-1 sm:mt-2 transition-all duration-500 ease-in-out text-stone-800">
-                  {currentProduct ? format(parseFloat(currentProduct.price)) : '$6.50'}
+                  {currentProduct ? format(getPriceBySize(currentProduct, selectedSize)) : '$6.50'}
                </p>
           </div>
 

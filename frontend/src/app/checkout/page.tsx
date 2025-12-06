@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
@@ -14,8 +14,9 @@ import apiClient from "@/lib/api/config";
 import { useCurrency } from "@/lib/hooks/use-store";
 import { getImageUrl } from "@/lib/image-utils";
 import { vouchersApi } from "@/lib/api/customer";
+import type { CartItem } from "@/lib/store";
 
-type PaymentMethod = "cash" | "qris" | "transfer";
+type PaymentMethod = "cash" | "qris" | "transfer" | "card";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -39,12 +40,13 @@ export default function CheckoutPage() {
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [voucherError, setVoucherError] = useState<string | null>(null);
   const [appliedVoucher, setAppliedVoucher] = useState<{
-    id: number;
+    id: string;
     code: string;
     discount_type: "percentage" | "fixed_amount";
     discount_value: number;
     discount_amount: number;
   } | null>(null);
+  const [enabledPayments, setEnabledPayments] = useState<PaymentMethod[]>([]);
   
   const cartTotal = total();
   const tax = cartTotal * 0.1;
@@ -107,11 +109,44 @@ export default function CheckoutPage() {
     }
   };
 
+  // Fetch payment methods availability from public settings
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const res = await apiClient.get("/customer/store/payment-methods");
+        const data = res.data;
+        const methods: PaymentMethod[] = (data.methods || []).map((m: { id: string }) => {
+          if (m.id === "ewallet") return "qris";
+          if (m.id === "card") return "card";
+          return m.id as PaymentMethod;
+        });
+        if (methods.length > 0) {
+          setEnabledPayments(methods);
+          if (!methods.includes(paymentMethod)) {
+            setPaymentMethod(methods[0]);
+          }
+        }
+      } catch {
+        // ignore fetch errors, keep defaults
+      }
+    };
+    fetchPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Remove voucher
   const handleRemoveVoucher = () => {
     setAppliedVoucher(null);
     setVoucherError(null);
   };
+
+  const isPaymentEnabled = (method: PaymentMethod) => enabledPayments.includes(method);
+
+  const paymentButtons: Array<{ id: PaymentMethod; label: string; icon: JSX.Element }> = [
+    { id: "cash", label: "Cash", icon: <Banknote className="h-6 w-6 text-green-600" /> },
+    { id: "qris", label: "QRIS", icon: <Smartphone className="h-6 w-6 text-blue-600" /> },
+    { id: "transfer", label: "Transfer", icon: <CreditCard className="h-6 w-6 text-purple-600" /> },
+  ];
 
   // Helper to ensure price is valid number
   const getValidPrice = (price: number | string | undefined): number => {
@@ -131,6 +166,11 @@ export default function CheckoutPage() {
       return getImageUrl(item.color);
     }
     return null;
+  };
+  
+  const resolveProductId = (item: CartItem) => {
+    if (item.productId) return String(item.productId);
+    return String(item.id).replace(/-(small|medium|large)$/i, "");
   };
 
   const handleSubmitOrder = async () => {
@@ -162,10 +202,11 @@ export default function CheckoutPage() {
     try {
       const orderData = {
         items: items.map((item) => ({
-          product_id: String(item.id),
+          product_id: resolveProductId(item),
           name: item.name,
           price: getValidPrice(item.price),
           quantity: item.quantity,
+          size: item.size || "medium",
         })),
         notes: notes || undefined,
         payment_method: paymentMethod,
@@ -320,39 +361,23 @@ export default function CheckoutPage() {
                   Payment Method
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <button
-                    onClick={() => setPaymentMethod("cash")}
-                    className={`flex items-center gap-3 rounded-2xl border-2 p-4 transition-colors ${
-                      paymentMethod === "cash"
-                        ? "border-green-600 bg-green-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <Banknote className="h-6 w-6 text-green-600" />
-                    <span className="font-medium text-gray-900">Cash</span>
-                  </button>
-                  <button
-                    onClick={() => setPaymentMethod("qris")}
-                    className={`flex items-center gap-3 rounded-2xl border-2 p-4 transition-colors ${
-                      paymentMethod === "qris"
-                        ? "border-green-600 bg-green-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <Smartphone className="h-6 w-6 text-blue-600" />
-                    <span className="font-medium text-gray-900">QRIS</span>
-                  </button>
-                  <button
-                    onClick={() => setPaymentMethod("transfer")}
-                    className={`flex items-center gap-3 rounded-2xl border-2 p-4 transition-colors ${
-                      paymentMethod === "transfer"
-                        ? "border-green-600 bg-green-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <CreditCard className="h-6 w-6 text-purple-600" />
-                    <span className="font-medium text-gray-900">Transfer</span>
-                  </button>
+                  {paymentButtons.map((btn) => {
+                    const enabled = isPaymentEnabled(btn.id);
+                    const active = paymentMethod === btn.id;
+                    return (
+                      <button
+                        key={btn.id}
+                        onClick={() => enabled && setPaymentMethod(btn.id)}
+                        disabled={!enabled}
+                        className={`flex items-center gap-3 rounded-2xl border-2 p-4 transition-colors ${
+                          active ? "border-green-600 bg-green-50" : "border-gray-200 hover:border-gray-300"
+                        } ${!enabled ? "opacity-60 cursor-not-allowed bg-gray-50 hover:border-gray-200" : ""}`}
+                      >
+                        {btn.icon}
+                        <span className="font-medium text-gray-900">{btn.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -477,7 +502,7 @@ export default function CheckoutPage() {
                         setVoucherError(null);
                       }}
                       placeholder="Masukkan kode voucher"
-                      className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                      className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                     />
                     <Button
                       onClick={handleApplyVoucher}

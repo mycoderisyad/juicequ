@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuthStore } from "@/lib/store";
+import { vouchersApi } from "@/lib/api/admin";
 
 interface Voucher {
   id: string;
@@ -50,7 +50,6 @@ export default function VouchersPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const { token } = useAuthStore();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -71,18 +70,15 @@ export default function VouchersPage() {
   const fetchVouchers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/v1/admin/vouchers", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch vouchers");
-      const data = await res.json();
+      setError(null);
+      const data = await vouchersApi.getAll();
       setVouchers(data.items || []);
     } catch {
       setError("Gagal memuat data voucher");
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchVouchers();
@@ -91,55 +87,40 @@ export default function VouchersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = editingVoucher 
-        ? `/api/v1/admin/vouchers/${editingVoucher.id}`
-        : "/api/v1/admin/vouchers";
-      
       const payload = {
         code: formData.code.toUpperCase(),
         name: formData.name,
-        description: formData.description || null,
-        voucher_type: formData.voucher_type as "percentage" | "fixed_amount",
+        description: formData.description || undefined,
+        voucher_type: formData.voucher_type,
         discount_value: parseFloat(formData.discount_value) || 0,
         min_order_amount: parseFloat(formData.min_order_amount) || 0,
-        max_discount: formData.max_discount ? parseFloat(formData.max_discount) : null,
-        usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : null,
+        max_discount: formData.max_discount ? parseFloat(formData.max_discount) : undefined,
+        usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : undefined,
         per_user_limit: parseInt(formData.per_user_limit) || 1,
         start_date: new Date(formData.start_date).toISOString(),
         end_date: new Date(formData.end_date).toISOString(),
         is_active: formData.is_active,
       };
 
-      const res = await fetch(url, {
-        method: editingVoucher ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || "Failed to save voucher");
+      if (editingVoucher) {
+        await vouchersApi.update(editingVoucher.id, payload);
+      } else {
+        await vouchersApi.create(payload);
       }
 
       setShowModal(false);
       resetForm();
       fetchVouchers();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to save voucher");
+      const errorMsg = err instanceof Error ? err.message : "Failed to save voucher";
+      alert(errorMsg);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Hapus voucher ini?")) return;
     try {
-      const res = await fetch(`/api/v1/admin/vouchers/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to delete");
+      await vouchersApi.delete(id);
       fetchVouchers();
     } catch {
       alert("Gagal menghapus voucher");
@@ -148,21 +129,11 @@ export default function VouchersPage() {
 
   const handleToggleActive = async (voucher: Voucher) => {
     try {
-      const res = await fetch(`/api/v1/admin/vouchers/${voucher.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ is_active: !voucher.is_active }),
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || "Failed to update");
-      }
+      await vouchersApi.update(voucher.id, { is_active: !voucher.is_active });
       fetchVouchers();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to update");
+      const errorMsg = err instanceof Error ? err.message : "Failed to update";
+      alert(errorMsg);
     }
   };
 

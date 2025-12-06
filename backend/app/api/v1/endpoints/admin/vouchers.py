@@ -22,10 +22,19 @@ from app.schemas.promo import (
 router = APIRouter()
 
 
+def _ensure_aware(dt: datetime) -> datetime:
+    """Return timezone-aware datetime (defaults to UTC)."""
+    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 def voucher_to_response(voucher) -> dict:
     """Convert voucher model to response dict."""
     now = datetime.now(timezone.utc)
-    is_valid = voucher.is_active and voucher.start_date <= now <= voucher.end_date
+    start = _ensure_aware(voucher.start_date)
+    end = _ensure_aware(voucher.end_date)
+    is_valid = voucher.is_active and start <= now <= end
     
     # Calculate usage remaining
     usage_remaining = None

@@ -605,6 +605,7 @@ export default function ChatPage() {
     for (const item of orderData.items) {
       addItem({
         id: item.product_id,
+        productId: item.product_id,
         name: item.product_name,
         price: item.unit_price,
         quantity: item.quantity,
@@ -625,10 +626,10 @@ export default function ChatPage() {
   }, [locale, setInput]);
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
-      <main className="flex flex-1 flex-col overflow-hidden">
-        <div className="container mx-auto flex flex-1 flex-col px-4 py-4 overflow-hidden">
+      <main className="flex flex-1 flex-col overflow-hidden pt-4 sm:pt-6">
+        <div className="container mx-auto flex flex-1 flex-col px-4 pb-4 sm:pb-6 overflow-hidden pt-4 sm:pt-6">
           <div className="flex flex-1 flex-col overflow-hidden rounded-3xl bg-white shadow-xl shadow-gray-200/50">
             <ChatHeader isAuthenticated={isAuthenticated} t={t} />
             {displayError && <ErrorBanner error={displayError} onDismiss={() => setError(null)} />}

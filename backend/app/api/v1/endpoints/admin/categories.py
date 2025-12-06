@@ -21,14 +21,14 @@ class CreateCategoryRequest(BaseModel):
     """Request to create a category."""
     id: str = Field(..., min_length=2, max_length=50, description="Category ID/slug")
     name: str = Field(..., min_length=2, max_length=100)
-    icon: str = Field(default="", max_length=10)
+    icon: str = Field(default="", max_length=2048)
     description: str | None = Field(None, max_length=500)
 
 
 class UpdateCategoryRequest(BaseModel):
     """Request to update a category."""
     name: str | None = Field(None, min_length=2, max_length=100)
-    icon: str | None = Field(None, max_length=10)
+    icon: str | None = Field(None, max_length=2048)
     description: str | None = Field(None, max_length=500)
 
 

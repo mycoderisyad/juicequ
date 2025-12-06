@@ -23,10 +23,19 @@ from app.schemas.promo import (
 router = APIRouter()
 
 
+def _ensure_aware(dt: datetime) -> datetime:
+    """Return timezone-aware datetime (defaults to UTC)."""
+    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 def promo_to_response(promo) -> dict:
     """Convert promo model to response dict."""
     now = datetime.now(timezone.utc)
-    is_valid = promo.is_active and promo.start_date <= now <= promo.end_date
+    start = _ensure_aware(promo.start_date)
+    end = _ensure_aware(promo.end_date)
+    is_valid = promo.is_active and start <= now <= end
     
     discount_display = f"{int(promo.discount_value)}%" if promo.promo_type.value == "percentage" else f"Rp {promo.discount_value:,.0f}"
     

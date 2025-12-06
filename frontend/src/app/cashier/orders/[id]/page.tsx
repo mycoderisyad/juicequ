@@ -283,7 +283,7 @@ export default function CashierOrderDetailPage() {
               </div>
               <div className="flex justify-between text-stone-500 text-sm">
                 <span>Pajak</span>
-                <span>{formatCurrency(order.tax)}</span>
+                <span>{formatCurrency(order.tax ?? 0)}</span>
               </div>
               {order.discount && order.discount > 0 && (
                 <div className="flex justify-between text-emerald-600 text-sm font-medium">

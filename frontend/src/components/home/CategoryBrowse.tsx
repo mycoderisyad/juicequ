@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 import { productsApi, type Category } from "@/lib/api/customer";
+import { getImageUrl } from "@/lib/image-utils";
 import { Sparkles, ArrowRight } from "lucide-react";
 
 // Fallback colors - used when category doesn't have color from database
@@ -168,6 +169,7 @@ export function CategoryBrowse() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {categories.map((category, index) => {
               const colors = getCategoryColors(category, index);
+              const isCustomIcon = !!category.icon && (category.icon.startsWith("http") || category.icon.startsWith("/"));
               const categoryIcon = category.icon || defaultEmoji;
               const subtitle = getCategorySubtitle(category);
               const description = category.description || t("home.browseCategories.defaultDescription");
@@ -180,18 +182,27 @@ export function CategoryBrowse() {
                   className={`
                     group relative rounded-3xl sm:rounded-4xl p-6 sm:p-8 lg:p-10 
                     border border-stone-100 bg-linear-to-br ${colors.bgGradient}
-                    transition-all duration-500 cursor-pointer 
-                    ${colors.hoverBorder} hover:shadow-2xl ${colors.shadowColor} 
-                    hover:-translate-y-2 overflow-hidden
                     focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
                   `}
                 >
-                  {/* Decorative blob */}
-                  <div className={`absolute -right-10 -bottom-10 w-48 h-48 rounded-full mix-blend-multiply filter blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 ${colors.blobColor}`} />
 
                   {/* Icon */}
                   <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl ${colors.iconBg} flex items-center justify-center mb-6 sm:mb-8 shadow-sm group-hover:scale-110 transition-transform duration-300 relative z-10 text-3xl sm:text-4xl`}>
-                    {categoryIcon}
+                    {isCustomIcon ? (
+                      <img
+                        src={getImageUrl(categoryIcon)}
+                        alt={category.name}
+                        className="h-full w-full object-contain rounded-2xl sm:rounded-3xl"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const fallback = e.currentTarget.parentElement?.querySelector("[data-fallback]");
+                          if (fallback instanceof HTMLElement) fallback.classList.remove("hidden");
+                        }}
+                      />
+                    ) : null}
+                    <span data-fallback className={isCustomIcon ? "hidden" : ""}>
+                      {categoryIcon || defaultEmoji}
+                    </span>
                   </div>
 
                   {/* Content */}

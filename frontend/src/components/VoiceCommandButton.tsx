@@ -69,6 +69,8 @@ export function VoiceCommandButton({ className, show = true }: VoiceCommandButto
   const [showToast, setShowToast] = useState(false);
   const [toastData, setToastData] = useState<VoiceCommandResult | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [showHelpTooltip, setShowHelpTooltip] = useState(true);
+  const [isHidden, setIsHidden] = useState(false);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Drag state
@@ -261,7 +263,7 @@ export function VoiceCommandButton({ className, show = true }: VoiceCommandButto
     };
   }, []);
 
-  if (!show || !isSupported) return null;
+  if (!show || !isSupported || isHidden) return null;
 
   const isActive = isListening || isProcessing;
   const style = toastData ? getToastStyle(toastData.command, toastData.success) : null;
@@ -375,6 +377,18 @@ export function VoiceCommandButton({ className, show = true }: VoiceCommandButto
             <Mic className="w-6 h-6 text-white" />
           )}
         </button>
+
+        {/* Hide control */}
+        <div className="flex justify-end w-full">
+          <button
+            type="button"
+            onClick={() => setIsHidden(true)}
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors underline"
+            aria-label={locale === "id" ? "Sembunyikan tombol suara" : "Hide voice button"}
+          >
+            {locale === "id" ? "Sembunyikan" : "Hide"}
+          </button>
+        </div>
       </div>
 
       {/* Toast Notification */}
@@ -432,10 +446,20 @@ export function VoiceCommandButton({ className, show = true }: VoiceCommandButto
       )}
 
       {/* Help tooltip */}
-      {!isActive && !showToast && (
+      {!isActive && !showToast && showHelpTooltip && (
         <div className="fixed bottom-6 right-24 z-40 hidden lg:block pointer-events-none opacity-60">
-          <div className="bg-gray-900/90 text-white text-xs px-3 py-2 rounded-lg backdrop-blur-sm">
-            {locale === "id" ? "Tekan & tahan untuk perintah suara" : "Press & hold for voice command"}
+          <div className="bg-gray-900/90 text-white text-xs px-3 py-2 rounded-lg backdrop-blur-sm pointer-events-auto flex items-start gap-2">
+            <span>
+              {locale === "id" ? "Tekan & tahan untuk perintah suara" : "Press & hold for voice command"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowHelpTooltip(false)}
+              className="text-white/70 hover:text-white transition-colors"
+              aria-label={locale === "id" ? "Tutup petunjuk suara" : "Dismiss voice hint"}
+            >
+              <X className="w-3 h-3" />
+            </button>
           </div>
         </div>
       )}

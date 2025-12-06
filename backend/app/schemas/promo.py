@@ -3,7 +3,7 @@ Promo and Voucher schemas for API serialization.
 """
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ConfigDict, field_validator, ValidationInfo
 
 
 # =============================================================================
@@ -35,22 +35,25 @@ class ProductPromoBase(BaseModel):
     end_date: datetime
     is_active: bool = True
 
-    @validator('promo_type')
-    def validate_promo_type(cls, v):
+    @field_validator('promo_type')
+    @classmethod
+    def validate_promo_type(cls, v: str):
         if v not in ['percentage', 'fixed']:
             raise ValueError('promo_type must be percentage or fixed')
         return v
 
-    @validator('discount_value')
-    def validate_discount_value(cls, v, values):
-        promo_type = values.get('promo_type', 'percentage')
+    @field_validator('discount_value')
+    @classmethod
+    def validate_discount_value(cls, v: float, info: ValidationInfo):
+        promo_type = info.data.get('promo_type', 'percentage') if info and info.data else 'percentage'
         if promo_type == 'percentage' and v > 100:
             raise ValueError('Percentage discount cannot exceed 100%')
         return v
 
-    @validator('end_date')
-    def validate_end_date(cls, v, values):
-        start_date = values.get('start_date')
+    @field_validator('end_date')
+    @classmethod
+    def validate_end_date(cls, v: datetime, info: ValidationInfo):
+        start_date = info.data.get('start_date') if info and info.data else None
         if start_date and v <= start_date:
             raise ValueError('end_date must be after start_date')
         return v
@@ -58,7 +61,7 @@ class ProductPromoBase(BaseModel):
 
 class ProductPromoCreate(ProductPromoBase):
     """Schema for creating a product promo."""
-    product_id: int
+    product_id: str
 
 
 class ProductPromoUpdate(BaseModel):
@@ -75,7 +78,7 @@ class ProductPromoUpdate(BaseModel):
 class ProductPromoResponse(ProductPromoBase):
     """Schema for product promo response."""
     id: str
-    product_id: int
+    product_id: str
     created_at: datetime
     updated_at: datetime
     
@@ -83,8 +86,7 @@ class ProductPromoResponse(ProductPromoBase):
     is_valid: bool = False
     discount_display: str = ""
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProductPromoListResponse(BaseModel):
@@ -114,20 +116,23 @@ class VoucherBase(BaseModel):
     end_date: datetime
     is_active: bool = True
 
-    @validator('voucher_type')
-    def validate_voucher_type(cls, v):
+    @field_validator('voucher_type')
+    @classmethod
+    def validate_voucher_type(cls, v: str):
         if v not in ['percentage', 'fixed', 'free_shipping']:
             raise ValueError('voucher_type must be percentage, fixed, or free_shipping')
         return v
 
-    @validator('code')
-    def validate_code(cls, v):
+    @field_validator('code')
+    @classmethod
+    def validate_code(cls, v: str):
         # Uppercase and remove spaces
         return v.upper().replace(' ', '')
 
-    @validator('end_date')
-    def validate_end_date(cls, v, values):
-        start_date = values.get('start_date')
+    @field_validator('end_date')
+    @classmethod
+    def validate_end_date(cls, v: datetime, info: ValidationInfo):
+        start_date = info.data.get('start_date') if info and info.data else None
         if start_date and v <= start_date:
             raise ValueError('end_date must be after start_date')
         return v
@@ -166,8 +171,7 @@ class VoucherResponse(VoucherBase):
     usage_remaining: Optional[int] = None
     discount_display: str = ""
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VoucherListResponse(BaseModel):
@@ -211,8 +215,7 @@ class VoucherUsageResponse(BaseModel):
     discount_amount: float
     used_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # =============================================================================

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "id_ID",
-    url: "https://juicequ.com",
+    url: "https://juicequ.app",
     siteName: "JuiceQu",
     title: "JuiceQu - Fresh & Healthy Juice Store",
     description: "Order fresh, healthy juices with AI-powered recommendations.",
