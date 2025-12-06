@@ -8,6 +8,7 @@ from app.models.cart import Cart, CartItem
 from app.models.ai_interaction import AIInteraction, InteractionType, InteractionStatus
 from app.models.settings import StoreSetting, DEFAULT_SETTINGS
 from app.models.promo import ProductPromo, Voucher, VoucherUsage, PromoType, VoucherType
+from app.models.review import Review
 
 __all__ = [
     # User
@@ -38,4 +39,7 @@ __all__ = [
     "VoucherUsage",
     "PromoType",
     "VoucherType",
+    # Review
+    "Review",
 ]
+

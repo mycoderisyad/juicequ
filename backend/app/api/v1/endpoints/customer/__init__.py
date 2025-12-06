@@ -4,13 +4,15 @@ Handles all customer-facing functionality.
 """
 from fastapi import APIRouter
 
-from app.api.v1.endpoints.customer import products, cart, orders, profile, store, vouchers
+from app.api.v1.endpoints.customer import products, cart, orders, profile, store, vouchers, reviews, photobooth
 
 router = APIRouter()
 
 router.include_router(store.router, prefix="/store", tags=["Customer - Store Info"])
+router.include_router(reviews.router, prefix="/products", tags=["Customer - Reviews"])
 router.include_router(products.router, prefix="/products", tags=["Customer - Products"])
 router.include_router(cart.router, prefix="/cart", tags=["Customer - Cart"])
 router.include_router(orders.router, prefix="/orders", tags=["Customer - Orders"])
 router.include_router(profile.router, prefix="/profile", tags=["Customer - Profile"])
 router.include_router(vouchers.router, prefix="/vouchers", tags=["Customer - Vouchers"])
+router.include_router(photobooth.router, prefix="/photobooth", tags=["Customer - AI Photobooth"])

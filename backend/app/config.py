@@ -49,6 +49,9 @@ class Settings(BaseSettings):
     kolosal_api_base: str = ""
     kolosal_model: str = ""
 
+    # Google Gemini AI (for image generation)
+    gemini_api_key: str = ""
+
     # Google Cloud (only for Speech-to-Text, optional)
     gcp_project_id: str = ""
     gcp_speech_credentials: str = ""

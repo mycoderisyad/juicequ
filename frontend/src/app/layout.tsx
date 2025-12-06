@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
+import { locales, defaultLocale, type Locale } from "@/locales";
 import "./globals.css";
 import { Providers } from "./providers";
 import { SkipLink } from "@/components/ui/SkipLink";
@@ -36,15 +38,19 @@ export const viewport: Viewport = {
   themeColor: "#16a34a",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get("juicequ-locale")?.value as Locale | undefined;
+  const initialLocale = localeCookie && locales[localeCookie] ? localeCookie : defaultLocale;
+
   return (
-    <html lang="id" className={inter.variable}>
+    <html lang={initialLocale} className={inter.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50 font-sans antialiased">
-        <Providers>
+        <Providers initialLocale={initialLocale}>
           <SkipLink />
           {children}
         </Providers>

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, Enum, String, Text, func
+from sqlalchemy import Boolean, DateTime, Enum, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
@@ -136,6 +136,13 @@ class User(Base):
     last_login: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
+    )
+    
+    # AI Photobooth usage count (limit 3 for regular users)
+    ai_photobooth_count: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
     )
     
     # Relationships

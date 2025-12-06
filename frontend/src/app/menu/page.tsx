@@ -145,13 +145,13 @@ function MenuContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState<string>(() => getInitialSearch(searchParams));
   const [activeCategory, setActiveCategory] = useState<string>(() => getInitialCategory(searchParams));
-  
+
   // Filter dropdowns state
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isPriceOpen, setIsPriceOpen] = useState(false);
   const [priceRange, setPriceRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
   const [sortOrder, setSortOrder] = useState<"default" | "low-high" | "high-low">(() => getInitialSort(searchParams));
-  
+
   // Size selector state: item_id -> selected size
   const [selectedSizes, setSelectedSizes] = useState<Record<string, "small" | "medium" | "large">>({});
   const cartItems = useCartStore((state) => state.items);
@@ -162,15 +162,15 @@ function MenuContent() {
   const [modalSugar, setModalSugar] = useState<string>("Normal");
   const [showCartDrawer, setShowCartDrawer] = useState(false);
   const sugarOptions = [
-    t("product.sugar.normal", "Normal"),
-    t("product.sugar.less", "Less sugar"),
-    t("product.sugar.none", "No sugar"),
-    t("product.sugar.extra", "Extra sweet"),
+    t("product.sugar.normal"),
+    t("product.sugar.less"),
+    t("product.sugar.none"),
+    t("product.sugar.extra"),
   ];
-  
+
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const priceDropdownRef = useRef<HTMLDivElement>(null);
-  
+
   // API state
   const [products, setProducts] = useState<DisplayProduct[]>([]);
   const [categories, setCategories] = useState<DisplayCategory[]>([{ id: "all", name: "All", icon: <ListFilter className="h-4 w-4" /> }]);
@@ -197,7 +197,7 @@ function MenuContent() {
     const urlCategory = getInitialCategory(searchParams);
     const urlSort = getInitialSort(searchParams);
     const urlSearch = getInitialSearch(searchParams);
-    
+
     if (urlCategory !== activeCategory) {
       setActiveCategory(urlCategory);
     }
@@ -219,20 +219,20 @@ function MenuContent() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Fetch both products and categories
       const [productsResponse, categoriesResponse] = await Promise.all([
         productsApi.getAll(),
         productsApi.getCategories(),
       ]);
-      
+
       if (productsResponse.items && productsResponse.items.length > 0) {
         const transformed = productsResponse.items.map(transformProduct);
         setProducts(transformed);
       } else {
         setProducts([]);
       }
-      
+
       // Set categories from API (backend already includes "All" category)
       if (categoriesResponse.categories && categoriesResponse.categories.length > 0) {
         const apiCategories: DisplayCategory[] = categoriesResponse.categories.map(cat => ({
@@ -256,11 +256,11 @@ function MenuContent() {
   }, [fetchData]);
 
   const getSelectedSize = (id: string): "small" | "medium" | "large" => selectedSizes[id] || "medium";
-  
+
   const setSelectedSize = (id: string, size: "small" | "medium" | "large") => {
     setSelectedSizes(prev => ({ ...prev, [id]: size }));
   };
-  
+
   const getItemPrice = (item: DisplayProduct, size: "small" | "medium" | "large"): number => {
     if (item.prices && item.prices[size]) {
       return item.prices[size];
@@ -270,7 +270,7 @@ function MenuContent() {
     const multipliers = { small: 0.8, medium: 1.0, large: 1.2 };
     return Math.round(basePrice * multipliers[size]);
   };
-  
+
   const getItemVolume = (item: DisplayProduct, size: "small" | "medium" | "large"): number => {
     if (item.volumes && item.volumes[size]) {
       return item.volumes[size];
@@ -364,30 +364,30 @@ function MenuContent() {
   const filteredItems = useMemo(() => {
     let filtered = products.filter((item) => {
       // Filter by category ID
-      const matchesCategory = activeCategory === "all" || 
+      const matchesCategory = activeCategory === "all" ||
         item.category_id.toLowerCase() === activeCategory.toLowerCase();
-      
+
       // Filter by search query
       const query = searchQuery.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         item.name.toLowerCase().includes(query) ||
         item.description.toLowerCase().includes(query);
-      
+
       // Filter by price range
       const price = parseFloat(item.price);
       const matchesMinPrice = priceRange.min === null || price >= priceRange.min;
       const matchesMaxPrice = priceRange.max === null || price <= priceRange.max;
-      
+
       return matchesCategory && matchesSearch && matchesMinPrice && matchesMaxPrice;
     });
-    
+
     // Sort by price
     if (sortOrder === "low-high") {
       filtered = [...filtered].sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
     } else if (sortOrder === "high-low") {
       filtered = [...filtered].sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
     }
-    
+
     return filtered;
   }, [products, searchQuery, activeCategory, priceRange, sortOrder]);
 
@@ -412,10 +412,10 @@ function MenuContent() {
 
   // Get active category name
   const activeCategoryName = categories.find(c => c.id.toLowerCase() === activeCategory.toLowerCase())?.name || "All";
-  
+
   // Check if any filter is active
   const hasActiveFilters = activeCategory !== "all" || priceRange.min !== null || priceRange.max !== null || sortOrder !== "default";
-  
+
   // Clear all filters
   const clearAllFilters = () => {
     setActiveCategory("all");
@@ -436,7 +436,7 @@ function MenuContent() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
-      
+
       <main id="main-content" className="flex-1 pt-24 pb-10">
         <div className="container mx-auto px-4">
           {/* Error Banner */}
@@ -446,10 +446,10 @@ function MenuContent() {
               <button
                 onClick={fetchData}
                 className="flex items-center gap-2 text-sm font-medium hover:underline"
-                aria-label={t("menu.filter.retry", "Retry")}
+                aria-label={t("menu.filter.retry")}
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                {t("menu.filter.retry", "Retry")}
+                {t("menu.filter.retry")}
               </button>
             </div>
           )}
@@ -465,14 +465,14 @@ function MenuContent() {
             {/* Search Bar */}
             <div className="relative w-full">
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <Input 
+              <Input
                 placeholder={t("menu.searchPlaceholder")}
                 className="pl-12 h-12 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
+
             {/* Filter Row */}
             <div className="flex flex-wrap items-center gap-3">
               {/* Category Dropdown */}
@@ -482,16 +482,15 @@ function MenuContent() {
                     setIsCategoryOpen(!isCategoryOpen);
                     setIsPriceOpen(false);
                   }}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${
-                    activeCategory !== "all"
-                      ? "bg-green-50 border-green-200 text-green-700"
-                      : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${activeCategory !== "all"
+                    ? "bg-green-50 border-green-200 text-green-700"
+                    : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   <span className="font-medium">{activeCategoryName}</span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${isCategoryOpen ? "rotate-180" : ""}`} />
                 </button>
-                
+
                 {isCategoryOpen && (
                   <div className="absolute left-0 top-full mt-2 z-50 w-56 rounded-xl bg-white shadow-lg border border-gray-100 py-2 max-h-64 overflow-y-auto">
                     {categories.map((category) => {
@@ -503,9 +502,8 @@ function MenuContent() {
                             setActiveCategory(category.id);
                             setIsCategoryOpen(false);
                           }}
-                          className={`w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-gray-50 transition-colors ${
-                            isActive ? "bg-green-50 text-green-700" : "text-gray-700"
-                          }`}
+                          className={`w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-gray-50 transition-colors ${isActive ? "bg-green-50 text-green-700" : "text-gray-700"
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{category.name}</span>
@@ -517,7 +515,7 @@ function MenuContent() {
                   </div>
                 )}
               </div>
-              
+
               {/* Price Filter Dropdown */}
               <div className="relative" ref={priceDropdownRef}>
                 <button
@@ -525,38 +523,36 @@ function MenuContent() {
                     setIsPriceOpen(!isPriceOpen);
                     setIsCategoryOpen(false);
                   }}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${
-                    priceRange.min !== null || priceRange.max !== null || sortOrder !== "default"
-                      ? "bg-green-50 border-green-200 text-green-700"
-                      : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${priceRange.min !== null || priceRange.max !== null || sortOrder !== "default"
+                    ? "bg-green-50 border-green-200 text-green-700"
+                    : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-                  <span className="font-medium">{t("menu.filter.price", "Price")}</span>
+                  <span className="font-medium">{t("menu.filter.price")}</span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${isPriceOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
-                
+
                 {isPriceOpen && (
                   <div className="absolute left-0 top-full mt-2 z-50 w-72 rounded-xl bg-white shadow-lg border border-gray-100 p-4">
                     {/* Sort Order */}
                     <div className="mb-4">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t("menu.filter.sortBy", "Sort by")}</p>
-                      <div className="flex flex-col gap-1" role="radiogroup" aria-label={t("menu.filter.sortBy", "Sort by")}>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t("menu.filter.sortBy")}</p>
+                      <div className="flex flex-col gap-1" role="radiogroup" aria-label={t("menu.filter.sortBy")}>
                         {[
-                          { value: "default", labelKey: "menu.filter.sortDefault" },
-                          { value: "low-high", labelKey: "menu.filter.sortPriceLowHigh" },
-                          { value: "high-low", labelKey: "menu.filter.sortPriceHighLow" },
+                          { value: "default", labelKey: "menu.filter.sortDefault" as const },
+                          { value: "low-high", labelKey: "menu.filter.sortPriceLowHigh" as const },
+                          { value: "high-low", labelKey: "menu.filter.sortPriceHighLow" as const },
                         ].map((option) => (
                           <button
                             key={option.value}
                             onClick={() => setSortOrder(option.value as typeof sortOrder)}
                             role="radio"
                             aria-checked={sortOrder === option.value}
-                            className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                              sortOrder === option.value
-                                ? "bg-green-50 text-green-700"
-                                : "text-gray-700 hover:bg-gray-50"
-                            }`}
+                            className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${sortOrder === option.value
+                              ? "bg-green-50 text-green-700"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
                           >
                             <span>{t(option.labelKey)}</span>
                             {sortOrder === option.value && <Check className="h-4 w-4 text-green-600" aria-hidden="true" />}
@@ -564,10 +560,10 @@ function MenuContent() {
                         ))}
                       </div>
                     </div>
-                    
+
                     {/* Price Range */}
                     <div className="border-t border-gray-100 pt-4">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t("menu.filter.priceRange", "Price Range")}</p>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t("menu.filter.priceRange")}</p>
                       <div className="flex items-center gap-2">
                         <div className="flex-1">
                           <label htmlFor="price-min" className="sr-only">Minimum price</label>
@@ -576,9 +572,9 @@ function MenuContent() {
                             type="number"
                             placeholder="Min"
                             value={priceRange.min ?? ""}
-                            onChange={(e) => setPriceRange(prev => ({ 
-                              ...prev, 
-                              min: e.target.value ? parseInt(e.target.value) : null 
+                            onChange={(e) => setPriceRange(prev => ({
+                              ...prev,
+                              min: e.target.value ? parseInt(e.target.value) : null
                             }))}
                             className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-green-500"
                           />
@@ -591,16 +587,16 @@ function MenuContent() {
                             type="number"
                             placeholder="Max"
                             value={priceRange.max ?? ""}
-                            onChange={(e) => setPriceRange(prev => ({ 
-                              ...prev, 
-                              max: e.target.value ? parseInt(e.target.value) : null 
+                            onChange={(e) => setPriceRange(prev => ({
+                              ...prev,
+                              max: e.target.value ? parseInt(e.target.value) : null
                             }))}
                             className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-green-500"
                           />
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Apply/Clear Buttons */}
                     <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
                       <button
@@ -610,19 +606,19 @@ function MenuContent() {
                         }}
                         className="flex-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
                       >
-                        {t("menu.filter.reset", "Reset")}
+                        {t("menu.filter.reset")}
                       </button>
                       <button
                         onClick={() => setIsPriceOpen(false)}
                         className="flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
                       >
-                        {t("menu.filter.apply", "Apply")}
+                        {t("menu.filter.apply")}
                       </button>
                     </div>
                   </div>
                 )}
               </div>
-              
+
               {/* Active Filters Count & Clear */}
               {hasActiveFilters && (
                 <button
@@ -630,15 +626,15 @@ function MenuContent() {
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <X className="h-4 w-4" aria-hidden="true" />
-                  <span>{t("menu.filter.clearFilters", "Clear Filters")}</span>
+                  <span>{t("menu.filter.clearFilters")}</span>
                 </button>
               )}
-              
+
               {/* Results Count */}
               <div className="ml-auto text-sm text-gray-500" aria-live="polite">
                 {filteredItems.length === 0
-                  ? t("menu.filter.productsFound", "0 products found")
-                  : `${pageStart}-${pageEnd} of ${filteredItems.length} ${t("menu.filter.productsFound", "products found")}`}
+                  ? t("menu.filter.productsFound")
+                  : `${pageStart}-${pageEnd} of ${filteredItems.length} ${t("menu.filter.productsFound")}`}
               </div>
             </div>
           </div>
@@ -662,7 +658,7 @@ function MenuContent() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {paginatedItems.map((item) => (
                 <div key={item.id} className="group relative flex flex-col overflow-hidden rounded-3xl border border-stone-100 bg-white shadow-sm">
-                  
+
                   {/* Product Image & Badges */}
                   <Link href={`/products/${item.id}`} className="relative aspect-square overflow-hidden bg-stone-50">
                     {item.thumbnail_image && !item.thumbnail_image.startsWith('bg-') ? (
@@ -679,7 +675,7 @@ function MenuContent() {
                         <div className={`h-32 w-32 rounded-full ${item.color} opacity-80 shadow-lg transition-transform duration-500 group-hover:scale-110`} aria-hidden="true"></div>
                       </div>
                     )}
-                    
+
                     {/* Badges Container */}
                     <div className="absolute left-3 top-3 right-3 flex justify-between items-start z-10">
                       {/* Category Badge */}
@@ -689,10 +685,10 @@ function MenuContent() {
 
                       {/* Best Seller Badge (if rating >= 4.5) */}
                       {(item.rating && item.rating >= 4.5) && (
-                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
-                           <Star className="h-3 w-3 fill-current" />
-                           Best Seller
-                         </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                          <Star className="h-3 w-3 fill-current" />
+                          Best Seller
+                        </span>
                       )}
                     </div>
                   </Link>
@@ -704,26 +700,26 @@ function MenuContent() {
                         {item.name}
                       </h3>
                     </Link>
-                    
+
                     <div className="mb-3 flex items-center justify-between">
-                       <span className="text-xs font-medium text-stone-500">
-                         {(item.has_sizes ?? true) && (
-                           <span className="text-emerald-600">
-                             {getItemVolume(item, getSelectedSize(item.id))} {item.volume_unit || "ml"}
-                           </span>
-                         )}
-                         {!(item.has_sizes ?? true) && (
-                           <>Stok: <span className={item.stock_quantity && item.stock_quantity <= 10 ? "text-orange-500" : "text-stone-700"}>
-                             {item.stock_quantity || 0}
-                           </span></>
-                         )}
-                       </span>
-                       {/* Price */}
-                       <span className="text-lg font-bold text-emerald-600">
-                         {formatCurrency((item.has_sizes ?? true) ? getItemPrice(item, getSelectedSize(item.id)) : parseInt(item.price))}
-                       </span>
+                      <span className="text-xs font-medium text-stone-500">
+                        {(item.has_sizes ?? true) && (
+                          <span className="text-emerald-600 mr-2">
+                            {getItemVolume(item, getSelectedSize(item.id))} {item.volume_unit || "ml"}
+                          </span>
+                        )}
+                        <span className="text-xs text-stone-500">
+                          Sto: <span className={item.stock_quantity && item.stock_quantity <= 10 ? "text-orange-500" : "text-stone-700"}>
+                            {item.stock_quantity !== undefined ? item.stock_quantity : 0}
+                          </span>
+                        </span>
+                      </span>
+                      {/* Price */}
+                      <span className="text-lg font-bold text-emerald-600">
+                        {formatCurrency((item.has_sizes ?? true) ? getItemPrice(item, getSelectedSize(item.id)) : parseInt(item.price))}
+                      </span>
                     </div>
-                    
+
                     {/* Size Selector */}
                     {(item.has_sizes ?? true) && (
                       <div className="mb-3 flex items-center justify-center gap-1" role="group" aria-label="Size selector">
@@ -735,11 +731,10 @@ function MenuContent() {
                               e.stopPropagation();
                               setSelectedSize(item.id, size);
                             }}
-                            className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-lg transition-all ${
-                              getSelectedSize(item.id) === size
-                                ? "bg-emerald-600 text-white shadow-sm"
-                                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                            }`}
+                            className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-lg transition-all ${getSelectedSize(item.id) === size
+                              ? "bg-emerald-600 text-white shadow-sm"
+                              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                              }`}
                             aria-pressed={getSelectedSize(item.id) === size}
                           >
                             {size === "small" ? "S" : size === "medium" ? "M" : "L"}
@@ -752,13 +747,16 @@ function MenuContent() {
                     <div className="mt-auto flex items-center gap-3">
                       <button
                         onClick={(e) => handleAddToCart(e, item)}
-                        className="flex flex-1 h-10 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white transition-colors hover:bg-emerald-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex flex-1 h-10 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white transition-colors hover:bg-emerald-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-stone-400"
                         disabled={!item.is_available || (item.stock_quantity !== undefined && item.stock_quantity <= 0)}
                       >
                         <span>
-                          {getCartCount(item.id) > 0
-                            ? `${getCartCount(item.id)} ${t("cart.items")}`
-                            : t("product.addToCart")}
+                          {item.stock_quantity !== undefined && item.stock_quantity <= 0
+                            ? "Stok Habis"
+                            : (getCartCount(item.id) > 0
+                              ? `${getCartCount(item.id)} ${t("cart.items")}`
+                              : t("product.addToCart"))
+                          }
                         </span>
                       </button>
                     </div>
@@ -776,7 +774,7 @@ function MenuContent() {
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               >
-                {t("common.previous", "Previous")}
+                {t("common.previous")}
               </Button>
               <span className="text-sm text-gray-600">
                 Page {currentPage} of {totalPages}
@@ -787,7 +785,7 @@ function MenuContent() {
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
               >
-                {t("common.next", "Next")}
+                {t("common.next")}
               </Button>
             </div>
           )}
@@ -837,7 +835,7 @@ function MenuContent() {
 
       {/* Add to Cart Modal */}
       {modalProduct && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
           role="dialog"
           aria-modal="true"
@@ -849,9 +847,9 @@ function MenuContent() {
                 <p className="text-sm font-medium text-emerald-600">{modalProduct.category_name}</p>
                 <h3 id="modal-title" className="text-xl font-bold text-gray-900">{modalProduct.name}</h3>
               </div>
-              <button 
-                onClick={() => setModalProduct(null)} 
-                aria-label={t("product.closeModal", "Close dialog")} 
+              <button
+                onClick={() => setModalProduct(null)}
+                aria-label={t("product.closeModal")}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
@@ -861,7 +859,7 @@ function MenuContent() {
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-semibold text-gray-800 mb-2">
-                  {t("product.selectSizeAndQuantity", "Choose size & quantity")}
+                  {t("product.selectSizeAndQuantity")}
                 </p>
                 {(["small", "medium", "large"] as const).map((size) => (
                   <div key={size} className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2 mb-2">
@@ -877,7 +875,7 @@ function MenuContent() {
                       <button
                         onClick={() => updateModalQty(size, -1)}
                         className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
-                        aria-label={t("menu.decreaseQuantity", "Decrease quantity")}
+                        aria-label={t("menu.decreaseQuantity")}
                       >
                         <span aria-hidden="true">-</span>
                       </button>
@@ -885,7 +883,7 @@ function MenuContent() {
                       <button
                         onClick={() => updateModalQty(size, 1)}
                         className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
-                        aria-label={t("menu.increaseQuantity", "Increase quantity")}
+                        aria-label={t("menu.increaseQuantity")}
                       >
                         <span aria-hidden="true">+</span>
                       </button>
@@ -896,18 +894,17 @@ function MenuContent() {
 
               <div>
                 <p className="text-sm font-semibold text-gray-800 mb-2">
-                  {t("product.sugarOptions", "Sugar preference")}
+                  {t("product.sugarOptions")}
                 </p>
-                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("product.sugarOptions", "Sugar preference")}>
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("product.sugarOptions")}>
                   {sugarOptions.map((opt) => (
                     <button
                       key={opt}
                       onClick={() => setModalSugar(opt)}
                       role="radio"
                       aria-checked={modalSugar === opt}
-                      className={`rounded-full border px-3 py-1 text-sm ${
-                        modalSugar === opt ? "border-emerald-500 text-emerald-700 bg-emerald-50" : "border-stone-200 text-stone-600"
-                      }`}
+                      className={`rounded-full border px-3 py-1 text-sm ${modalSugar === opt ? "border-emerald-500 text-emerald-700 bg-emerald-50" : "border-stone-200 text-stone-600"
+                        }`}
                     >
                       {opt}
                     </button>
@@ -917,15 +914,15 @@ function MenuContent() {
 
               <div className="flex items-center justify-between border-t border-stone-200 pt-4">
                 <div>
-                  <p className="text-sm text-gray-500">{t("common.total", "Total")}</p>
+                  <p className="text-sm text-gray-500">{t("common.total")}</p>
                   <p className="text-lg font-bold text-gray-900">{formatCurrency(modalTotal)}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Button variant="outline" onClick={() => setModalProduct(null)}>
-                    {t("common.cancel", "Cancel")}
+                    {t("common.cancel")}
                   </Button>
                   <Button onClick={handleModalConfirm} disabled={modalTotal <= 0} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                    {getCartCount(modalProduct.id) > 0 ? t("cart.updateCart", "Update Cart") : t("product.addToCart")}
+                    {getCartCount(modalProduct.id) > 0 ? t("cart.updateCart") : t("product.addToCart")}
                   </Button>
                 </div>
               </div>

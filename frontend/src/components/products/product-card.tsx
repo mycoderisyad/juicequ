@@ -93,12 +93,12 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
   const getPromoPrice = () => {
     if (!product.promo?.has_promo) return null;
     const originalPrice = getPrice();
-    
+
     // Use discounted_price from backend if available (for medium size)
     if (selectedSize === "medium" && product.promo.discounted_price) {
       return product.promo.discounted_price;
     }
-    
+
     // Calculate for other sizes
     if (product.promo.promo_type === "percentage" && product.promo.discount_value) {
       return Math.round(originalPrice * (1 - product.promo.discount_value / 100));
@@ -156,7 +156,7 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (onAddToCart) {
       onAddToCart(product, quantity, selectedSize);
     } else {
@@ -173,7 +173,7 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
         quantity: quantity,
       });
     }
-    
+
     // Reset quantity after adding
     setQuantity(1);
   };
@@ -192,7 +192,7 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
 
   const imageColor = product.image_color || "bg-gray-200";
   const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
-  
+
   // Check if productImage is a color class (bg-*) rather than actual image
   const isColorClass = productImage?.startsWith('bg-') || false;
   const hasValidImage = productImage && !isColorClass && !imageError;
@@ -228,7 +228,7 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
               )}
               aria-hidden="true"
             />
-            
+
             {/* Product visual placeholder */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div
@@ -286,15 +286,15 @@ export function ProductCard({ product, className, onAddToCart }: ProductCardProp
         )}
 
         {/* Low stock badge */}
-        {product.is_available && product.stock_quantity !== undefined && 
-         product.stock_quantity > 0 && product.stock_quantity <= 10 && (
-          <Badge
-            variant="destructive"
-            className="absolute left-3 bottom-3"
-          >
-            Stok Terbatas
-          </Badge>
-        )}
+        {product.is_available && product.stock_quantity !== undefined &&
+          product.stock_quantity > 0 && product.stock_quantity <= 10 && (
+            <Badge
+              variant="destructive"
+              className="absolute left-3 bottom-3"
+            >
+              Sisa: {product.stock_quantity}
+            </Badge>
+          )}
 
         {/* Out of stock overlay */}
         {!product.is_available && (
