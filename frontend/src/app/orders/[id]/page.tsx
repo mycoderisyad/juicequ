@@ -8,12 +8,12 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  ArrowLeft, 
-  Package, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  ArrowLeft,
+  Package,
+  Clock,
+  CheckCircle,
+  XCircle,
   ChefHat,
   Banknote,
   Smartphone,
@@ -186,9 +186,8 @@ export default function OrderDetailPage() {
             aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
           >
             <Star
-              className={`h-5 w-5 transition-colors ${
-                value <= current ? "text-amber-500" : "text-gray-300 group-hover:text-amber-400"
-              }`}
+              className={`h-5 w-5 transition-colors ${value <= current ? "text-amber-500" : "text-gray-300 group-hover:text-amber-400"
+                }`}
               fill={value <= current ? "#f59e0b" : "none"}
             />
           </button>
@@ -249,7 +248,7 @@ export default function OrderDetailPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
-      
+
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
           <Link
@@ -294,7 +293,7 @@ export default function OrderDetailPage() {
                     const ratingKey = getRatingKey(item.product_id);
                     const userRating = ratings[ratingKey]?.rating || 0;
                     const userReview = ratings[ratingKey]?.review || "";
-                    
+
                     return (
                       <div key={item.id || index} className="space-y-3 py-4 border-b border-gray-100 last:border-0">
                         <div className="flex items-center justify-between">
@@ -319,48 +318,17 @@ export default function OrderDetailPage() {
                         </div>
                         {order.status === "completed" && (
                           <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
-                            <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center justify-between gap-3">
                               <div>
-                                <p className="text-sm font-semibold text-gray-900">Beri rating & ulasan</p>
-                                <p className="text-xs text-gray-500">Review akan tampil di AI Fotobooth & detail produk.</p>
+                                <p className="text-sm font-semibold text-gray-900">Review Product & AI Photobooth</p>
+                                <p className="text-xs text-gray-500">Share your experience and try our AI features!</p>
                               </div>
-                              {saveMessage && (
-                                <span className="text-xs text-emerald-600">{saveMessage}</span>
-                              )}
+                              <Link href={`/products/${item.product_id}#reviews`}>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                                  Write Review
+                                </Button>
+                              </Link>
                             </div>
-                            
-                            <div className="mt-3 flex items-center gap-2">
-                              {renderStars(item.product_id)}
-                              <span className="text-xs text-gray-500">{userRating ? `${userRating}/5` : "Belum dipilih"}</span>
-                            </div>
-                            
-                            <div className="mt-3">
-                              <textarea
-                                className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 focus:border-emerald-500 focus:ring-emerald-500"
-                                placeholder="Tulis pengalamanmu setelah beli produk ini..."
-                                value={userReview}
-                                onChange={(e) => handleReviewChange(item.product_id, e.target.value)}
-                                rows={3}
-                              />
-                              <p className="text-[11px] text-gray-500 mt-1">
-                                Disimpan di perangkat ini. Akan disinkronkan ke profil saat fitur review aktif.
-                              </p>
-                            </div>
-
-                          <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-3">
-                            <div className="flex items-center justify-between gap-2">
-                              <div>
-                                <p className="text-sm font-semibold text-gray-900">AI Fotobooth (Coming Soon)</p>
-                                <p className="text-xs text-gray-600">Tambahkan momen foto AI untuk ulasan produkmu.</p>
-                              </div>
-                              <Button variant="outline" size="sm" className="text-emerald-700 border-emerald-200" disabled>
-                                Coming Soon
-                              </Button>
-                            </div>
-                            <p className="mt-2 text-[11px] text-gray-600">
-                              Saat fitur aktif, kamu bisa upload selfie dan AI akan membuat foto bersama produk ini. Hasilnya akan muncul di ulasan produk.
-                            </p>
-                          </div>
                           </div>
                         )}
                       </div>
@@ -388,7 +356,7 @@ export default function OrderDetailPage() {
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
                     Payment Summary
                   </h2>
-                  
+
                   {order.payment_method && (
                     <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
                       {paymentIcons[order.payment_method] || <CreditCard className="h-5 w-5 text-gray-700" />}

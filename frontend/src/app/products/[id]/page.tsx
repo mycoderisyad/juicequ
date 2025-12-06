@@ -14,6 +14,7 @@ import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
+import { ReviewSection } from "@/components/products/ReviewSection";
 
 type SizeType = "small" | "medium" | "large";
 
@@ -94,18 +95,18 @@ export default function ProductPage() {
   const [modalSugar, setModalSugar] = useState<string>("Normal");
   const [showCartDrawer, setShowCartDrawer] = useState(false);
   const sugarOptions = [
-    t("product.sugar.normal", "Normal"),
-    t("product.sugar.less", "Less sugar"),
-    t("product.sugar.none", "No sugar"),
-    t("product.sugar.extra", "Extra sweet"),
+    t("product.sugar.normal"),
+    t("product.sugar.less"),
+    t("product.sugar.none"),
+    t("product.sugar.extra"),
   ];
-  
+
   const idParam = params?.id;
   const idString = Array.isArray(idParam) ? idParam[0] : idParam;
 
   // Helper functions for size-based pricing
   const hasSizes = product?.has_sizes ?? true;
-  
+
   const getPrice = useCallback((size: SizeType): number => {
     if (!product) return 0;
     if (product.prices && product.prices[size]) {
@@ -152,11 +153,11 @@ export default function ProductPage() {
 
   const fetchProduct = useCallback(async () => {
     if (!idString) return;
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response = await productsApi.getById(idString);
       setProduct(transformProduct(response));
     } catch (err) {
@@ -291,7 +292,7 @@ export default function ProductPage() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
-      
+
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
           {/* Error Banner */}
@@ -307,7 +308,7 @@ export default function ProductPage() {
               </button>
             </div>
           )}
-          
+
           <Link href="/menu" className="mb-8 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Menu
@@ -349,6 +350,12 @@ export default function ProductPage() {
                     </span>
                   )}
                 </div>
+              </div>
+
+              <div className="mb-4 font-medium text-gray-500">
+                Stok: <span className={product.stock_quantity && product.stock_quantity <= 10 ? "text-orange-500" : "text-gray-900"}>
+                  {product.stock_quantity !== undefined ? product.stock_quantity : 0}
+                </span>
               </div>
 
               <p className="mb-8 text-lg leading-relaxed text-gray-600">
@@ -415,165 +422,180 @@ export default function ProductPage() {
                 <Button
                   onClick={openModal}
                   disabled={!product.is_available || (product.stock_quantity !== undefined && product.stock_quantity <= 0)}
-                  className="h-12 flex-1 rounded-full bg-emerald-600 text-lg font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="h-12 flex-1 rounded-full bg-emerald-600 text-lg font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-stone-400"
                 >
-                  {cartCount > 0 ? `${cartCount} ${t("cart.items")}` : t("product.addToCart")}
+                  {product.stock_quantity !== undefined && product.stock_quantity <= 0
+                    ? "Stok Habis"
+                    : (cartCount > 0 ? `${cartCount} ${t("cart.items")}` : t("product.addToCart"))
+                  }
                 </Button>
               </div>
 
             </div>
           </div>
         </div>
-      </main>
+
+
+        {
+          product && (
+            <div id="reviews" className="container mx-auto px-4 mt-8 scroll-mt-24">
+              <ReviewSection productId={product.id} productName={product.name} />
+            </div>
+          )
+        }
+      </main >
 
       {/* Mini Cart Drawer (show only when items exist) */}
-      {cartItems.length > 0 && (
-        <div className={`fixed left-0 right-0 bottom-0 z-40 transition-all duration-300 ${showCartDrawer ? "h-64" : "h-14"}`}>
-          <div className="mx-auto max-w-5xl rounded-t-2xl border border-stone-200 bg-white shadow-lg">
-            <div className="flex items-center justify-between px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold text-gray-900">
-                  {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
-                </p>
-                <p className="text-xs text-gray-500">Total: {format(drawerTotal)}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setShowCartDrawer((v) => !v)}>
-                  {showCartDrawer ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                </Button>
-                <Link href="/cart">
-                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                    Checkout
+      {
+        cartItems.length > 0 && (
+          <div className={`fixed left-0 right-0 bottom-0 z-40 transition-all duration-300 ${showCartDrawer ? "h-64" : "h-14"}`}>
+            <div className="mx-auto max-w-5xl rounded-t-2xl border border-stone-200 bg-white shadow-lg">
+              <div className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
+                  </p>
+                  <p className="text-xs text-gray-500">Total: {format(drawerTotal)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setShowCartDrawer((v) => !v)}>
+                    {showCartDrawer ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   </Button>
-                </Link>
+                  <Link href="/cart">
+                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                      Checkout
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            </div>
-            {showCartDrawer && (
-              <div className="max-h-44 overflow-y-auto border-t border-stone-100 px-4 py-3 space-y-2">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between text-sm">
-                    <div>
-                      <p className="font-semibold text-gray-900">{item.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {item.quantity} x {format(item.price)} {item.notes ? `· ${item.notes}` : ""}
-                      </p>
+              {showCartDrawer && (
+                <div className="max-h-44 overflow-y-auto border-t border-stone-100 px-4 py-3 space-y-2">
+                  {cartItems.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between text-sm">
+                      <div>
+                        <p className="font-semibold text-gray-900">{item.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {item.quantity} x {format(item.price)} {item.notes ? `· ${item.notes}` : ""}
+                        </p>
+                      </div>
+                      <span className="font-semibold text-gray-900">{format(item.price * item.quantity)}</span>
                     </div>
-                    <span className="font-semibold text-gray-900">{format(item.price * item.quantity)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Add to Cart Modal */}
-      {modalOpen && product && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="product-modal-title"
-        >
-          <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm font-medium text-emerald-600">{product.category}</p>
-                <h3 id="product-modal-title" className="text-xl font-bold text-gray-900">{product.name}</h3>
-              </div>
-              <button 
-                onClick={() => setModalOpen(false)} 
-                aria-label={t("product.closeModal", "Close dialog")} 
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-800 mb-2">
-                  {t("product.selectSizeAndQuantity", "Choose size & quantity")}
-                </p>
-                {(["small", "medium", "large"] as const).map((size) => (
-                  <div key={size} className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2 mb-2">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {size === "small" ? "Small (S)" : size === "medium" ? "Medium (M)" : "Large (L)"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {getVolume(size)} {volumeUnit} · {format(getPrice(size))}{" "}
-                        {getCalories(size) !== undefined && `· ${getCalories(size)} cal`}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateModalQty(size, -1)}
-                        className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
-                        aria-label={t("menu.decreaseQuantity", "Decrease quantity")}
-                      >
-                        <span aria-hidden="true">-</span>
-                      </button>
-                      <span className="w-6 text-center font-semibold text-gray-900" aria-live="polite">{modalQuantities[size]}</span>
-                      <button
-                        onClick={() => updateModalQty(size, 1)}
-                        className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
-                        aria-label={t("menu.increaseQuantity", "Increase quantity")}
-                      >
-                        <span aria-hidden="true">+</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-gray-800 mb-2">
-                  {t("product.sugarOptions", "Sugar preference")}
-                </p>
-                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("product.sugarOptions", "Sugar preference")}>
-                  {sugarOptions.map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => setModalSugar(opt)}
-                      role="radio"
-                      aria-checked={modalSugar === opt}
-                      className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                        modalSugar === opt
-                          ? "border-emerald-500 text-emerald-700 bg-emerald-50"
-                          : "border-stone-200 text-stone-600 hover:border-stone-300"
-                      }`}
-                    >
-                      {opt}
-                    </button>
                   ))}
                 </div>
+              )}
+            </div>
+          </div>
+        )
+      }
+
+      {/* Add to Cart Modal */}
+      {
+        modalOpen && product && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="product-modal-title"
+          >
+            <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="text-sm font-medium text-emerald-600">{product.category}</p>
+                  <h3 id="product-modal-title" className="text-xl font-bold text-gray-900">{product.name}</h3>
+                </div>
+                <button
+                  onClick={() => setModalOpen(false)}
+                  aria-label={t("product.closeModal")}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
               </div>
 
-              <div className="flex items-center justify-between rounded-lg bg-stone-50 px-4 py-3">
+              <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-gray-500">{t("common.total", "Total")}</p>
-                  <p className="text-xl font-bold text-gray-900">{format(modalTotal)}</p>
+                  <p className="text-sm font-semibold text-gray-800 mb-2">
+                    {t("product.selectSizeAndQuantity")}
+                  </p>
+                  {(["small", "medium", "large"] as const).map((size) => (
+                    <div key={size} className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2 mb-2">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {size === "small" ? "Small (S)" : size === "medium" ? "Medium (M)" : "Large (L)"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {getVolume(size)} {volumeUnit} · {format(getPrice(size))}{" "}
+                          {getCalories(size) !== undefined && `· ${getCalories(size)} cal`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateModalQty(size, -1)}
+                          className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
+                          aria-label={t("menu.decreaseQuantity")}
+                        >
+                          <span aria-hidden="true">-</span>
+                        </button>
+                        <span className="w-6 text-center font-semibold text-gray-900" aria-live="polite">{modalQuantities[size]}</span>
+                        <button
+                          onClick={() => updateModalQty(size, 1)}
+                          className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
+                          aria-label={t("menu.increaseQuantity")}
+                        >
+                          <span aria-hidden="true">+</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setModalOpen(false)}>
-                    {t("common.cancel", "Cancel")}
-                  </Button>
-                  <Button
-                    onClick={handleModalConfirm}
-                    disabled={modalTotal <= 0}
-                    className="bg-emerald-600 text-white hover:bg-emerald-700"
-                  >
-                    {cartCount > 0 ? t("cart.updateCart", "Update Cart") : t("product.addToCart")}
-                  </Button>
+
+                <div>
+                  <p className="text-sm font-semibold text-gray-800 mb-2">
+                    {t("product.sugarOptions")}
+                  </p>
+                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("product.sugarOptions")}>
+                    {sugarOptions.map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => setModalSugar(opt)}
+                        role="radio"
+                        aria-checked={modalSugar === opt}
+                        className={`rounded-full border px-3 py-1 text-sm transition-colors ${modalSugar === opt
+                          ? "border-emerald-500 text-emerald-700 bg-emerald-50"
+                          : "border-stone-200 text-stone-600 hover:border-stone-300"
+                          }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg bg-stone-50 px-4 py-3">
+                  <div>
+                    <p className="text-xs text-gray-500">{t("common.total")}</p>
+                    <p className="text-xl font-bold text-gray-900">{format(modalTotal)}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setModalOpen(false)}>
+                      {t("common.cancel")}
+                    </Button>
+                    <Button
+                      onClick={handleModalConfirm}
+                      disabled={modalTotal <= 0}
+                      className="bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      {cartCount > 0 ? t("cart.updateCart") : t("product.addToCart")}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <Footer />
-    </div>
+    </div >
   );
 }

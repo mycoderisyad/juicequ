@@ -49,20 +49,32 @@ function useIsMounted() {
   );
 }
 
-function getInitialLocale(): Locale {
-  if (typeof window === 'undefined') return defaultLocale;
+function getStoredLocale(): Locale | null {
+  if (typeof window === 'undefined') return null;
   const savedLocale = localStorage.getItem('juicequ-locale') as Locale | null;
-  return savedLocale && locales[savedLocale] ? savedLocale : defaultLocale;
+  return savedLocale && locales[savedLocale] ? savedLocale : null;
 }
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
+export function I18nProvider({ children, initialLocale }: { children: React.ReactNode; initialLocale?: Locale }) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale || defaultLocale);
   const mounted = useIsMounted();
+
+  // Align with stored preference after hydration to avoid SSR mismatch
+  React.useEffect(() => {
+    const stored = getStoredLocale();
+    if (stored && stored !== locale) {
+      setLocaleState(stored);
+      document.cookie = `juicequ-locale=${stored}; path=/; max-age=${60 * 60 * 24 * 365}`;
+      document.documentElement.lang = stored;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
     localStorage.setItem('juicequ-locale', newLocale);
     document.documentElement.lang = newLocale;
+    document.cookie = `juicequ-locale=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}`;
   }, []);
 
   const t = useCallback((key: TranslationKey, params?: Record<string, string | number>): string => {
@@ -80,7 +92,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   if (!mounted) {
     return (
-      <I18nContext.Provider value={{ locale: defaultLocale, setLocale, t }}>
+      <I18nContext.Provider value={{ locale: initialLocale || defaultLocale, setLocale, t }}>
         {children}
       </I18nContext.Provider>
     );
