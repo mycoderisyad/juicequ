@@ -88,7 +88,7 @@ export default function CartPage() {
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
       
-      <main className="flex-1 py-10">
+      <main id="main-content" className="flex-1 py-10">
         <div className="container mx-auto px-4">
           <h1 className="mb-8 text-3xl font-bold text-gray-900">{t("cart.title")}</h1>
 

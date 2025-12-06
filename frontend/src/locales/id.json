@@ -29,7 +29,12 @@
     "allRightsReserved": "Hak cipta dilindungi",
     "secureCheckout": "Checkout Aman oleh JuiceQu",
     "secureEncrypted": "Aman & Terenkripsi",
-    "sslSecurity": "Keamanan SSL 256-bit"
+    "sslSecurity": "Keamanan SSL 256-bit",
+    "total": "Total",
+    "quantity": "Jumlah",
+    "price": "Harga",
+    "skipToMainContent": "Langsung ke konten utama",
+    "skipToNavigation": "Langsung ke navigasi"
   },
   "nav": {
     "home": "Beranda",
@@ -185,7 +190,20 @@
     "decreaseQuantity": "Kurangi jumlah",
     "increaseQuantity": "Tambah jumlah",
     "quantityFor": "Jumlah untuk",
-    "addToCartFor": "Tambah ke keranjang"
+    "addToCartFor": "Tambah ke keranjang",
+    "filter": {
+      "price": "Harga",
+      "sortBy": "Urutkan",
+      "sortDefault": "Default",
+      "sortPriceLowHigh": "Harga: Rendah ke Tinggi",
+      "sortPriceHighLow": "Harga: Tinggi ke Rendah",
+      "priceRange": "Rentang Harga",
+      "reset": "Reset",
+      "apply": "Terapkan",
+      "clearFilters": "Hapus Filter",
+      "productsFound": "produk ditemukan",
+      "retry": "Coba Lagi"
+    }
   },
   "product": {
     "addToCart": "Tambah ke Keranjang",
@@ -197,7 +215,20 @@
     "reviews": "Ulasan",
     "relatedProducts": "Produk Terkait",
     "outOfStock": "Stok Habis",
-    "inStock": "Tersedia"
+    "inStock": "Tersedia",
+    "selectSizeAndQuantity": "Pilih ukuran & jumlah",
+    "sugarOptions": "Pilihan gula",
+    "sugar": {
+      "normal": "Normal",
+      "less": "Kurang gula",
+      "none": "Tanpa gula",
+      "extra": "Ekstra manis"
+    },
+    "sizeSmall": "Kecil (S)",
+    "sizeMedium": "Sedang (M)",
+    "sizeLarge": "Besar (L)",
+    "closeModal": "Tutup dialog",
+    "productImage": "Gambar produk"
   },
   "cart": {
     "title": "Keranjang Belanja",
@@ -227,7 +258,11 @@
       "apply": "Terapkan"
     },
     "checkout": "Checkout",
-    "secureCheckout": "Checkout Aman oleh JuiceQu"
+    "secureCheckout": "Checkout Aman oleh JuiceQu",
+    "items": "item",
+    "updateCart": "Perbarui Keranjang",
+    "viewCart": "Lihat keranjang",
+    "removeItem": "Hapus item dari keranjang"
   },
   "checkout": {
     "title": "Pembayaran",
@@ -477,6 +512,23 @@
       "title": "Koneksi Bermasalah",
       "description": "Periksa koneksi internet Anda",
       "cta": "Muat Ulang"
+    }
+  },
+  "voice": {
+    "listening": "Mendengarkan...",
+    "processing": "Memproses...",
+    "tapToSpeak": "Ketuk untuk berbicara",
+    "holdToSpeak": "Tahan untuk berbicara",
+    "speakNow": "Bicara sekarang...",
+    "orderConfirmed": "Pesanan dikonfirmasi!",
+    "addedToCart": "Ditambahkan ke keranjang",
+    "tryAgain": "Coba lagi",
+    "examples": {
+      "title": "Contoh perintah:",
+      "order": "Saya mau pesan Berry Blast dua",
+      "recommend": "Yang enak apa?",
+      "cart": "Lihat keranjang",
+      "checkout": "Checkout sekarang"
     }
   },
   "admin": {

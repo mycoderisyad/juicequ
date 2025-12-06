@@ -271,6 +271,22 @@ export const adminProductsApi = {
   },
 
   /**
+   * Batch delete products.
+   */
+  batchDelete: async (productIds: string[]): Promise<{
+    message: string;
+    deleted_count: number;
+    deleted_names: string[];
+    failed_ids: string[];
+    success: boolean;
+  }> => {
+    const response = await apiClient.post("/admin/products/batch-delete", {
+      product_ids: productIds,
+    });
+    return response.data;
+  },
+
+  /**
    * Update stock.
    */
   updateStock: async (

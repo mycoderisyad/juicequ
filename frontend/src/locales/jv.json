@@ -29,7 +29,12 @@
     "allRightsReserved": "Hak cipta dilindungi",
     "secureCheckout": "Checkout Aman dening JuiceQu",
     "secureEncrypted": "Aman & Terenkripsi",
-    "sslSecurity": "Keamanan SSL 256-bit"
+    "sslSecurity": "Keamanan SSL 256-bit",
+    "total": "Total",
+    "quantity": "Jumlah",
+    "price": "Rega",
+    "skipToMainContent": "Langsung menyang konten utama",
+    "skipToNavigation": "Langsung menyang navigasi"
   },
   "nav": {
     "home": "Beranda",
@@ -185,7 +190,20 @@
     "decreaseQuantity": "Kurangi jumlah",
     "increaseQuantity": "Tambah jumlah",
     "quantityFor": "Jumlah kanggo",
-    "addToCartFor": "Tambah menyang keranjang"
+    "addToCartFor": "Tambah menyang keranjang",
+    "filter": {
+      "price": "Rega",
+      "sortBy": "Urutake",
+      "sortDefault": "Default",
+      "sortPriceLowHigh": "Rega: Murah menyang Larang",
+      "sortPriceHighLow": "Rega: Larang menyang Murah",
+      "priceRange": "Rentang Rega",
+      "reset": "Reset",
+      "apply": "Terapake",
+      "clearFilters": "Busak Filter",
+      "productsFound": "produk ditemokake",
+      "retry": "Coba Maneh"
+    }
   },
   "product": {
     "addToCart": "Tambah menyang Keranjang",
@@ -197,7 +215,20 @@
     "reviews": "Ulasan",
     "relatedProducts": "Produk Liyane",
     "outOfStock": "Stok Entek",
-    "inStock": "Ana Stok"
+    "inStock": "Ana Stok",
+    "selectSizeAndQuantity": "Pilih ukuran & jumlah",
+    "sugarOptions": "Pilihan gula",
+    "sugar": {
+      "normal": "Normal",
+      "less": "Kurang gula",
+      "none": "Tanpa gula",
+      "extra": "Ekstra legi"
+    },
+    "sizeSmall": "Cilik (S)",
+    "sizeMedium": "Sedang (M)",
+    "sizeLarge": "Gedhe (L)",
+    "closeModal": "Tutup dialog",
+    "productImage": "Gambar produk"
   },
   "cart": {
     "title": "Keranjang Belanja",
@@ -227,7 +258,11 @@
       "apply": "Terapake"
     },
     "checkout": "Checkout",
-    "secureCheckout": "Checkout Aman dening JuiceQu"
+    "secureCheckout": "Checkout Aman dening JuiceQu",
+    "items": "barang",
+    "updateCart": "Perbarui Keranjang",
+    "viewCart": "Deleng keranjang",
+    "removeItem": "Busak barang saka keranjang"
   },
   "checkout": {
     "title": "Pembayaran",
