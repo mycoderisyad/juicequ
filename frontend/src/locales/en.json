@@ -29,7 +29,12 @@
     "allRightsReserved": "All rights reserved",
     "secureCheckout": "Secure Checkout powered by JuiceQu",
     "secureEncrypted": "Secure & Encrypted",
-    "sslSecurity": "256-bit SSL Security"
+    "sslSecurity": "256-bit SSL Security",
+    "total": "Total",
+    "quantity": "Quantity",
+    "price": "Price",
+    "skipToMainContent": "Skip to main content",
+    "skipToNavigation": "Skip to navigation"
   },
   "nav": {
     "home": "Home",
@@ -185,7 +190,20 @@
     "decreaseQuantity": "Decrease quantity",
     "increaseQuantity": "Increase quantity",
     "quantityFor": "Quantity for",
-    "addToCartFor": "Add to cart"
+    "addToCartFor": "Add to cart",
+    "filter": {
+      "price": "Price",
+      "sortBy": "Sort by",
+      "sortDefault": "Default",
+      "sortPriceLowHigh": "Price: Low to High",
+      "sortPriceHighLow": "Price: High to Low",
+      "priceRange": "Price Range",
+      "reset": "Reset",
+      "apply": "Apply",
+      "clearFilters": "Clear Filters",
+      "productsFound": "products found",
+      "retry": "Retry"
+    }
   },
   "product": {
     "addToCart": "Add to Cart",
@@ -197,7 +215,20 @@
     "reviews": "Reviews",
     "relatedProducts": "Related Products",
     "outOfStock": "Out of Stock",
-    "inStock": "In Stock"
+    "inStock": "In Stock",
+    "selectSizeAndQuantity": "Choose size & quantity",
+    "sugarOptions": "Sugar preference",
+    "sugar": {
+      "normal": "Normal",
+      "less": "Less sugar",
+      "none": "No sugar",
+      "extra": "Extra sweet"
+    },
+    "sizeSmall": "Small (S)",
+    "sizeMedium": "Medium (M)",
+    "sizeLarge": "Large (L)",
+    "closeModal": "Close dialog",
+    "productImage": "Product image"
   },
   "cart": {
     "title": "Shopping Cart",
@@ -227,7 +258,11 @@
       "apply": "Apply"
     },
     "checkout": "Checkout",
-    "secureCheckout": "Secure Checkout powered by JuiceQu"
+    "secureCheckout": "Secure Checkout powered by JuiceQu",
+    "items": "items",
+    "updateCart": "Update Cart",
+    "viewCart": "View cart",
+    "removeItem": "Remove item from cart"
   },
   "checkout": {
     "title": "Checkout",
@@ -477,6 +512,23 @@
       "title": "Connection Problem",
       "description": "Please check your internet connection",
       "cta": "Reload"
+    }
+  },
+  "voice": {
+    "listening": "Listening...",
+    "processing": "Processing...",
+    "tapToSpeak": "Tap to speak",
+    "holdToSpeak": "Hold to speak",
+    "speakNow": "Speak now...",
+    "orderConfirmed": "Order confirmed!",
+    "addedToCart": "Added to cart",
+    "tryAgain": "Try again",
+    "examples": {
+      "title": "Example commands:",
+      "order": "I want to order two Berry Blast",
+      "recommend": "What's good?",
+      "cart": "View cart",
+      "checkout": "Checkout now"
     }
   },
   "admin": {

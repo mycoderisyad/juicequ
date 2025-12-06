@@ -75,7 +75,7 @@ export default function AboutPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-b from-green-50 to-white py-20 lg:py-28">
           <div className="container mx-auto px-4">

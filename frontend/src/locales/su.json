@@ -29,7 +29,12 @@
     "allRightsReserved": "Hak cipta dilindungi",
     "secureCheckout": "Checkout Aman ku JuiceQu",
     "secureEncrypted": "Aman & Terenkripsi",
-    "sslSecurity": "Kaamanan SSL 256-bit"
+    "sslSecurity": "Kaamanan SSL 256-bit",
+    "total": "Total",
+    "quantity": "Jumlah",
+    "price": "Harga",
+    "skipToMainContent": "Langsung ka konten utama",
+    "skipToNavigation": "Langsung ka navigasi"
   },
   "nav": {
     "home": "Beranda",
@@ -185,7 +190,20 @@
     "decreaseQuantity": "Kurangkeun jumlah",
     "increaseQuantity": "Tambihkeun jumlah",
     "quantityFor": "Jumlah pikeun",
-    "addToCartFor": "Tambih ka karanjang"
+    "addToCartFor": "Tambih ka karanjang",
+    "filter": {
+      "price": "Harga",
+      "sortBy": "Urutkeun",
+      "sortDefault": "Default",
+      "sortPriceLowHigh": "Harga: Handap ka Luhur",
+      "sortPriceHighLow": "Harga: Luhur ka Handap",
+      "priceRange": "Rentang Harga",
+      "reset": "Reset",
+      "apply": "Terapkeun",
+      "clearFilters": "Hapus Filter",
+      "productsFound": "produk kapendak",
+      "retry": "Cobian Deui"
+    }
   },
   "product": {
     "addToCart": "Tambih ka Karanjang",
@@ -197,7 +215,20 @@
     "reviews": "Ulasan",
     "relatedProducts": "Produk Séjénna",
     "outOfStock": "Stok Seep",
-    "inStock": "Aya Stok"
+    "inStock": "Aya Stok",
+    "selectSizeAndQuantity": "Pilih ukuran & jumlah",
+    "sugarOptions": "Pilihan gula",
+    "sugar": {
+      "normal": "Normal",
+      "less": "Kirang gula",
+      "none": "Tanpa gula",
+      "extra": "Ekstra amis"
+    },
+    "sizeSmall": "Alit (S)",
+    "sizeMedium": "Sedeng (M)",
+    "sizeLarge": "Ageung (L)",
+    "closeModal": "Tutup dialog",
+    "productImage": "Gambar produk"
   },
   "cart": {
     "title": "Karanjang Balanja",
@@ -227,7 +258,11 @@
       "apply": "Terapkeun"
     },
     "checkout": "Checkout",
-    "secureCheckout": "Checkout Aman ku JuiceQu"
+    "secureCheckout": "Checkout Aman ku JuiceQu",
+    "items": "barang",
+    "updateCart": "Perbarui Karanjang",
+    "viewCart": "Tingali karanjang",
+    "removeItem": "Hapus barang ti karanjang"
   },
   "checkout": {
     "title": "Pembayaran",

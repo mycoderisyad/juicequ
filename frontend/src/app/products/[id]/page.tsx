@@ -138,6 +138,12 @@ export default function ProductPage() {
     return defaultVolumes[size];
   }, [product]);
 
+  const getCartCount = useCallback(
+    (productId: string) =>
+      cartItems.filter((i) => i.productId === productId).reduce((acc, item) => acc + item.quantity, 0),
+    [cartItems]
+  );
+
   const displayPrice = getPrice(selectedSize);
   const displayVolume = getVolume(selectedSize);
   const displayCalories = getCalories(selectedSize);
@@ -164,12 +170,6 @@ export default function ProductPage() {
   useEffect(() => {
     fetchProduct();
   }, [fetchProduct]);
-
-  const getCartCount = useCallback(
-    (productId: string) =>
-      cartItems.filter((i) => i.productId === productId).reduce((acc, item) => acc + item.quantity, 0),
-    [cartItems]
-  );
 
   const getCartQuantitiesBySize = useCallback(
     (productId: string) => {
@@ -469,15 +469,24 @@ export default function ProductPage() {
 
       {/* Add to Cart Modal */}
       {modalOpen && product && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="product-modal-title"
+        >
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="text-sm font-medium text-emerald-600">{product.category}</p>
-                <h3 className="text-xl font-bold text-gray-900">{product.name}</h3>
+                <h3 id="product-modal-title" className="text-xl font-bold text-gray-900">{product.name}</h3>
               </div>
-              <button onClick={() => setModalOpen(false)} aria-label="Close" className="text-gray-400 hover:text-gray-600">
-                <X className="h-5 w-5" />
+              <button 
+                onClick={() => setModalOpen(false)} 
+                aria-label={t("product.closeModal", "Close dialog")} 
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -501,17 +510,17 @@ export default function ProductPage() {
                       <button
                         onClick={() => updateModalQty(size, -1)}
                         className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
-                        aria-label={`Decrease ${size} quantity`}
+                        aria-label={t("menu.decreaseQuantity", "Decrease quantity")}
                       >
-                        -
+                        <span aria-hidden="true">-</span>
                       </button>
-                      <span className="w-6 text-center font-semibold text-gray-900">{modalQuantities[size]}</span>
+                      <span className="w-6 text-center font-semibold text-gray-900" aria-live="polite">{modalQuantities[size]}</span>
                       <button
                         onClick={() => updateModalQty(size, 1)}
                         className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
-                        aria-label={`Increase ${size} quantity`}
+                        aria-label={t("menu.increaseQuantity", "Increase quantity")}
                       >
-                        +
+                        <span aria-hidden="true">+</span>
                       </button>
                     </div>
                   </div>
@@ -522,11 +531,13 @@ export default function ProductPage() {
                 <p className="text-sm font-semibold text-gray-800 mb-2">
                   {t("product.sugarOptions", "Sugar preference")}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("product.sugarOptions", "Sugar preference")}>
                   {sugarOptions.map((opt) => (
                     <button
                       key={opt}
                       onClick={() => setModalSugar(opt)}
+                      role="radio"
+                      aria-checked={modalSugar === opt}
                       className={`rounded-full border px-3 py-1 text-sm transition-colors ${
                         modalSugar === opt
                           ? "border-emerald-500 text-emerald-700 bg-emerald-50"

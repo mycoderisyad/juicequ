@@ -239,9 +239,20 @@ export function ImportExportModal({ isOpen, onClose, onImportSuccess }: ImportEx
             <div className="space-y-4">
               {!importResult ? (
                 <>
-                  <p className="text-stone-500 text-sm mb-4">
+                  <p className="text-stone-500 text-sm mb-2">
                     Impor produk dari file CSV atau Excel. Produk dengan nama yang sama akan diperbarui.
                   </p>
+                  
+                  {/* Import Tips */}
+                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-100 text-sm">
+                    <p className="font-medium text-blue-800 mb-1">💡 Tips Import Fleksibel:</p>
+                    <ul className="text-blue-700 text-xs space-y-0.5 list-disc list-inside">
+                      <li>Header case-insensitive: &quot;Name&quot;, &quot;NAME&quot;, &quot;name&quot; semua valid</li>
+                      <li>Support nama kolom Indonesia: Nama, Harga, Kategori, Stok</li>
+                      <li>Hanya wajib: name, price, category_id</li>
+                      <li>Kolom lain opsional (akan pakai default)</li>
+                    </ul>
+                  </div>
 
                   {/* Download Template */}
                   <button
@@ -250,7 +261,7 @@ export function ImportExportModal({ isOpen, onClose, onImportSuccess }: ImportEx
                     className="w-full flex items-center gap-3 p-3 rounded-xl bg-stone-100 hover:bg-stone-200 transition-colors text-sm"
                   >
                     <FileDown size={18} className="text-stone-600" />
-                    <span className="text-stone-700 font-medium">Download Template CSV</span>
+                    <span className="text-stone-700 font-medium">Download Template CSV (dengan petunjuk)</span>
                   </button>
 
                   {/* File Upload Area */}

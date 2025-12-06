@@ -476,6 +476,51 @@ async def delete_product(
     }
 
 
+class BatchDeleteRequest(BaseModel):
+    """Request to batch delete products."""
+    product_ids: list[str] = Field(..., min_length=1, description="List of product IDs to delete")
+
+
+@router.post(
+    "/batch-delete",
+    summary="Batch delete products",
+    description="Delete multiple products at once (soft delete).",
+)
+async def batch_delete_products(
+    request: BatchDeleteRequest,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+):
+    """Batch delete products (soft delete to preserve order history)."""
+    deleted_count = 0
+    deleted_names = []
+    failed_ids = []
+    
+    for product_id in request.product_ids:
+        product = db.query(Product).filter(
+            Product.id == product_id,
+            Product.is_deleted == False
+        ).first()
+        
+        if product:
+            product.is_deleted = True
+            product.is_available = False
+            deleted_count += 1
+            deleted_names.append(product.name)
+        else:
+            failed_ids.append(product_id)
+    
+    db.commit()
+    
+    return {
+        "message": f"Successfully deleted {deleted_count} products",
+        "deleted_count": deleted_count,
+        "deleted_names": deleted_names,
+        "failed_ids": failed_ids,
+        "success": True,
+    }
+
+
 @router.put(
     "/{product_id}/stock",
     summary="Update stock",

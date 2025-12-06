@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Edit2, Trash2, Package, AlertCircle, Loader2, MoreHorizontal, FileUp, FileDown } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Package, AlertCircle, Loader2, MoreHorizontal, FileUp, FileDown, CheckSquare, Square, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ProductModal, DeleteModal, ImportExportModal } from "@/components/admin";
+import { ProductModal, DeleteModal, ImportExportModal, BatchDeleteModal } from "@/components/admin";
 import { adminProductsApi, categoriesApi } from "@/lib/api/admin";
 
 interface Product {
@@ -98,8 +98,10 @@ function useProductModals(refetch: () => void) {
   const [isSaving, setIsSaving] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isBatchDeleteModalOpen, setIsBatchDeleteModalOpen] = useState(false);
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   const handleCreate = () => {
@@ -119,6 +121,32 @@ function useProductModals(refetch: () => void) {
 
   const handleOpenImportExport = () => {
     setIsImportExportModalOpen(true);
+  };
+
+  const handleOpenBatchDelete = () => {
+    if (selectedProductIds.size > 0) {
+      setIsBatchDeleteModalOpen(true);
+    }
+  };
+
+  const toggleProductSelection = (productId: string) => {
+    setSelectedProductIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllProducts = (products: Product[]) => {
+    setSelectedProductIds(new Set(products.map(p => String(p.id))));
+  };
+
+  const clearSelection = () => {
+    setSelectedProductIds(new Set());
   };
 
   const handleSave = async (data: Partial<Product>) => {
@@ -152,6 +180,21 @@ function useProductModals(refetch: () => void) {
     }
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedProductIds.size === 0) return;
+    try {
+      setIsSaving(true);
+      await adminProductsApi.batchDelete(Array.from(selectedProductIds));
+      setIsBatchDeleteModalOpen(false);
+      clearSelection();
+      refetch();
+    } catch {
+      setError("Failed to delete products");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleToggleAvailability = async (product: Product) => {
     try {
       await adminProductsApi.update(String(product.id), { is_available: !product.is_available });
@@ -169,27 +212,69 @@ function useProductModals(refetch: () => void) {
     setIsProductModalOpen,
     isDeleteModalOpen,
     setIsDeleteModalOpen,
+    isBatchDeleteModalOpen,
+    setIsBatchDeleteModalOpen,
     isImportExportModalOpen,
     setIsImportExportModalOpen,
     selectedProduct,
+    selectedProductIds,
     handleCreate,
     handleEdit,
     handleDeleteClick,
     handleOpenImportExport,
+    handleOpenBatchDelete,
+    toggleProductSelection,
+    selectAllProducts,
+    clearSelection,
     handleSave,
     handleDelete,
+    handleBatchDelete,
     handleToggleAvailability,
   };
 }
 
-function ProductsHeader({ onCreate, onImportExport }: { onCreate: () => void; onImportExport: () => void }) {
+function ProductsHeader({ 
+  onCreate, 
+  onImportExport, 
+  selectedCount, 
+  onBatchDelete, 
+  onClearSelection 
+}: { 
+  onCreate: () => void; 
+  onImportExport: () => void;
+  selectedCount: number;
+  onBatchDelete: () => void;
+  onClearSelection: () => void;
+}) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
       <div>
         <h1 className="text-2xl font-serif font-bold text-stone-800">Products</h1>
         <p className="text-stone-500 text-sm">Kelola katalog produk kamu</p>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
+        {selectedCount > 0 && (
+          <>
+            <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium">
+              <CheckSquare size={16} />
+              {selectedCount} dipilih
+            </div>
+            <button 
+              onClick={onBatchDelete}
+              className="flex items-center gap-2 bg-rose-600 text-white px-5 py-3 rounded-full hover:bg-rose-700 transition-colors font-medium"
+            >
+              <Trash2 size={18} />
+              Hapus Terpilih
+            </button>
+            <button 
+              onClick={onClearSelection}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
+              title="Batalkan pilihan"
+            >
+              <X size={18} />
+            </button>
+          </>
+        )}
         <button 
           onClick={onImportExport} 
           className="flex items-center gap-2 bg-white text-stone-700 px-5 py-3 rounded-full border border-stone-200 hover:bg-stone-50 hover:border-stone-300 transition-colors font-medium"
@@ -269,12 +354,16 @@ function ProductsFilter({
 function ProductRow({
   product,
   categories,
+  isSelected,
+  onToggleSelect,
   onEdit,
   onDelete,
   onToggle,
 }: {
   product: Product;
   categories: Category[];
+  isSelected: boolean;
+  onToggleSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onToggle: () => void;
@@ -282,7 +371,19 @@ function ProductRow({
   const categoryName = categories.find((c) => c.id === (product.category || product.category_id))?.name || product.category;
 
   return (
-    <tr className="hover:bg-stone-50/50 transition-colors group">
+    <tr className={`hover:bg-stone-50/50 transition-colors group ${isSelected ? "bg-emerald-50/50" : ""}`}>
+      <td className="px-4 py-4">
+        <button 
+          onClick={onToggleSelect}
+          className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+            isSelected 
+              ? "bg-emerald-600 text-white" 
+              : "border-2 border-stone-300 hover:border-emerald-500"
+          }`}
+        >
+          {isSelected && <CheckSquare size={14} />}
+        </button>
+      </td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-4">
           <div className={`h-12 w-12 rounded-2xl ${product.image_color || product.image || "bg-emerald-100"} shrink-0`} />
@@ -347,6 +448,10 @@ function ProductsTable({
   onEdit,
   onDelete,
   onToggle,
+  selectedIds,
+  toggleSelect,
+  selectAll,
+  clearSelection,
 }: {
   products: Product[];
   categories: Category[];
@@ -355,6 +460,10 @@ function ProductsTable({
   onEdit: (p: Product) => void;
   onDelete: (p: Product) => void;
   onToggle: (p: Product) => void;
+  selectedIds: Set<string>;
+  toggleSelect: (id: string) => void;
+  selectAll: (products: Product[]) => void;
+  clearSelection: () => void;
 }) {
   if (isLoading) {
     return (
@@ -388,6 +497,22 @@ function ProductsTable({
       <table className="w-full">
         <thead>
           <tr className="border-b border-stone-100">
+            <th className="px-4 py-4">
+              <button
+                onClick={() => {
+                  // Toggle select all / clear
+                  if (selectedIds.size === products.length) {
+                    clearSelection();
+                  } else {
+                    selectAll(products);
+                  }
+                }}
+                className="w-6 h-6 rounded-md flex items-center justify-center border-2 border-stone-300 hover:border-emerald-500"
+                title={selectedIds.size === products.length ? "Batal pilih semua" : "Pilih semua"}
+              >
+                {selectedIds.size === products.length ? <CheckSquare size={14} /> : null}
+              </button>
+            </th>
             <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Produk</th>
             <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Kategori</th>
             <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-wider">Harga</th>
@@ -402,6 +527,8 @@ function ProductsTable({
               key={product.id}
               product={product}
               categories={categories}
+              isSelected={selectedIds.has(String(product.id))}
+              onToggleSelect={() => toggleSelect(String(product.id))}
               onEdit={() => onEdit(product)}
               onDelete={() => onDelete(product)}
               onToggle={() => onToggle(product)}
@@ -423,9 +550,19 @@ export default function AdminProductsPage() {
     modalsState.setError(null);
   };
 
+  const selectedNames = productsState.products
+    .filter((p) => modalsState.selectedProductIds.has(String(p.id)))
+    .map((p) => p.name);
+
   return (
     <div>
-      <ProductsHeader onCreate={modalsState.handleCreate} onImportExport={modalsState.handleOpenImportExport} />
+      <ProductsHeader
+        onCreate={modalsState.handleCreate}
+        onImportExport={modalsState.handleOpenImportExport}
+        selectedCount={modalsState.selectedProductIds.size}
+        onBatchDelete={modalsState.handleOpenBatchDelete}
+        onClearSelection={modalsState.clearSelection}
+      />
       {combinedError && <ErrorBanner message={combinedError} onDismiss={clearError} />}
       <ProductsFilter
         searchQuery={productsState.searchQuery}
@@ -443,6 +580,10 @@ export default function AdminProductsPage() {
           onEdit={modalsState.handleEdit}
           onDelete={modalsState.handleDeleteClick}
           onToggle={modalsState.handleToggleAvailability}
+          selectedIds={modalsState.selectedProductIds}
+          toggleSelect={(id: string) => modalsState.toggleProductSelection(id)}
+          selectAll={(products) => modalsState.selectAllProducts(products)}
+          clearSelection={() => modalsState.clearSelection()}
         />
       </div>
       <ProductModal
@@ -464,6 +605,14 @@ export default function AdminProductsPage() {
         isOpen={modalsState.isImportExportModalOpen}
         onClose={() => modalsState.setIsImportExportModalOpen(false)}
         onImportSuccess={productsState.refetch}
+      />
+      <BatchDeleteModal
+        isOpen={modalsState.isBatchDeleteModalOpen}
+        onClose={() => modalsState.setIsBatchDeleteModalOpen(false)}
+        onConfirm={modalsState.handleBatchDelete}
+        selectedCount={modalsState.selectedProductIds.size}
+        selectedNames={selectedNames}
+        isLoading={modalsState.isSaving}
       />
     </div>
   );

@@ -628,7 +628,7 @@ export default function ChatPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
-      <main className="flex flex-1 flex-col overflow-hidden pt-4 sm:pt-6">
+      <main id="main-content" className="flex flex-1 flex-col overflow-hidden pt-4 sm:pt-6">
         <div className="container mx-auto flex flex-1 flex-col px-4 pb-4 sm:pb-6 overflow-hidden pt-4 sm:pt-6">
           <div className="flex flex-1 flex-col overflow-hidden rounded-3xl bg-white shadow-xl shadow-gray-200/50">
             <ChatHeader isAuthenticated={isAuthenticated} t={t} />

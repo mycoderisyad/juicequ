@@ -131,7 +131,7 @@ function LoginForm() {
         </Link>
       </div>
       
-      <main className="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <main id="main-content" className="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md space-y-8">
           {/* Header Section */}
           <div className="text-center">
