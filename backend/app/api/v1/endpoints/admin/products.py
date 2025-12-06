@@ -42,10 +42,13 @@ class CreateProductRequest(BaseModel):
     stock: int = Field(default=100, ge=0)
     ingredients: list[str] = []
     nutrition: dict | None = None
+    allergy_warning: str | None = None
+    calories: int | None = None
     # Size variants
     has_sizes: bool = True
     size_prices: dict | None = None  # {"small": 10000, "medium": 15000, "large": 20000}
     size_volumes: dict | None = None  # {"small": 250, "medium": 350, "large": 500}
+    size_calories: dict | None = None  # {"small": 120, "medium": 180, "large": 240}
     volume_unit: str = "ml"
 
 
@@ -63,10 +66,13 @@ class UpdateProductRequest(BaseModel):
     stock: int | None = Field(None, ge=0)
     ingredients: list[str] | None = None
     nutrition: dict | None = None
+    allergy_warning: str | None = None
+    calories: int | None = None
     # Size variants
     has_sizes: bool | None = None
     size_prices: dict | None = None
     size_volumes: dict | None = None
+    size_calories: dict | None = None
     volume_unit: str | None = None
 
 
@@ -86,6 +92,7 @@ def product_to_dict(product: Product) -> dict:
     # Parse stored size data
     size_prices = None
     size_volumes = None
+    size_calories = None
     if product.size_prices:
         try:
             size_prices = json.loads(product.size_prices)
@@ -94,6 +101,11 @@ def product_to_dict(product: Product) -> dict:
     if product.size_volumes:
         try:
             size_volumes = json.loads(product.size_volumes)
+        except json.JSONDecodeError:
+            pass
+    if product.size_calories:
+        try:
+            size_calories = json.loads(product.size_calories)
         except json.JSONDecodeError:
             pass
     
@@ -116,6 +128,9 @@ def product_to_dict(product: Product) -> dict:
         "stock_quantity": product.stock_quantity,
         "ingredients": ingredients,
         "calories": product.calories,
+        "size_calories": size_calories,
+        "calories_by_size": product.get_all_calories(),
+        "allergy_warning": product.allergy_warning,
         "rating": product.average_rating,
         "reviews": product.order_count,
         "order_count": product.order_count,
@@ -308,11 +323,14 @@ async def create_product(
         is_available=request.is_available,
         stock_quantity=request.stock,
         ingredients=json.dumps(request.ingredients) if request.ingredients else None,
+        calories=request.calories,
         # Size variants
         has_sizes=request.has_sizes,
         size_prices=json.dumps(request.size_prices) if request.size_prices else None,
         size_volumes=json.dumps(request.size_volumes) if request.size_volumes else None,
+        size_calories=json.dumps(request.size_calories) if request.size_calories else None,
         volume_unit=request.volume_unit,
+        allergy_warning=request.allergy_warning,
     )
     
     db.add(new_product)
@@ -361,6 +379,8 @@ async def update_product(
     
     if request.price is not None:
         product.base_price = request.price
+    if request.calories is not None:
+        product.calories = request.calories
     
     if request.category is not None:
         # Validate category exists
@@ -389,6 +409,8 @@ async def update_product(
     
     if request.ingredients is not None:
         product.ingredients = json.dumps(request.ingredients)
+    if request.allergy_warning is not None:
+        product.allergy_warning = request.allergy_warning
     
     # Size variants
     if request.has_sizes is not None:
@@ -399,6 +421,9 @@ async def update_product(
     
     if request.size_volumes is not None:
         product.size_volumes = json.dumps(request.size_volumes)
+
+    if request.size_calories is not None:
+        product.size_calories = json.dumps(request.size_calories)
     
     if request.volume_unit is not None:
         product.volume_unit = request.volume_unit

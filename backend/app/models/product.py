@@ -181,9 +181,21 @@ class Product(Base):
         Integer,
         nullable=True,
     )
+    # Size-specific calories (JSON: {"small": 120, "medium": 180, "large": 240})
+    size_calories: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="JSON object with calories per size",
+    )
     sugar_grams: Mapped[float | None] = mapped_column(
         Float,
         nullable=True,
+    )
+    # Allergy warning text
+    allergy_warning: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Allergy warning or allergens",
     )
     
     # Ingredients (JSON string for AI to parse)
@@ -344,6 +356,25 @@ class Product(Base):
             "medium": 350,
             "large": 500,
         }
+
+    def get_all_calories(self) -> dict:
+        """Get calories per size, falling back to base calories when needed."""
+        if self.size_calories:
+            try:
+                parsed = json.loads(self.size_calories)
+                if isinstance(parsed, dict):
+                    return parsed
+            except (json.JSONDecodeError, ValueError, TypeError):
+                pass
+
+        # Fallback: use base calories for all sizes when available
+        if self.calories is not None:
+            return {
+                "small": self.calories,
+                "medium": self.calories,
+                "large": self.calories,
+            }
+        return {}
     
     def is_in_stock(self, quantity: int = 1) -> bool:
         """Check if product is in stock."""

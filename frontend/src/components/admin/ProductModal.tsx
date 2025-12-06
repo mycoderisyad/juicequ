@@ -25,6 +25,9 @@ interface Product {
   stock?: number;
   stock_quantity?: number;
   ingredients?: string[];
+  size_calories?: { small?: number; medium?: number; large?: number };
+  allergy_warning?: string;
+  calories?: number;
   // Size variants
   has_sizes?: boolean;
   size_prices?: { small?: number; medium?: number; large?: number };
@@ -54,6 +57,8 @@ interface FormData {
   category: string;
   is_available: boolean;
   stock: number;
+  calories: number;
+  allergy_warning: string;
   ingredients: string[];
   image: string;
   hero_image: string;
@@ -63,6 +68,7 @@ interface FormData {
   has_sizes: boolean;
   size_prices: { small: number; medium: number; large: number };
   size_volumes: { small: number; medium: number; large: number };
+  size_calories: { small: number; medium: number; large: number };
   volume_unit: string;
 }
 
@@ -76,6 +82,8 @@ function getInitialFormData(product: Product | null, categories: Category[]): Fo
       category: product.category || product.category_id || "",
       is_available: product.is_available,
       stock: product.stock ?? 100,
+      calories: product.calories ?? 0,
+      allergy_warning: product.allergy_warning || "",
       ingredients: product.ingredients || [],
       image: product.image || product.image_color || "",
       hero_image: product.hero_image || "",
@@ -93,6 +101,11 @@ function getInitialFormData(product: Product | null, categories: Category[]): Fo
         medium: product.size_volumes?.medium ?? 350,
         large: product.size_volumes?.large ?? 500,
       },
+      size_calories: {
+        small: product.size_calories?.small ?? product.calories ?? 0,
+        medium: product.size_calories?.medium ?? product.calories ?? 0,
+        large: product.size_calories?.large ?? product.calories ?? 0,
+      },
       volume_unit: product.volume_unit || "ml",
     };
   }
@@ -103,6 +116,8 @@ function getInitialFormData(product: Product | null, categories: Category[]): Fo
     category: categories[0]?.id || "",
     is_available: true,
     stock: 100,
+    calories: 0,
+    allergy_warning: "",
     ingredients: [],
     image: "",
     hero_image: "",
@@ -112,6 +127,7 @@ function getInitialFormData(product: Product | null, categories: Category[]): Fo
     has_sizes: true,
     size_prices: { small: 0, medium: 0, large: 0 },
     size_volumes: { small: 250, medium: 350, large: 500 },
+    size_calories: { small: 0, medium: 0, large: 0 },
     volume_unit: "ml",
   };
 }
@@ -253,6 +269,15 @@ export function ProductModal({
             required
           />
 
+          <FormFieldTextarea
+            label="Allergy warning (optional)"
+            hint="Example: contains nuts or dairy"
+            value={formData.allergy_warning}
+            onChange={(v) => updateField("allergy_warning", v)}
+            placeholder="Highlight potential allergens for customers"
+            maxLength={500}
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <FormFieldPrice
               label="Price (Rp)"
@@ -269,11 +294,17 @@ export function ProductModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <FormFieldNumber
               label="Stock"
               value={formData.stock}
               onChange={(v) => updateField("stock", v)}
+              min={0}
+            />
+            <FormFieldNumber
+              label="Calories (kcal, optional)"
+              value={formData.calories}
+              onChange={(v) => updateField("calories", v)}
               min={0}
             />
             <FormFieldColorPicker
@@ -344,6 +375,21 @@ export function ProductModal({
                           className="text-sm"
                         />
                       </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Calories (kcal)</label>
+                        <Input
+                          type="number"
+                          value={formData.size_calories.small || ""}
+                          onChange={(e) =>
+                            updateField("size_calories", {
+                              ...formData.size_calories,
+                              small: Number(e.target.value) || 0,
+                            })
+                          }
+                          placeholder="120"
+                          className="text-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                   
@@ -377,6 +423,21 @@ export function ProductModal({
                           className="text-sm"
                         />
                       </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Calories (kcal)</label>
+                        <Input
+                          type="number"
+                          value={formData.size_calories.medium || ""}
+                          onChange={(e) =>
+                            updateField("size_calories", {
+                              ...formData.size_calories,
+                              medium: Number(e.target.value) || 0,
+                            })
+                          }
+                          placeholder="180"
+                          className="text-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                   
@@ -407,6 +468,21 @@ export function ProductModal({
                             large: Number(e.target.value) || 0
                           })}
                           placeholder="500"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Calories (kcal)</label>
+                        <Input
+                          type="number"
+                          value={formData.size_calories.large || ""}
+                          onChange={(e) =>
+                            updateField("size_calories", {
+                              ...formData.size_calories,
+                              large: Number(e.target.value) || 0,
+                            })
+                          }
+                          placeholder="220"
                           className="text-sm"
                         />
                       </div>

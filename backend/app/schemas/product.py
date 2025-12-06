@@ -67,6 +67,13 @@ class SizeVolume(BaseModel):
     large: Optional[int] = None
 
 
+class SizeCalories(BaseModel):
+    """Schema for calories per size."""
+    small: Optional[int] = None
+    medium: Optional[int] = None
+    large: Optional[int] = None
+
+
 # =============================================================================
 # Nutrition Schemas
 # =============================================================================
@@ -94,9 +101,11 @@ class ProductBase(BaseModel):
     image_url: Optional[str] = None
     base_price: float = Field(..., gt=0)
     calories: Optional[int] = None
+    size_calories: Optional[SizeCalories] = None
     sugar_grams: Optional[float] = None
     ingredients: Optional[str] = None  # JSON string
     health_benefits: Optional[str] = None  # JSON string
+    allergy_warning: Optional[str] = None
     stock_quantity: int = 100
     is_available: bool = True
     is_featured: bool = False
@@ -121,9 +130,11 @@ class ProductUpdate(BaseModel):
     category_id: Optional[str] = None
     base_price: Optional[float] = Field(None, gt=0)
     calories: Optional[int] = None
+    size_calories: Optional[SizeCalories] = None
     sugar_grams: Optional[float] = None
     ingredients: Optional[str] = None
     health_benefits: Optional[str] = None
+    allergy_warning: Optional[str] = None
     stock_quantity: Optional[int] = None
     is_available: Optional[bool] = None
     is_featured: Optional[bool] = None
@@ -153,6 +164,7 @@ class ProductResponse(ProductBase):
     # Computed size data (for convenience)
     prices: Optional[dict] = None  # {"small": 8000, "medium": 10000, "large": 13000}
     volumes: Optional[dict] = None  # {"small": 250, "medium": 350, "large": 500}
+    calories_by_size: Optional[dict] = None  # {"small": 120, "medium": 180, "large": 240}
     
     model_config = ConfigDict(from_attributes=True)
 
