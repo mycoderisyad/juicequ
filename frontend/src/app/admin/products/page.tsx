@@ -25,6 +25,13 @@ interface Product {
   stock?: number;
   stock_quantity?: number;
   ingredients?: string[];
+  has_sizes?: boolean;
+  size_prices?: { small?: number; medium?: number; large?: number };
+  size_volumes?: { small?: number; medium?: number; large?: number };
+  size_calories?: { small?: number; medium?: number; large?: number };
+  volume_unit?: string;
+  allergy_warning?: string;
+  calories?: number;
 }
 
 interface Category {

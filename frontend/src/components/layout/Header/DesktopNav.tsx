@@ -36,7 +36,7 @@ export function DesktopNav({ navLinks }: DesktopNavProps) {
             `}
           >
             <link.icon className={`h-4 w-4 ${link.special ? "animate-pulse" : ""}`} aria-hidden="true" />
-            {t(link.labelKey)}
+            <span suppressHydrationWarning>{t(link.labelKey)}</span>
           </Link>
         );
       })}

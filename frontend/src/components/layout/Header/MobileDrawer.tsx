@@ -118,7 +118,7 @@ export function MobileDrawer({
                     <link.icon 
                       className={`h-5 w-5 ${link.special ? "text-orange-500" : ""}`}
                     />
-                    <span>{t(link.labelKey)}</span>
+                    <span suppressHydrationWarning>{t(link.labelKey)}</span>
                   </div>
                   {link.special && (
                     <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">

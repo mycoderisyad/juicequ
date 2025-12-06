@@ -221,6 +221,12 @@ export const adminProductsApi = {
     stock?: number;
     ingredients?: string[];
     nutrition?: Record<string, number>;
+    has_sizes?: boolean;
+    size_prices?: { small?: number; medium?: number; large?: number };
+    size_volumes?: { small?: number; medium?: number; large?: number };
+    size_calories?: { small?: number; medium?: number; large?: number };
+    volume_unit?: string;
+    allergy_warning?: string;
   }): Promise<{ product: Product; message: string }> => {
     const response = await apiClient.post("/admin/products", data);
     return response.data;
@@ -244,6 +250,12 @@ export const adminProductsApi = {
       stock: number;
       ingredients: string[];
       nutrition: Record<string, number>;
+      has_sizes: boolean;
+      size_prices: { small?: number; medium?: number; large?: number };
+      size_volumes: { small?: number; medium?: number; large?: number };
+      size_calories: { small?: number; medium?: number; large?: number };
+      volume_unit: string;
+      allergy_warning: string;
     }>
   ): Promise<{ product: Product; message: string }> => {
     const response = await apiClient.put(`/admin/products/${productId}`, data);

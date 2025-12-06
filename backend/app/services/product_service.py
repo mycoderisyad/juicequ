@@ -345,6 +345,13 @@ class ProductService:
     ) -> dict[str, int]:
         """Get product volumes for all sizes."""
         return product.get_all_volumes()
+
+    @staticmethod
+    def get_all_calories(
+        product: Product,
+    ) -> dict[str, int]:
+        """Get calories for all sizes."""
+        return product.get_all_calories()
     
     # ==========================================================================
     # Nutrition Info

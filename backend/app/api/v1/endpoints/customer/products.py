@@ -25,6 +25,13 @@ def product_to_response(product, db: Session = None) -> dict:
             ingredients = json.loads(product.ingredients) if isinstance(product.ingredients, str) else product.ingredients
         except (json.JSONDecodeError, TypeError):
             ingredients = []
+
+    size_calories = None
+    if getattr(product, "size_calories", None):
+        try:
+            size_calories = json.loads(product.size_calories)
+        except (json.JSONDecodeError, TypeError):
+            size_calories = None
     
     # Get promo info if db session available
     promo_info = None
@@ -50,6 +57,8 @@ def product_to_response(product, db: Session = None) -> dict:
         "base_price": product.base_price,
         "price": product.base_price,
         "calories": product.calories,
+        "size_calories": size_calories,
+        "calories_by_size": ProductService.get_all_calories(product),
         "category": product.category_id,
         "category_id": product.category_id,
         "category_name": product.category.name if product.category else None,
@@ -64,6 +73,7 @@ def product_to_response(product, db: Session = None) -> dict:
         "stock": product.stock_quantity,
         "stock_quantity": product.stock_quantity,
         "ingredients": ingredients,
+        "allergy_warning": getattr(product, "allergy_warning", None),
         "rating": product.average_rating or 0,
         "reviews": product.order_count or 0,
         "nutrition": ProductService.get_nutrition_info(product).model_dump() if hasattr(ProductService, 'get_nutrition_info') else {},

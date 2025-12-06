@@ -24,12 +24,23 @@ export interface Product {
   price?: number;
   base_price?: number;
   calories?: number;
+  size_calories?: {
+    small?: number;
+    medium?: number;
+    large?: number;
+  };
+  calories_by_size?: {
+    small?: number;
+    medium?: number;
+    large?: number;
+  };
   category?: string;
   category_id?: string;
   category_name?: string;
   image?: string;
   image_url?: string;
   image_color?: string;
+  allergy_warning?: string;
   is_available: boolean;
   stock?: number;
   stock_quantity?: number;

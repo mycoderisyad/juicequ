@@ -7,7 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Plus, Minus, ShoppingBag, RefreshCw, AlertCircle, ChevronDown, SlidersHorizontal, X, Check, ListFilter, Tag, SearchX, Star } from "lucide-react";
+import { Search, ShoppingBag, RefreshCw, AlertCircle, ChevronDown, SlidersHorizontal, X, Check, ListFilter, Tag, SearchX, Star, ChevronUp } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n";
 import { productsApi, type Product as ApiProduct, type Category } from "@/lib/api/customer";
@@ -15,6 +15,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCurrency } from "@/lib/hooks/use-store";
 import { getImageUrl } from "@/lib/image-utils";
+import { Button } from "@/components/ui/button";
 
 interface DisplayProduct {
   id: string;
@@ -137,13 +138,11 @@ function MenuLoadingSkeleton() {
 }
 
 function MenuContent() {
-  const addItem = useCartStore((state) => state.addItem);
   const { t } = useTranslation();
   const { format: formatCurrency } = useCurrency();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState<string>(() => getInitialSearch(searchParams));
   const [activeCategory, setActiveCategory] = useState<string>(() => getInitialCategory(searchParams));
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
   
   // Filter dropdowns state
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -153,6 +152,19 @@ function MenuContent() {
   
   // Size selector state: item_id -> selected size
   const [selectedSizes, setSelectedSizes] = useState<Record<string, "small" | "medium" | "large">>({});
+  const cartItems = useCartStore((state) => state.items);
+  const addItem = useCartStore((state) => state.addItem);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const [modalProduct, setModalProduct] = useState<DisplayProduct | null>(null);
+  const [modalQuantities, setModalQuantities] = useState<{ small: number; medium: number; large: number }>({ small: 0, medium: 0, large: 0 });
+  const [modalSugar, setModalSugar] = useState<string>("Normal");
+  const [showCartDrawer, setShowCartDrawer] = useState(false);
+  const sugarOptions = [
+    t("product.sugar.normal", "Normal"),
+    t("product.sugar.less", "Less sugar"),
+    t("product.sugar.none", "No sugar"),
+    t("product.sugar.extra", "Extra sweet"),
+  ];
   
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const priceDropdownRef = useRef<HTMLDivElement>(null);
@@ -235,8 +247,6 @@ function MenuContent() {
     fetchData();
   }, [fetchData]);
 
-  const getQuantity = (id: string) => quantities[id] || 1;
-  
   const getSelectedSize = (id: string): "small" | "medium" | "large" => selectedSizes[id] || "medium";
   
   const setSelectedSize = (id: string, size: "small" | "medium" | "large") => {
@@ -262,16 +272,85 @@ function MenuContent() {
     return defaultVolumes[size];
   };
 
-  const incrementQuantity = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setQuantities(prev => ({ ...prev, [id]: (prev[id] || 1) + 1 }));
+  const getCartCount = (productId: string) =>
+    cartItems
+      .filter((i) => i.productId === productId)
+      .reduce((acc, item) => acc + item.quantity, 0);
+  const drawerTotal = useMemo(
+    () => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    [cartItems]
+  );
+
+  const getCartQuantitiesBySize = (productId: string) => {
+    const base = { small: 0, medium: 0, large: 0 } as const;
+    const entries = cartItems.filter((i) => i.productId === productId && i.size);
+    return entries.reduce(
+      (acc, item) => {
+        if (item.size && acc[item.size] !== undefined) {
+          acc[item.size] += item.quantity;
+        }
+        return acc;
+      },
+      { ...base }
+    );
   };
 
-  const decrementQuantity = (e: React.MouseEvent, id: string) => {
+  const openAddModal = (e: React.MouseEvent, item: DisplayProduct) => {
     e.preventDefault();
     e.stopPropagation();
-    setQuantities(prev => ({ ...prev, [id]: Math.max(1, (prev[id] || 1) - 1) }));
+    const size = getSelectedSize(item.id);
+    const existing = getCartQuantitiesBySize(item.id);
+    const totalExisting = existing.small + existing.medium + existing.large;
+    setModalProduct(item);
+    setModalQuantities(
+      totalExisting > 0 ? existing : { small: 0, medium: 0, large: 0, [size]: 1 }
+    );
+    setModalSugar("Normal");
+  };
+
+  const updateModalQty = (size: "small" | "medium" | "large", delta: number) => {
+    setModalQuantities((prev) => ({ ...prev, [size]: Math.max(0, prev[size] + delta) }));
+  };
+
+  const modalTotal = useMemo(() => {
+    if (!modalProduct) return 0;
+    return (["small", "medium", "large"] as const).reduce((sum, size) => {
+      const qty = modalQuantities[size];
+      if (qty <= 0) return sum;
+      const price = getItemPrice(modalProduct, size);
+      return sum + price * qty;
+    }, 0);
+  }, [modalProduct, modalQuantities]);
+
+  const handleModalConfirm = () => {
+    if (!modalProduct) return;
+    // Replace existing entries for this product with the new selection
+    cartItems
+      .filter((i) => i.productId === modalProduct.id)
+      .forEach((i) => removeItem(i.id));
+
+    (["small", "medium", "large"] as const).forEach((size) => {
+      const qty = modalQuantities[size];
+      if (qty > 0) {
+        const price = getItemPrice(modalProduct, size);
+        const volume = getItemVolume(modalProduct, size);
+        const itemName = `${modalProduct.name} (${size === "small" ? "S" : size === "medium" ? "M" : "L"})`;
+        addItem({
+          id: `${modalProduct.id}-${size}`,
+          productId: modalProduct.id,
+          name: itemName,
+          price,
+          color: modalProduct.color,
+          image: modalProduct.thumbnail_image,
+          size,
+          volume,
+          volumeUnit: modalProduct.volume_unit,
+          notes: `Sugar: ${modalSugar}`,
+          quantity: qty,
+        });
+      }
+    });
+    setModalProduct(null);
   };
 
   const filteredItems = useMemo(() => {
@@ -319,31 +398,7 @@ function MenuContent() {
   };
 
   const handleAddToCart = (e: React.MouseEvent, item: DisplayProduct) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const qty = getQuantity(item.id);
-    const size = getSelectedSize(item.id);
-    const hasSizes = item.has_sizes ?? true;
-    const price = hasSizes ? getItemPrice(item, size) : parseFloat(item.price);
-    const volume = hasSizes ? getItemVolume(item, size) : undefined;
-    const cartItemId = hasSizes ? `${item.id}-${size}` : item.id;
-    const itemName = hasSizes ? `${item.name} (${size === "small" ? "S" : size === "medium" ? "M" : "L"})` : item.name;
-    
-    for (let i = 0; i < qty; i++) {
-      addItem({
-        id: cartItemId,
-        productId: item.id,
-        name: itemName,
-        price: price,
-        color: item.color,
-        image: item.thumbnail_image,
-        size: hasSizes ? size : undefined,
-        volume: volume,
-        volumeUnit: hasSizes ? item.volume_unit : undefined,
-      });
-    }
-    // Reset quantity after adding
-    setQuantities(prev => ({ ...prev, [item.id]: 1 }));
+    openAddModal(e, item);
   };
 
   // Loading skeleton
@@ -659,37 +714,15 @@ function MenuContent() {
 
                     {/* Controls */}
                     <div className="mt-auto flex items-center gap-3">
-                      {/* Quantity Selector */}
-                      <div className="flex items-center rounded-full border border-stone-200 bg-stone-50 px-1 py-1">
-                        <button
-                          onClick={(e) => decrementQuantity(e, item.id)}
-                          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-stone-600 shadow-sm transition-colors hover:bg-stone-100 hover:text-emerald-600 focus:outline-none"
-                          aria-label={t("menu.decreaseQuantity")}
-                        >
-                          <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                        </button>
-                        <span className="w-8 text-center text-sm font-bold text-stone-900">
-                          {getQuantity(item.id)}
-                        </span>
-                        <button
-                          onClick={(e) => incrementQuantity(e, item.id)}
-                          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-stone-600 shadow-sm transition-colors hover:bg-stone-100 hover:text-emerald-600 focus:outline-none"
-                          aria-label={t("menu.increaseQuantity")}
-                        >
-                          <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                        </button>
-                      </div>
-
-                      {/* Add to Cart Button */}
                       <button
                         onClick={(e) => handleAddToCart(e, item)}
-                        className="flex flex-1 h-10 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 hover:shadow-emerald-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex flex-1 h-10 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white transition-colors hover:bg-emerald-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={!item.is_available || (item.stock_quantity !== undefined && item.stock_quantity <= 0)}
                       >
-                        <ShoppingBag className="h-5 w-5" />
                         <span>
-                          {t("product.addToCart")} -{" "}
-                          {formatCurrency(((item.has_sizes ?? true) ? getItemPrice(item, getSelectedSize(item.id)) : parseFloat(item.price)) * getQuantity(item.id))}
+                          {getCartCount(item.id) > 0
+                            ? `${getCartCount(item.id)} ${t("cart.items")}`
+                            : t("product.addToCart")}
                         </span>
                       </button>
                     </div>
@@ -700,6 +733,133 @@ function MenuContent() {
           )}
         </div>
       </main>
+
+      {/* Mini Cart Drawer (show only when items exist) */}
+      {cartItems.length > 0 && (
+        <div className={`fixed left-0 right-0 bottom-0 z-40 transition-all duration-300 ${showCartDrawer ? "h-64" : "h-14"}`}>
+          <div className="mx-auto max-w-6xl rounded-t-2xl border border-stone-200 bg-white shadow-lg">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {cartItems.length} {t("cart.items")}
+                </p>
+                <p className="text-xs text-gray-500">Total: {formatCurrency(drawerTotal)}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowCartDrawer((v) => !v)}>
+                  {showCartDrawer ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                </Button>
+                <Link href="/cart">
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                    Checkout
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            {showCartDrawer && (
+              <div className="max-h-44 overflow-y-auto border-t border-stone-100 px-4 py-3 space-y-2">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between text-sm">
+                    <div>
+                      <p className="font-semibold text-gray-900">{item.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {item.quantity} x {formatCurrency(item.price)} {item.notes ? `· ${item.notes}` : ""}
+                      </p>
+                    </div>
+                    <span className="font-semibold text-gray-900">{formatCurrency(item.price * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Add to Cart Modal */}
+      {modalProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-sm font-medium text-emerald-600">{modalProduct.category_name}</p>
+                <h3 className="text-xl font-bold text-gray-900">{modalProduct.name}</h3>
+              </div>
+              <button onClick={() => setModalProduct(null)} aria-label="Close" className="text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-800 mb-2">
+                  {t("product.selectSizeAndQuantity", "Choose size & quantity")}
+                </p>
+                {(["small", "medium", "large"] as const).map((size) => (
+                  <div key={size} className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2 mb-2">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {size === "small" ? "Small (S)" : size === "medium" ? "Medium (M)" : "Large (L)"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {getItemVolume(modalProduct, size)} {modalProduct.volume_unit || "ml"} · {formatCurrency(getItemPrice(modalProduct, size))}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateModalQty(size, -1)}
+                        className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
+                      >
+                        -
+                      </button>
+                      <span className="w-6 text-center font-semibold text-gray-900">{modalQuantities[size]}</span>
+                      <button
+                        onClick={() => updateModalQty(size, 1)}
+                        className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-gray-800 mb-2">
+                  {t("product.sugarOptions", "Sugar preference")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {sugarOptions.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setModalSugar(opt)}
+                      className={`rounded-full border px-3 py-1 text-sm ${
+                        modalSugar === opt ? "border-emerald-500 text-emerald-700 bg-emerald-50" : "border-stone-200 text-stone-600"
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-stone-200 pt-4">
+                <div>
+                  <p className="text-sm text-gray-500">{t("common.total", "Total")}</p>
+                  <p className="text-lg font-bold text-gray-900">{formatCurrency(modalTotal)}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" onClick={() => setModalProduct(null)}>
+                    {t("common.cancel", "Cancel")}
+                  </Button>
+                  <Button onClick={handleModalConfirm} disabled={modalTotal <= 0} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                    {getCartCount(modalProduct.id) > 0 ? t("cart.updateCart", "Update Cart") : t("product.addToCart")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

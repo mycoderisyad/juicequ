@@ -84,12 +84,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-green-50 via-white to-orange-50">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-emerald-50 via-white to-orange-50">
       {/* Back to Home */}
       <div className="absolute top-6 left-6">
         <Link
           href="/"
-          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-green-600 transition-colors bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm"
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm"
         >
           <Home className="h-4 w-4" />
           {t("common.back")}
@@ -105,7 +105,7 @@ export default function RegisterPage() {
             </h2>
             <p className="mt-2 text-sm text-gray-600">
               {t("auth.register.hasAccount")}{" "}
-              <Link href="/login" className="font-medium text-green-600 hover:text-green-500">
+              <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-500">
                 {t("auth.register.signIn")}
               </Link>
             </p>
@@ -250,12 +250,12 @@ export default function RegisterPage() {
                   id="terms"
                   name="terms"
                   type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                   required
                 />
                 <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
                   {t("auth.register.agreeTerms")}{" "}
-                  <a href="#" className="font-medium text-green-600 hover:text-green-500">
+                  <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
                     {t("auth.register.termsLink")}
                   </a>
                 </label>
@@ -265,7 +265,7 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   disabled={isLoading || isGoogleLoading}
-                  className="group relative flex w-full justify-center rounded-full bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+                  className="group relative flex w-full justify-center rounded-full bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
                 >
                   {isLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

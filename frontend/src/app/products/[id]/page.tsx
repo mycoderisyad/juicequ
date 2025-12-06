@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Minus, Plus, ArrowLeft, ShoppingBag, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, X, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { productsApi, type Product as ApiProduct } from "@/lib/api/customer";
 import { useCurrency } from "@/lib/hooks/use-store";
-import { AIFotobooth } from "@/components/products";
 import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 type SizeType = "small" | "medium" | "large";
 
@@ -23,6 +23,8 @@ interface DisplayProduct {
   description: string;
   price: string;
   calories: number;
+  caloriesBySize?: { small?: number; medium?: number; large?: number };
+  allergyWarning?: string | null;
   category: string;
   color: string;
   ingredients?: string[];
@@ -40,6 +42,8 @@ interface DisplayProduct {
   prices?: { small: number; medium: number; large: number };
   volumes?: { small: number; medium: number; large: number };
   volume_unit?: string;
+  stock_quantity?: number;
+  is_available?: boolean;
 }
 
 // Transform API product to display format
@@ -51,6 +55,8 @@ function transformProduct(product: ApiProduct): DisplayProduct {
     description: product.description,
     price: priceValue.toString(),
     calories: product.calories || 0,
+    caloriesBySize: product.calories_by_size || product.size_calories,
+    allergyWarning: product.allergy_warning || null,
     category: product.category_id || product.category || "",
     color: product.image_color || product.image_url || "bg-green-500",
     ingredients: product.ingredients,
@@ -63,18 +69,36 @@ function transformProduct(product: ApiProduct): DisplayProduct {
     prices: product.prices,
     volumes: product.volumes,
     volume_unit: product.volume_unit || "ml",
+    stock_quantity: product.stock_quantity,
+    is_available: product.is_available ?? true,
   };
 }
 
 export default function ProductPage() {
   const params = useParams();
-  const { addItem } = useCartStore();
+  const { t } = useTranslation();
+  const cartItems = useCartStore((state) => state.items);
+  const addItem = useCartStore((state) => state.addItem);
+  const removeItem = useCartStore((state) => state.removeItem);
   const { format } = useCurrency();
-  const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<DisplayProduct | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<SizeType>("medium");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalQuantities, setModalQuantities] = useState<{ small: number; medium: number; large: number }>({
+    small: 0,
+    medium: 0,
+    large: 0,
+  });
+  const [modalSugar, setModalSugar] = useState<string>("Normal");
+  const [showCartDrawer, setShowCartDrawer] = useState(false);
+  const sugarOptions = [
+    t("product.sugar.normal", "Normal"),
+    t("product.sugar.less", "Less sugar"),
+    t("product.sugar.none", "No sugar"),
+    t("product.sugar.extra", "Extra sweet"),
+  ];
   
   const idParam = params?.id;
   const idString = Array.isArray(idParam) ? idParam[0] : idParam;
@@ -93,6 +117,17 @@ export default function ProductPage() {
     return Math.round(basePrice * multipliers[size]);
   }, [product]);
 
+  const getCalories = useCallback(
+    (size: SizeType): number | undefined => {
+      if (!product) return undefined;
+      if (product.caloriesBySize && product.caloriesBySize[size] !== undefined) {
+        return product.caloriesBySize[size];
+      }
+      return product.calories;
+    },
+    [product]
+  );
+
   const getVolume = useCallback((size: SizeType): number => {
     if (!product) return 0;
     if (product.volumes && product.volumes[size]) {
@@ -105,7 +140,9 @@ export default function ProductPage() {
 
   const displayPrice = getPrice(selectedSize);
   const displayVolume = getVolume(selectedSize);
+  const displayCalories = getCalories(selectedSize);
   const volumeUnit = product?.volume_unit || "ml";
+  const cartCount = product ? getCartCount(product.id) : 0;
 
   const fetchProduct = useCallback(async () => {
     if (!idString) return;
@@ -128,22 +165,87 @@ export default function ProductPage() {
     fetchProduct();
   }, [fetchProduct]);
 
-  const handleAddToCart = () => {
+  const getCartCount = useCallback(
+    (productId: string) =>
+      cartItems.filter((i) => i.productId === productId).reduce((acc, item) => acc + item.quantity, 0),
+    [cartItems]
+  );
+
+  const getCartQuantitiesBySize = useCallback(
+    (productId: string) => {
+      const base = { small: 0, medium: 0, large: 0 } as const;
+      const entries = cartItems.filter((i) => i.productId === productId && i.size);
+      return entries.reduce(
+        (acc, item) => {
+          if (item.size && acc[item.size] !== undefined) {
+            acc[item.size] += item.quantity;
+          }
+          return acc;
+        },
+        { ...base }
+      );
+    },
+    [cartItems]
+  );
+
+  const drawerTotal = useMemo(
+    () => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    [cartItems]
+  );
+
+  const modalTotal = useMemo(() => {
+    if (!product) return 0;
+    return (["small", "medium", "large"] as const).reduce((sum, size) => {
+      const qty = modalQuantities[size];
+      if (qty <= 0) return sum;
+      const price = getPrice(size);
+      return sum + price * qty;
+    }, 0);
+  }, [getPrice, modalQuantities, product]);
+
+  const openModal = () => {
     if (!product) return;
-    const productImage = product.thumbnail_image || product.bottle_image || product.hero_image;
-    const cartItemId = hasSizes ? `${product.id}-${selectedSize}` : product.id;
-    addItem({
-      id: cartItemId,
-      productId: product.id,
-      name: hasSizes ? `${product.name} (${selectedSize === "small" ? "S" : selectedSize === "medium" ? "M" : "L"})` : product.name,
-      price: displayPrice,
-      color: product.color,
-      image: productImage,
-      quantity: quantity,
-      size: hasSizes ? selectedSize : undefined,
-      volume: hasSizes ? displayVolume : undefined,
-      volumeUnit: hasSizes ? volumeUnit : undefined,
+    const existing = getCartQuantitiesBySize(product.id);
+    const totalExisting = existing.small + existing.medium + existing.large;
+    setModalQuantities(
+      totalExisting > 0 ? existing : { small: 0, medium: 0, large: 0, [selectedSize]: 1 }
+    );
+    setModalSugar("Normal");
+    setModalOpen(true);
+  };
+
+  const updateModalQty = (size: SizeType, delta: number) => {
+    setModalQuantities((prev) => ({ ...prev, [size]: Math.max(0, prev[size] + delta) }));
+  };
+
+  const handleModalConfirm = () => {
+    if (!product) return;
+    const image = product.thumbnail_image || product.bottle_image || product.hero_image;
+    // Replace existing entries for this product with the new selection
+    cartItems.filter((i) => i.productId === product.id).forEach((i) => removeItem(i.id));
+
+    (["small", "medium", "large"] as const).forEach((size) => {
+      const qty = modalQuantities[size];
+      if (qty > 0) {
+        const price = getPrice(size);
+        const volume = getVolume(size);
+        addItem({
+          id: `${product.id}-${size}`,
+          productId: product.id,
+          name: `${product.name} (${size === "small" ? "S" : size === "medium" ? "M" : "L"})`,
+          price,
+          color: product.color,
+          image,
+          size,
+          volume,
+          volumeUnit,
+          notes: `Sugar: ${modalSugar}`,
+          quantity: qty,
+        });
+      }
     });
+    setModalOpen(false);
+    setShowCartDrawer(true);
   };
 
   // Loading state
@@ -177,7 +279,7 @@ export default function ProductPage() {
         <Header />
         <main className="flex flex-1 flex-col items-center justify-center p-10">
           <h1 className="text-2xl font-bold text-gray-900">Product not found</h1>
-          <Link href="/menu" className="mt-4 text-green-600 hover:underline">
+          <Link href="/menu" className="mt-4 text-emerald-600 hover:underline">
             Back to Menu
           </Link>
         </main>
@@ -235,21 +337,33 @@ export default function ProductPage() {
               <div className="mb-6">
                 <h1 className="mb-2 text-4xl font-bold text-gray-900">{product.name}</h1>
                 <div className="flex items-center gap-4">
-                  <span className="text-3xl font-bold text-green-600">{format(displayPrice)}</span>
+                  <span className="text-3xl font-bold text-emerald-600">{format(displayPrice)}</span>
                   {hasSizes && (
-                    <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
                       {displayVolume} {volumeUnit}
                     </span>
                   )}
-                  <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
-                    {product.calories} cal
-                  </span>
+                  {displayCalories !== undefined && (
+                    <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-800">
+                      {displayCalories} cal
+                    </span>
+                  )}
                 </div>
               </div>
 
               <p className="mb-8 text-lg leading-relaxed text-gray-600">
                 {product.description}
               </p>
+
+              {product.allergyWarning && (
+                <div className="mb-8 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                  <AlertTriangle className="h-5 w-5 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Allergy notice</p>
+                    <p className="mt-1">{product.allergyWarning}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Size Selector */}
               {hasSizes && (
@@ -263,7 +377,7 @@ export default function ProductPage() {
                         className={cn(
                           "flex-1 py-3 px-4 rounded-xl border-2 transition-all",
                           selectedSize === size
-                            ? "border-green-600 bg-green-50 text-green-700"
+                            ? "border-emerald-600 bg-emerald-50 text-emerald-700"
                             : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                         )}
                         aria-pressed={selectedSize === size}
@@ -298,28 +412,12 @@ export default function ProductPage() {
 
               {/* Actions */}
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-                <div className="flex items-center rounded-full border border-gray-200 bg-gray-50 p-1">
-                  <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-600 shadow-sm transition-colors hover:text-gray-900"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-12 text-center font-semibold text-gray-900">{quantity}</span>
-                  <button 
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-600 shadow-sm transition-colors hover:text-gray-900"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <Button 
-                  onClick={handleAddToCart}
-                  className="h-12 flex-1 rounded-full bg-emerald-600 text-lg font-medium text-white hover:bg-emerald-700"
+                <Button
+                  onClick={openModal}
+                  disabled={!product.is_available || (product.stock_quantity !== undefined && product.stock_quantity <= 0)}
+                  className="h-12 flex-1 rounded-full bg-emerald-600 text-lg font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <ShoppingBag className="mr-2 h-5 w-5" />
-                  Add to Cart - {format(displayPrice * quantity)}
+                  {cartCount > 0 ? `${cartCount} ${t("cart.items")}` : t("product.addToCart")}
                 </Button>
               </div>
 
@@ -327,6 +425,142 @@ export default function ProductPage() {
           </div>
         </div>
       </main>
+
+      {/* Mini Cart Drawer (show only when items exist) */}
+      {cartItems.length > 0 && (
+        <div className={`fixed left-0 right-0 bottom-0 z-40 transition-all duration-300 ${showCartDrawer ? "h-64" : "h-14"}`}>
+          <div className="mx-auto max-w-5xl rounded-t-2xl border border-stone-200 bg-white shadow-lg">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
+                </p>
+                <p className="text-xs text-gray-500">Total: {format(drawerTotal)}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowCartDrawer((v) => !v)}>
+                  {showCartDrawer ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                </Button>
+                <Link href="/cart">
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                    Checkout
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            {showCartDrawer && (
+              <div className="max-h-44 overflow-y-auto border-t border-stone-100 px-4 py-3 space-y-2">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between text-sm">
+                    <div>
+                      <p className="font-semibold text-gray-900">{item.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {item.quantity} x {format(item.price)} {item.notes ? `· ${item.notes}` : ""}
+                      </p>
+                    </div>
+                    <span className="font-semibold text-gray-900">{format(item.price * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Add to Cart Modal */}
+      {modalOpen && product && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-sm font-medium text-emerald-600">{product.category}</p>
+                <h3 className="text-xl font-bold text-gray-900">{product.name}</h3>
+              </div>
+              <button onClick={() => setModalOpen(false)} aria-label="Close" className="text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-800 mb-2">
+                  {t("product.selectSizeAndQuantity", "Choose size & quantity")}
+                </p>
+                {(["small", "medium", "large"] as const).map((size) => (
+                  <div key={size} className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2 mb-2">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {size === "small" ? "Small (S)" : size === "medium" ? "Medium (M)" : "Large (L)"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {getVolume(size)} {volumeUnit} · {format(getPrice(size))}{" "}
+                        {getCalories(size) !== undefined && `· ${getCalories(size)} cal`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateModalQty(size, -1)}
+                        className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
+                        aria-label={`Decrease ${size} quantity`}
+                      >
+                        -
+                      </button>
+                      <span className="w-6 text-center font-semibold text-gray-900">{modalQuantities[size]}</span>
+                      <button
+                        onClick={() => updateModalQty(size, 1)}
+                        className="h-8 w-8 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-100"
+                        aria-label={`Increase ${size} quantity`}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-gray-800 mb-2">
+                  {t("product.sugarOptions", "Sugar preference")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {sugarOptions.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setModalSugar(opt)}
+                      className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                        modalSugar === opt
+                          ? "border-emerald-500 text-emerald-700 bg-emerald-50"
+                          : "border-stone-200 text-stone-600 hover:border-stone-300"
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg bg-stone-50 px-4 py-3">
+                <div>
+                  <p className="text-xs text-gray-500">{t("common.total", "Total")}</p>
+                  <p className="text-xl font-bold text-gray-900">{format(modalTotal)}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setModalOpen(false)}>
+                    {t("common.cancel", "Cancel")}
+                  </Button>
+                  <Button
+                    onClick={handleModalConfirm}
+                    disabled={modalTotal <= 0}
+                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                  >
+                    {cartCount > 0 ? t("cart.updateCart", "Update Cart") : t("product.addToCart")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

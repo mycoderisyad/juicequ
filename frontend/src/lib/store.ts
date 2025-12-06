@@ -20,6 +20,7 @@ export interface CartItem {
   size?: "small" | "medium" | "large";
   volume?: number;
   volumeUnit?: string;
+  notes?: string;
 }
 
 type CartItemInput = Omit<CartItem, "quantity" | "id"> & { 
