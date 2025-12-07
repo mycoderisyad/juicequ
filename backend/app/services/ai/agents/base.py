@@ -21,6 +21,7 @@ class Intent(str, Enum):
     PRODUCT_INFO = "product_info"
     CHECKOUT = "checkout"
     INQUIRY = "inquiry"
+    HEALTH_INQUIRY = "health_inquiry"  # Health, nutrition, allergy questions
     GREETING = "greeting"
     OFF_TOPIC = "off_topic"
     UNKNOWN = "unknown"

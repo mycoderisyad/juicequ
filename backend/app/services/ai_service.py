@@ -106,6 +106,7 @@ class AIService:
         session_id: Optional[str] = None,
         locale: str = "id",
         conversation_history: Optional[List[Dict[str, str]]] = None,
+        is_voice_command: bool = False,
     ) -> Dict[str, Any]:
         """
         Process text chat with AI using Multi-Agent system.
@@ -116,6 +117,7 @@ class AIService:
             session_id: Session ID for conversation context
             locale: Language locale (id/en)
             conversation_history: Previous conversation messages
+            is_voice_command: If True, use VoiceAgent for action-oriented response
 
         Returns:
             Dictionary with AI response and metadata
@@ -128,10 +130,10 @@ class AIService:
         interaction = AIInteraction(
             session_id=session_id,
             user_id=user_id,
-            interaction_type=InteractionType.CHAT,
+            interaction_type=InteractionType.VOICE if is_voice_command else InteractionType.CHAT,
             status=InteractionStatus.ACTIVE,
             user_input=sanitized_input,
-            user_input_type="text",
+            user_input_type="voice" if is_voice_command else "text",
         )
         self.db.add(interaction)
 
@@ -144,6 +146,7 @@ class AIService:
                 user_id=user_id,
                 session_id=session_id,
                 conversation_history=conversation_history,
+                is_voice_command=is_voice_command,
             )
             
             response_time_ms = int((time.time() - start_time) * 1000)

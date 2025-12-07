@@ -15,7 +15,7 @@ import aiApi from "@/lib/api/ai";
 import { useCartStore } from "@/lib/store";
 
 // Voice command types
-export type VoiceCommandType = 
+export type VoiceCommandType =
   | "add_to_cart"      // Add items to cart
   | "remove_from_cart" // Remove items from cart
   | "clear_cart"       // Clear entire cart
@@ -77,17 +77,33 @@ export interface UseVoiceCommandReturn {
 // Local intent detection for common commands (faster, no API call needed)
 function detectLocalIntent(text: string, locale: string): VoiceCommandResult | null {
   const lower = text.toLowerCase().trim();
-  
-  // Navigation commands
+
+  // IMPORTANT: Check if this is an ADD TO CART command first
+  // These commands should go to LLM API for proper product matching
+  // Pattern: "masukan/tambah/beli/pesan X ke keranjang" or "beli X 2"
+  const addToCartPatterns = [
+    /\b(masuk(?:kan|in)?|tambah(?:kan|in)?|beli|pesan|order|mau)\b.*\b(keranjang|cart)\b/i,
+    /\b(beli|pesan|order|mau)\s+\d*\s*(?:buah|porsi|pcs|unit)?\s*.+/i,
+    /\b(tambah|masuk)\s+\d*\s*(?:buah|porsi|pcs|unit)?\s*.+\s*(ke\s*)?(keranjang|cart)/i,
+    /\b(buy|add|order|get)\s+\d*\s*.+\s*(to\s*)?(cart)?/i,
+    /\b(produk|product)\s+(terlaris|bestseller|termurah|termahal|popular).*(keranjang|cart)/i,
+  ];
+
+  if (addToCartPatterns.some(p => p.test(lower))) {
+    return null; // Send to LLM API for proper parsing
+  }
+
+  // Navigation commands - only for explicit navigation (not add to cart)
   const navPatterns: { patterns: RegExp[]; destination: string }[] = [
     { patterns: [/\b(ke|buka|lihat|tampilkan)\s*(halaman\s*)?(beranda|home|utama)\b/i, /\bgo\s*(to)?\s*home\b/i], destination: "/" },
     { patterns: [/\b(ke|buka|lihat|tampilkan)\s*(halaman\s*)?(produk|menu|daftar\s*produk|daftar\s*menu)\b/i, /\b(go\s*(to)?|show|open)\s*(products?|menu)\b/i], destination: "/menu" },
-    { patterns: [/\b(ke|buka|lihat|tampilkan)\s*(halaman\s*)?(keranjang|cart)\b/i, /\b(go\s*(to)?|show|open)\s*cart\b/i], destination: "/cart" },
+    // Cart navigation - only if it's JUST "ke keranjang" without add/buy/order words
+    { patterns: [/^(ke|buka|lihat|tampilkan)\s*(halaman\s*)?(keranjang|cart)\s*$/i, /^(go\s*(to)?|show|open)\s*cart\s*$/i], destination: "/cart" },
     { patterns: [/\b(ke|buka|lihat|tampilkan)\s*(halaman\s*)?(checkout|pembayaran|bayar)\b/i, /\b(go\s*(to)?)\s*checkout\b/i], destination: "/checkout" },
     { patterns: [/\b(ke|buka|lihat|tampilkan)\s*(halaman\s*)?(tentang|about)\b/i, /\b(go\s*(to)?|show)\s*about\b/i], destination: "/about" },
     { patterns: [/\b(ke|buka|lihat|tampilkan)\s*(halaman\s*)?(chat|ai|asisten)\b/i, /\b(go\s*(to)?|open)\s*chat\b/i], destination: "/chat" },
   ];
-  
+
   for (const { patterns, destination } of navPatterns) {
     if (patterns.some(p => p.test(lower))) {
       return {
@@ -99,7 +115,7 @@ function detectLocalIntent(text: string, locale: string): VoiceCommandResult | n
       };
     }
   }
-  
+
   // Clear cart command - catch ALL variations of "hapus" related to cart
   const clearCartPatterns = [
     /\b(kosongkan|hapus\s*semua|clear)\s*(keranjang|cart)\b/i,
@@ -113,7 +129,7 @@ function detectLocalIntent(text: string, locale: string): VoiceCommandResult | n
     // Simple "hapus keranjang" or just "hapus" when context is about cart
     /^(hapus|kosongkan|bersihkan)\s*(keranjang|cart|pesanan)?\s*$/i,
   ];
-  
+
   if (clearCartPatterns.some(p => p.test(lower))) {
     return {
       success: true,
@@ -122,7 +138,7 @@ function detectLocalIntent(text: string, locale: string): VoiceCommandResult | n
       transcript: text,
     };
   }
-  
+
   // Checkout command
   if (/\b(checkout|bayar|proses\s*pesanan|selesaikan\s*pesanan)\b/i.test(lower)) {
     return {
@@ -133,20 +149,20 @@ function detectLocalIntent(text: string, locale: string): VoiceCommandResult | n
       destination: "/checkout",
     };
   }
-  
+
   // Sort/filter commands
   const sortPatterns: { patterns: RegExp[]; sortBy: "price_asc" | "price_desc" | "popular" | "name" }[] = [
     { patterns: [/\b(termurah|harga\s*terendah|murah\s*dulu)\b/i, /\b(cheapest|lowest\s*price|price\s*low)\b/i], sortBy: "price_asc" },
     { patterns: [/\b(termahal|harga\s*tertinggi|mahal\s*dulu)\b/i, /\b(most\s*expensive|highest\s*price|price\s*high)\b/i], sortBy: "price_desc" },
     { patterns: [/\b(terpopuler|paling\s*laris|bestseller)\b/i, /\b(most\s*popular|bestseller|best\s*selling)\b/i], sortBy: "popular" },
   ];
-  
+
   for (const { patterns, sortBy } of sortPatterns) {
     if (patterns.some(p => p.test(lower))) {
       return {
         success: true,
         command: "filter",
-        message: locale === "id" 
+        message: locale === "id"
           ? `Menampilkan produk ${sortBy === "price_asc" ? "termurah" : sortBy === "price_desc" ? "termahal" : "terpopuler"}...`
           : `Showing ${sortBy === "price_asc" ? "cheapest" : sortBy === "price_desc" ? "most expensive" : "most popular"} products...`,
         transcript: text,
@@ -155,7 +171,7 @@ function detectLocalIntent(text: string, locale: string): VoiceCommandResult | n
       };
     }
   }
-  
+
   // Remove specific item from cart (must have actual product name, not generic words)
   // This pattern should only match when user mentions a specific product name
   const removeMatch = lower.match(/\b(hapus|hilangkan|buang|remove|delete)\s+([a-zA-Z][a-zA-Z0-9\s]*?)\s*(dari\s*keranjang|from\s*cart)?\s*$/i);
@@ -164,7 +180,7 @@ function detectLocalIntent(text: string, locale: string): VoiceCommandResult | n
     // Skip generic words that are not actual product names
     const genericWords = ["produk", "pesanan", "barang", "item", "isi", "semua", "semuanya", "product", "all", "everything"];
     const isGeneric = genericWords.some(w => productName.toLowerCase() === w || productName.toLowerCase().startsWith(w + " "));
-    
+
     if (!isGeneric && productName.length > 1) {
       return {
         success: true,
@@ -175,7 +191,7 @@ function detectLocalIntent(text: string, locale: string): VoiceCommandResult | n
       };
     }
   }
-  
+
   // Search command
   const searchMatch = lower.match(/\b(cari|carikan|search|find)\s+(.+)/i);
   if (searchMatch) {
@@ -189,7 +205,7 @@ function detectLocalIntent(text: string, locale: string): VoiceCommandResult | n
       destination: "/menu",
     };
   }
-  
+
   return null; // Need to call API for more complex commands
 }
 
@@ -205,7 +221,7 @@ export function useVoiceCommand({
   const [error, setError] = useState<string | null>(null);
   const [currentTranscript, setCurrentTranscript] = useState("");
   const [lastResult, setLastResult] = useState<VoiceCommandResult | null>(null);
-  
+
   const { addItem, items: cartItems } = useCartStore();
   const sessionIdRef = useRef<string | undefined>(undefined);
   const locale = language.startsWith("id") ? "id" : "en";
@@ -251,22 +267,22 @@ export function useVoiceCommand({
           router.push(result.destination);
         }
         break;
-        
+
       case "clear_cart":
         useCartStore.getState().clearCart();
         result.message = locale === "id" ? "Keranjang dikosongkan!" : "Cart cleared!";
         break;
-        
+
       case "remove_from_cart":
         if (result.removeProductName) {
           // Get current cart items directly from store
           const currentItems = useCartStore.getState().items;
-          const itemToRemove = currentItems.find(item => 
+          const itemToRemove = currentItems.find(item =>
             item.name.toLowerCase().includes(result.removeProductName!.toLowerCase())
           );
           if (itemToRemove) {
             useCartStore.getState().removeItem(itemToRemove.id);
-            result.message = locale === "id" 
+            result.message = locale === "id"
               ? `${itemToRemove.name} dihapus dari keranjang!`
               : `${itemToRemove.name} removed from cart!`;
           } else {
@@ -277,13 +293,13 @@ export function useVoiceCommand({
           }
         }
         break;
-        
+
       case "filter":
       case "search":
         if (result.destination) {
           let url = result.destination;
           const params = new URLSearchParams();
-          
+
           if (result.sortBy) {
             params.set("sort", result.sortBy);
           }
@@ -293,14 +309,14 @@ export function useVoiceCommand({
           if (result.filterCategory) {
             params.set("category", result.filterCategory);
           }
-          
+
           if (params.toString()) {
             url += `?${params.toString()}`;
           }
           router.push(url);
         }
         break;
-        
+
       case "add_to_cart":
         // Items already added during processing
         break;
@@ -318,13 +334,13 @@ export function useVoiceCommand({
 
   const stopAndProcess = useCallback(async (): Promise<VoiceCommandResult | null> => {
     stopBrowserSTT();
-    
+
     await new Promise(resolve => setTimeout(resolve, 150));
-    
+
     const transcriptToProcess = currentTranscript.trim();
-    
+
     if (!transcriptToProcess) {
-      const noSpeechMsg = locale === "id" 
+      const noSpeechMsg = locale === "id"
         ? "Tidak ada suara terdeteksi. Coba lagi."
         : "No speech detected. Try again.";
       setError(noSpeechMsg);
@@ -339,31 +355,34 @@ export function useVoiceCommand({
     try {
       // First, try local intent detection (faster)
       const localResult = detectLocalIntent(transcriptToProcess, locale);
-      
+
       if (localResult && localResult.command !== "unknown") {
         // Execute the command
         await executeCommand(localResult);
-        
+
         setLastResult(localResult);
         setStatus("");
         setIsProcessing(false);
-        
+
         if (onSuccess) {
           onSuccess(localResult);
         }
-        
+
         return localResult;
       }
-      
-      // Fall back to Multi-Agent API for complex commands
+
+
+      // Fall back to VoiceAgent API for smart command processing
+      // This uses LLM to understand context, correct typos, and return actions
       const response = await aiApi.sendChatMessage({
         message: transcriptToProcess,
         session_id: sessionIdRef.current,
         locale,
+        is_voice_command: true,  // Use VoiceAgent for action-oriented response
       });
 
       sessionIdRef.current = response.session_id;
-      
+
       // Map API intent to voice command type
       const intentMap: Record<string, VoiceCommandType> = {
         "add_to_cart": "add_to_cart",
@@ -379,13 +398,13 @@ export function useVoiceCommand({
         "inquiry": "inquiry",
         "off_topic": "unknown",
       };
-      
+
       const command = intentMap[response.intent || "inquiry"] || "inquiry";
-      
+
       // Handle navigation from API
       if (response.should_navigate && response.destination) {
         router.push(response.destination);
-        
+
         const result: VoiceCommandResult = {
           success: true,
           command: "navigate",
@@ -393,41 +412,41 @@ export function useVoiceCommand({
           transcript: transcriptToProcess,
           destination: response.destination,
         };
-        
+
         setLastResult(result);
         setStatus("");
         setIsProcessing(false);
-        
+
         if (onSuccess) {
           onSuccess(result);
         }
-        
+
         return result;
       }
 
       // Handle order data (add to cart)
       if (response.order_data && response.order_data.items && response.order_data.items.length > 0) {
         const validItems: VoiceCommandItem[] = [];
-        
+
         // Get fresh cart state
         const cartStore = useCartStore.getState();
-        
+
         for (const item of response.order_data.items) {
           if (!item.product_id || !item.product_name || !item.unit_price || item.unit_price <= 0) {
             continue;
           }
-          
+
           // Use string for product ID (UUID from database)
           const productId = String(item.product_id);
           const quantity = item.quantity > 0 ? item.quantity : 1;
           const size = item.size || "medium";
           const unitPrice = Number(item.unit_price);
-          
+
           if (unitPrice <= 0 || !productId) continue;
-          
+
           // Check for existing item with same ID (compare as string)
           const existingItem = cartStore.items.find(i => String(i.id) === productId);
-          
+
           if (existingItem) {
             // Update existing item's quantity (price will be updated by addItem)
             // Use addItem to update both quantity and price
@@ -448,7 +467,7 @@ export function useVoiceCommand({
               image: item.image_url || undefined,
             });
           }
-          
+
           validItems.push({
             product_id: productId,
             product_name: String(item.product_name),
@@ -459,7 +478,7 @@ export function useVoiceCommand({
             image_url: item.image_url,
           });
         }
-        
+
         if (validItems.length > 0) {
           const result: VoiceCommandResult = {
             success: true,
@@ -468,19 +487,19 @@ export function useVoiceCommand({
             transcript: transcriptToProcess,
             items: validItems,
           };
-          
+
           setLastResult(result);
           setStatus(locale === "id" ? "Ditambahkan ke keranjang!" : "Added to cart!");
           setIsProcessing(false);
-          
+
           if (onSuccess) {
             onSuccess(result);
           }
-          
+
           return result;
         }
       }
-      
+
       // Handle off-topic rejection
       if (response.intent === "off_topic") {
         const result: VoiceCommandResult = {
@@ -489,52 +508,52 @@ export function useVoiceCommand({
           message: response.response,
           transcript: transcriptToProcess,
         };
-        
+
         setLastResult(result);
         setStatus("");
         setIsProcessing(false);
-        
+
         if (onError) {
           onError(response.response);
         }
-        
+
         return result;
       }
-      
+
       // General response (recommendations, inquiries, etc.)
       const result: VoiceCommandResult = {
         success: true,
         command,
-        message: response.response || (locale === "id" 
+        message: response.response || (locale === "id"
           ? "Maaf, saya tidak mengerti perintah tersebut."
           : "Sorry, I didn't understand that command."),
         transcript: transcriptToProcess,
       };
-      
+
       setLastResult(result);
       setStatus("");
       setIsProcessing(false);
-      
+
       if (onSuccess) {
         onSuccess(result);
       }
-      
+
       return result;
-      
+
     } catch (err) {
       console.error("[Voice Command] Error:", err);
       const errorMsg = locale === "id"
         ? "Gagal memproses perintah. Silakan coba lagi."
         : "Failed to process command. Please try again.";
-      
+
       setError(errorMsg);
       setStatus("");
       setIsProcessing(false);
-      
+
       if (onError) {
         onError(errorMsg);
       }
-      
+
       return null;
     }
   }, [stopBrowserSTT, currentTranscript, locale, executeCommand, addItem, onSuccess, onError, cartItems]);

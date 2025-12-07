@@ -45,7 +45,7 @@ function useChat(locale: string) {
   const getInitialMessage = useCallback((): Message => ({
     id: 1,
     role: "assistant",
-    content: locale === "en" 
+    content: locale === "en"
       ? "Hi there! I'm your JuiceQu AI assistant. I can help you find the perfect smoothie or place an order directly! Just tell me what you'd like, for example: 'I want to buy 2 Acai Mango'."
       : "Halo! Saya asisten AI JuiceQu. Saya bisa membantu Anda menemukan smoothie yang sempurna atau langsung memesan! Cukup bilang apa yang Anda mau, contoh: 'Beli Acai Mango 2'.",
   }), [locale]);
@@ -101,7 +101,7 @@ function useChat(locale: string) {
     try {
       // Include conversation history for context
       const conversationHistory = getConversationHistory();
-      
+
       const response: ChatResponse = await aiApi.sendChatMessage({
         message: input,
         session_id: sessionId,
@@ -119,7 +119,7 @@ function useChat(locale: string) {
       });
     } catch (err) {
       updateMessage(loadingMessageId, {
-        content: locale === "en" 
+        content: locale === "en"
           ? "Sorry, I couldn't process your request. Please try again."
           : "Maaf, saya tidak bisa memproses permintaan Anda. Silakan coba lagi.",
         isLoading: false,
@@ -161,18 +161,18 @@ function ErrorBanner({ error, onDismiss }: { error: string; onDismiss: () => voi
 }
 
 // Featured products display (for bestsellers, recommendations, etc)
-function FeaturedProductsGrid({ 
-  products, 
-  locale, 
-  onProductClick 
-}: { 
-  products: FeaturedProduct[]; 
+function FeaturedProductsGrid({
+  products,
+  locale,
+  onProductClick
+}: {
+  products: FeaturedProduct[];
   locale: string;
   onProductClick: (product: FeaturedProduct) => void;
 }) {
   // Get backend URL for images
   const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
-  
+
   const getImageUrl = (imageUrl: string | undefined | null): string | null => {
     if (!imageUrl) return null;
     // If already a full URL, return as-is
@@ -186,7 +186,7 @@ function FeaturedProductsGrid({
       <div className="grid grid-cols-2 gap-3">
         {products.map((product) => {
           const imageUrl = getImageUrl(product.image_url) || getImageUrl(product.thumbnail_url);
-          
+
           return (
             <button
               key={product.id}
@@ -201,7 +201,7 @@ function FeaturedProductsGrid({
                   </span>
                 </div>
               )}
-              
+
               {/* Product image */}
               <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 mb-3">
                 {imageUrl ? (
@@ -218,7 +218,7 @@ function FeaturedProductsGrid({
                   </div>
                 )}
               </div>
-              
+
               {/* Product info */}
               <div className="space-y-1">
                 <h4 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2 group-hover:text-green-600 transition-colors">
@@ -244,13 +244,13 @@ function FeaturedProductsGrid({
           );
         })}
       </div>
-      
+
       {/* Tip */}
       <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-700">
         <Sparkles className="h-4 w-4 shrink-0" />
         <span>
-          {locale === "en" 
-            ? "Click a product or type: 'Buy [name] 1' to order!" 
+          {locale === "en"
+            ? "Click a product or type: 'Buy [name] 1' to order!"
             : "Klik produk atau ketik: 'Beli [nama] 1' untuk pesan!"}
         </span>
       </div>
@@ -259,8 +259,8 @@ function FeaturedProductsGrid({
 }
 
 // Product card for small orders (less than 3 items)
-function OrderProductCards({ orderData, locale, onCheckout }: { 
-  orderData: ChatOrderData; 
+function OrderProductCards({ orderData, locale, onCheckout }: {
+  orderData: ChatOrderData;
   locale: string;
   onCheckout: () => void;
 }) {
@@ -268,8 +268,8 @@ function OrderProductCards({ orderData, locale, onCheckout }: {
     <div className="mt-3 space-y-3">
       <div className="grid gap-3">
         {orderData.items.map((item, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="flex items-center gap-3 rounded-xl bg-white border border-gray-200 p-3 shadow-sm"
           >
             <div className="relative h-16 w-16 overflow-hidden rounded-lg bg-gray-100 shrink-0">
@@ -300,7 +300,7 @@ function OrderProductCards({ orderData, locale, onCheckout }: {
           </div>
         ))}
       </div>
-      
+
       {/* Total and Checkout */}
       <div className="rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 p-4 border border-green-200">
         <div className="flex justify-between text-sm text-gray-600 mb-1">
@@ -315,7 +315,7 @@ function OrderProductCards({ orderData, locale, onCheckout }: {
           <span>Total</span>
           <span className="text-green-600">Rp {orderData.total.toLocaleString("id-ID")}</span>
         </div>
-        <Button 
+        <Button
           onClick={onCheckout}
           className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2"
         >
@@ -328,8 +328,8 @@ function OrderProductCards({ orderData, locale, onCheckout }: {
 }
 
 // Bill format for larger orders (3+ items)
-function OrderBill({ orderData, locale, onCheckout }: { 
-  orderData: ChatOrderData; 
+function OrderBill({ orderData, locale, onCheckout }: {
+  orderData: ChatOrderData;
   locale: string;
   onCheckout: () => void;
 }) {
@@ -341,7 +341,7 @@ function OrderBill({ orderData, locale, onCheckout }: {
           <h3 className="font-bold text-lg">🧃 JuiceQu</h3>
           <p className="text-xs text-gray-500">{locale === "en" ? "Order Summary" : "Ringkasan Pesanan"}</p>
         </div>
-        
+
         {/* Items */}
         <div className="space-y-2 mb-3">
           {orderData.items.map((item, index) => (
@@ -355,7 +355,7 @@ function OrderBill({ orderData, locale, onCheckout }: {
             </div>
           ))}
         </div>
-        
+
         {/* Totals */}
         <div className="border-t border-dashed border-gray-300 pt-3 space-y-1">
           <div className="flex justify-between text-gray-600">
@@ -371,7 +371,7 @@ function OrderBill({ orderData, locale, onCheckout }: {
             <span>Rp {orderData.total.toLocaleString("id-ID")}</span>
           </div>
         </div>
-        
+
         {/* Footer */}
         <div className="text-center mt-3 pt-3 border-t border-dashed border-gray-300">
           <p className="text-xs text-gray-500">
@@ -379,9 +379,9 @@ function OrderBill({ orderData, locale, onCheckout }: {
           </p>
         </div>
       </div>
-      
+
       {/* Checkout Button */}
-      <Button 
+      <Button
         onClick={onCheckout}
         className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2"
       >
@@ -392,65 +392,72 @@ function OrderBill({ orderData, locale, onCheckout }: {
   );
 }
 
-function MessageBubble({ 
-  message, 
-  locale, 
+function MessageBubble({
+  message,
+  locale,
   onCheckout,
   onProductClick
-}: { 
-  message: Message; 
-  locale: string; 
+}: {
+  message: Message;
+  locale: string;
   onCheckout: (orderData: ChatOrderData) => void;
   onProductClick: (product: FeaturedProduct) => void;
 }) {
   const isUser = message.role === "user";
-  
+
   return (
     <div className={`flex items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-        isUser ? "bg-gray-900 text-white" : "bg-green-600 text-white"
-      }`}>
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isUser ? "bg-gray-900 text-white" : "bg-green-600 text-white"
+        }`}>
         {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
       </div>
       <div className={`max-w-[85%] ${isUser ? "" : ""}`}>
-        <div className={`rounded-2xl px-4 py-3 text-sm ${
-          isUser
+        <div className={`rounded-2xl px-4 py-3 text-sm ${isUser
             ? "bg-gray-900 text-white rounded-tr-none"
             : message.isError
-            ? "bg-red-50 text-red-800 rounded-tl-none"
-            : "bg-gray-100 text-gray-800 rounded-tl-none"
-        }`}>
+              ? "bg-red-50 text-red-800 rounded-tl-none"
+              : "bg-gray-100 text-gray-800 rounded-tl-none"
+          }`}>
           {message.isLoading ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span>{locale === "en" ? "Thinking..." : "Berpikir..."}</span>
             </div>
-          ) : (
+          ) : isUser ? (
             message.content
+          ) : (
+            <div
+              className="whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{
+                __html: message.content
+                  .replace(/\n/g, '<br/>')
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              }}
+            />
           )}
         </div>
-        
+
         {/* Featured Products Display */}
         {message.featuredProducts && message.featuredProducts.length > 0 && (
-          <FeaturedProductsGrid 
+          <FeaturedProductsGrid
             products={message.featuredProducts}
             locale={locale}
             onProductClick={onProductClick}
           />
         )}
-        
+
         {/* Order Data Display */}
         {message.orderData && message.showCheckout && message.orderData.items.length > 0 && (
           message.orderData.items.length < 3 ? (
-            <OrderProductCards 
-              orderData={message.orderData} 
-              locale={locale} 
+            <OrderProductCards
+              orderData={message.orderData}
+              locale={locale}
               onCheckout={() => onCheckout(message.orderData!)}
             />
           ) : (
-            <OrderBill 
-              orderData={message.orderData} 
-              locale={locale} 
+            <OrderBill
+              orderData={message.orderData}
+              locale={locale}
               onCheckout={() => onCheckout(message.orderData!)}
             />
           )
@@ -503,9 +510,9 @@ function ChatInput({
           className={`h-10 w-10 rounded-full ${isRecording ? "animate-pulse bg-red-500 hover:bg-red-600" : ""}`}
           disabled={(isLoading && !isRecording) || !isSpeechSupported}
           title={
-            !isSpeechSupported 
+            !isSpeechSupported
               ? (locale === "id" ? "Browser tidak mendukung speech recognition" : "Browser does not support speech recognition")
-              : isRecording 
+              : isRecording
                 ? (locale === "id" ? "Klik untuk berhenti" : "Click to stop")
                 : (locale === "id" ? "Klik untuk bicara" : "Click to speak")
           }
@@ -563,7 +570,7 @@ export default function ChatPage() {
   const { messages, input, setInput, isLoading, error, setError, sendMessage } = useChat(locale);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { addItem, clearCart } = useCartStore();
-  
+
   // Use browser-based speech recognition (free, no API key needed)
   const handleVoiceResult = useCallback((transcript: string) => {
     if (transcript.trim()) {
@@ -588,7 +595,7 @@ export default function ChatPage() {
     onResult: handleVoiceResult,
     onError: handleVoiceError,
   });
-  
+
   const suggestions = locale === "en" ? SUGGESTIONS_EN : SUGGESTIONS_ID;
 
   useEffect(() => {
@@ -601,7 +608,7 @@ export default function ChatPage() {
   const handleCheckout = useCallback((orderData: ChatOrderData) => {
     // Clear existing cart and add new items
     clearCart();
-    
+
     for (const item of orderData.items) {
       addItem({
         id: item.product_id,
@@ -612,14 +619,14 @@ export default function ChatPage() {
         image: item.image_url || undefined,
       });
     }
-    
+
     // Redirect to checkout
     router.push("/checkout");
   }, [addItem, clearCart, router]);
 
   // Handle product click - set input to order that product
   const handleProductClick = useCallback((product: FeaturedProduct) => {
-    const orderMessage = locale === "en" 
+    const orderMessage = locale === "en"
       ? `Buy ${product.name} 1`
       : `Beli ${product.name} 1`;
     setInput(orderMessage);
@@ -635,10 +642,10 @@ export default function ChatPage() {
             {displayError && <ErrorBanner error={displayError} onDismiss={() => setError(null)} />}
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
               {messages.map((msg) => (
-                <MessageBubble 
-                  key={msg.id} 
-                  message={msg} 
-                  locale={locale} 
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  locale={locale}
                   onCheckout={handleCheckout}
                   onProductClick={handleProductClick}
                 />

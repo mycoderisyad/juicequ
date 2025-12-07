@@ -23,6 +23,8 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(None, description="Session ID for conversation context")
     locale: Optional[str] = Field("id", description="Language locale (id/en)")
     conversation_history: Optional[List[ChatMessageHistory]] = Field(None, description="Previous conversation messages")
+    is_voice_command: bool = Field(False, description="If True, use VoiceAgent for action-oriented response")
+
 
 
 class FeaturedProduct(BaseModel):
@@ -62,6 +64,7 @@ class ChatOrderData(BaseModel):
     notes: Optional[str] = Field(None, description="Order notes")
 
 
+
 class ChatResponse(BaseModel):
     """Schema for chat response."""
     response: str = Field(..., description="AI response message (plain text, no HTML)")
@@ -72,6 +75,8 @@ class ChatResponse(BaseModel):
     order_data: Optional[ChatOrderData] = Field(None, description="Order data if intent is order")
     show_checkout: bool = Field(False, description="Whether to show checkout button")
     featured_products: Optional[List[FeaturedProduct]] = Field(None, description="Featured products to display (bestsellers, recommendations, etc)")
+    should_navigate: bool = Field(False, description="Whether frontend should navigate to destination")
+    destination: Optional[str] = Field(None, description="URL destination for navigation (e.g., /products/123)")
 
 
 # =============================================================================

@@ -8,6 +8,8 @@ from .product_agent import ProductAgent
 from .order_agent import OrderAgent
 from .navigation_agent import NavigationAgent
 from .guard_agent import GuardAgent
+from .conversational_agent import ConversationalAgent
+from .voice_agent import VoiceAgent
 from .orchestrator import AgentOrchestrator
 
 __all__ = [
@@ -20,6 +22,8 @@ __all__ = [
     "OrderAgent",
     "NavigationAgent",
     "GuardAgent",
+    "ConversationalAgent",
+    "VoiceAgent",
     "AgentOrchestrator",
 ]
 

@@ -13,6 +13,8 @@ from .product_agent import ProductAgent
 from .order_agent import OrderAgent
 from .navigation_agent import NavigationAgent
 from .guard_agent import GuardAgent
+from .conversational_agent import ConversationalAgent
+from .voice_agent import VoiceAgent
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,8 @@ class AgentOrchestrator:
         self.product_agent = ProductAgent(db)
         self.order_agent = OrderAgent(db)
         self.navigation_agent = NavigationAgent(db)
+        self.conversational_agent = ConversationalAgent(db)
+        self.voice_agent = VoiceAgent(db)
     
     async def process(
         self,
@@ -44,6 +48,7 @@ class AgentOrchestrator:
         session_id: Optional[str] = None,
         cart_items: Optional[list[dict]] = None,
         conversation_history: Optional[list[dict]] = None,
+        is_voice_command: bool = False,
     ) -> dict[str, Any]:
         """
         Process user input through the multi-agent system.
@@ -55,6 +60,7 @@ class AgentOrchestrator:
             session_id: Session ID for conversation context
             cart_items: Current cart items
             conversation_history: Previous conversation messages
+            is_voice_command: If True, use VoiceAgent for action-oriented response
             
         Returns:
             Response dictionary with message, intent, order_data, etc.
@@ -69,7 +75,15 @@ class AgentOrchestrator:
             conversation_history=conversation_history or [],
         )
         
+        
         try:
+            # VOICE COMMANDS: Use VoiceAgent for action-oriented response
+            # This bypasses normal flow and goes directly to LLM for smart parsing
+            if is_voice_command:
+                logger.info("[Orchestrator] Processing as voice command with VoiceAgent")
+                response = await self.voice_agent.process(context)
+                return self._format_response(response, context)
+            
             # Step 1: Guard check
             guard_response = await self.guard.process(context)
             
@@ -78,6 +92,12 @@ class AgentOrchestrator:
             
             if guard_response.intent == Intent.GREETING:
                 return self._handle_greeting(context)
+            
+            # If guard detected health topic, route directly to conversational agent
+            if guard_response.intent == Intent.HEALTH_INQUIRY:
+                context.detected_intent = Intent.HEALTH_INQUIRY
+                response = await self.conversational_agent.process(context)
+                return self._format_response(response, context)
             
             # Step 2: Route to detect intent
             router_response = await self.router.process(context)
@@ -105,32 +125,27 @@ class AgentOrchestrator:
     async def _route_to_agent(self, intent: Intent, context: AgentContext) -> AgentResponse:
         """Route request to appropriate specialist agent."""
         
-        # Order-related intents
+        # Order-related intents - need ProductAgent for database operations
         if intent in [Intent.ADD_TO_CART, Intent.REMOVE_FROM_CART, Intent.CLEAR_CART, Intent.CHECKOUT]:
             return await self.order_agent.process(context)
         
-        # Product-related intents
-        if intent in [Intent.RECOMMENDATION, Intent.SEARCH, Intent.PRODUCT_INFO]:
+        # Search intent - use ProductAgent for database search
+        if intent == Intent.SEARCH:
             return await self.product_agent.process(context)
         
         # Navigation intent
         if intent == Intent.NAVIGATE:
             return await self.navigation_agent.process(context)
         
-        # Default to product agent for general inquiries
-        if intent == Intent.INQUIRY:
-            # Check if it's about products
-            user_lower = context.user_input.lower()
-            product_keywords = ["produk", "product", "menu", "jus", "juice", "smoothie", "harga", "price"]
-            
-            if any(kw in user_lower for kw in product_keywords):
-                return await self.product_agent.process(context)
-            
-            # General store inquiry
-            return self._handle_general_inquiry(context)
-        
-        # Unknown intent - try product agent
-        return await self.product_agent.process(context)
+        # ALL conversational queries go to LLM for natural responses:
+        # - RECOMMENDATION: "juice yang cocok untuk stamina"
+        # - PRODUCT_INFO: "manfaat jus avocado"
+        # - HEALTH_INQUIRY: "vitamin untuk imun"
+        # - INQUIRY: "jam buka toko"
+        # - Unknown intents
+        #
+        # The LLM has product context injected and will give natural responses
+        return await self.conversational_agent.process(context)
     
     def _handle_greeting(self, context: AgentContext) -> dict[str, Any]:
         """Handle greeting messages."""

@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 export function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-1 cursor-pointer select-none">
-      <span className="text-xl md:text-2xl font-bold text-green-600">Juice</span>
-      <span className="text-xl md:text-2xl font-bold text-slate-800">Qu</span>
-      <span className="text-[10px] font-medium text-slate-400 -mt-3 ml-0.5">™</span>
+    <Link href="/" className="flex items-center cursor-pointer select-none">
+      <Image
+        src="/images/logo.png"
+        alt="JuiceQu Logo"
+        width={120}
+        height={40}
+        priority
+      />
     </Link>
   );
 }

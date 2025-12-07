@@ -25,8 +25,14 @@ class IntentRouterAgent(BaseAgent):
             r"^(halo|hai|hi|hello|hey|selamat\s+(pagi|siang|sore|malam)|good\s+(morning|afternoon|evening))[\s!?.]*$",
         ],
         Intent.ADD_TO_CART: [
-            r"\b(beli|pesan|order|mau|tambah|masukkan?|add|buy|purchase|want)\b.*\b(keranjang|cart)?\b",
+            # "beli/pesan/tambah X ke keranjang"
+            r"\b(beli|pesan|order|mau|tambah(?:kan|in)?|masuk(?:kan|in)?|add|buy|purchase|want)\b.*\b(keranjang|cart)\b",
+            # "keranjang tambah X"
             r"\b(keranjang|cart)\b.*\b(tambah|masuk|add)\b",
+            # "beli/pesan 2 berry blast" (with quantity or product name)
+            r"\b(beli|pesan|order|mau beli|mau pesan)\s+\d*\s*(?:buah|porsi|pcs|x)?\s*\w+",
+            # "tambah produk terlaris/termurah ke keranjang"
+            r"\b(tambah|masuk)\w*\s+.*?(terlaris|termurah|termahal|bestseller|populer).*?(keranjang|cart)",
         ],
         Intent.REMOVE_FROM_CART: [
             r"\b(hapus|hilangkan|buang|remove|delete)\b.*\b(dari\s*)?(keranjang|cart)\b",
@@ -53,6 +59,17 @@ class IntentRouterAgent(BaseAgent):
             r"\b(terlaris|bestseller|termurah|termahal|terpopuler)\b",
             r"(laris|populer|popular|bestseller|favorit|favorite)",
         ],
+        Intent.HEALTH_INQUIRY: [
+            # Benefits/nutrition questions - expanded to catch more patterns
+            r"\b(manfaat|khasiat|benefit|kebaikan|fungsi)\b",
+            r"\b(vitamin|nutrisi|gizi|nutrition)\s+(apa|yang|untuk|dalam)?\b",
+            r"\b(alergi|allergy|allergen)\b",
+            r"\b(aman|safe)\s+(untuk|buat|bagi|gak|tidak)?",
+            r"\b(tips|resep|recipe)\s*(sehat|jus|juice|diet|detox)?",
+            r"(bagus|baik)\s+(untuk|buat|bagi)\s+(kesehatan|kulit|rambut|imun|metabolisme|tubuh|badan)",
+            r"\b(sehat|healthy)\s+(untuk|buat|bagi|gak|tidak)",
+            r"\b(kandungan|content|gizi dalam)\b",
+        ],
     }
     
     # Keywords for intent classification
@@ -71,16 +88,27 @@ class IntentRouterAgent(BaseAgent):
                    "healthy", "fresh", "low calorie", "low sugar", "diet"],
         },
         Intent.PRODUCT_INFO: {
-            "id": ["apa itu", "jelaskan", "info", "detail", "bahan", "kandungan", "kalori", 
-                   "nutrisi", "manfaat", "khasiat", "harga"],
-            "en": ["what is", "explain", "info", "detail", "ingredient", "content", "calorie",
-                   "nutrition", "benefit", "price"],
+            # Only keep product-specific keywords, NOT health/nutrition keywords
+            "id": ["apa itu", "jelaskan", "info", "detail", "bahan", "kalori", "harga",
+                   "berapa", "ukuran", "size", "gambar", "foto"],
+            "en": ["what is", "explain", "info", "detail", "ingredient", "calorie",
+                   "price", "how much", "size", "image", "photo"],
         },
         Intent.INQUIRY: {
             "id": ["jam buka", "lokasi", "alamat", "delivery", "pengiriman", "promo", "diskon",
                    "pembayaran", "metode bayar"],
             "en": ["opening hours", "location", "address", "delivery", "shipping", "promo", 
                    "discount", "payment", "payment method"],
+        },
+        Intent.HEALTH_INQUIRY: {
+            "id": ["manfaat", "khasiat", "kebaikan", "fungsi", "vitamin", "mineral", "gizi",
+                   "nutrisi", "alergi", "intoleransi", "aman untuk", "bahaya", "efek samping",
+                   "tips sehat", "resep", "detox", "imun", "imunitas", "pencernaan", 
+                   "metabolisme", "antioksidan", "stamina", "energi", "kulit", "rambut"],
+            "en": ["benefit", "function", "vitamin", "mineral", "nutrition", "allergy",
+                   "intolerance", "safe for", "danger", "side effect", "health tips", 
+                   "recipe", "detox", "immune", "immunity", "digestion", "metabolism",
+                   "antioxidant", "stamina", "energy", "skin", "hair"],
         },
     }
     
@@ -153,6 +181,11 @@ class IntentRouterAgent(BaseAgent):
         order_keywords = self.INTENT_KEYWORDS[Intent.ADD_TO_CART][lang_key]
         if any(kw in user_input for kw in order_keywords):
             return Intent.ADD_TO_CART
+        
+        # Check health inquiry keywords (NEW)
+        health_keywords = self.INTENT_KEYWORDS[Intent.HEALTH_INQUIRY][lang_key]
+        if any(kw in user_input for kw in health_keywords):
+            return Intent.HEALTH_INQUIRY
         
         # Check product info keywords
         info_keywords = self.INTENT_KEYWORDS[Intent.PRODUCT_INFO][lang_key]

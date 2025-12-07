@@ -62,14 +62,25 @@ class OrderAgent(BaseAgent):
         
         products_to_add = []
         
+        # Extract how many products user wants (e.g., "2 buah produk terlaris")
+        product_count = self._extract_product_count(user_input)
+        
         if price_pref or category_pref:
-            # User wants to add product by criteria
-            product = self._get_product_by_criteria(price_pref, category_pref)
-            if product:
+            # User wants to add products by criteria
+            criteria_products = self._get_product_by_criteria(
+                price_pref, 
+                category_pref, 
+                count=product_count
+            )
+            
+            quantity_each = entities.get("quantity", 1)
+            size = entities.get("size", "medium")
+            
+            for product in criteria_products:
                 products_to_add.append({
                     "product": product,
-                    "quantity": entities.get("quantity", 1),
-                    "size": entities.get("size", "medium"),
+                    "quantity": quantity_each,
+                    "size": size,
                 })
         
         # If no criteria match, try to find product by name
@@ -221,25 +232,27 @@ class OrderAgent(BaseAgent):
     def _get_product_by_criteria(
         self, 
         price_pref: Optional[str], 
-        category_pref: Optional[str]
-    ) -> Optional[Product]:
-        """Get product based on user criteria."""
+        category_pref: Optional[str],
+        count: int = 1
+    ) -> list[Product]:
+        """Get products based on user criteria. Returns list of products."""
         query = self.db.query(Product).filter(
             Product.is_available == True,
             Product.is_deleted == False
         )
         
+        results = []
+        
         if price_pref == "cheapest":
-            return query.order_by(Product.base_price.asc()).first()
+            results = query.order_by(Product.base_price.asc()).limit(count).all()
         elif price_pref == "most_expensive":
-            return query.order_by(Product.base_price.desc()).first()
-        
-        if category_pref == "bestseller":
-            return query.order_by(Product.order_count.desc().nullslast()).first()
+            results = query.order_by(Product.base_price.desc()).limit(count).all()
+        elif category_pref == "bestseller":
+            results = query.order_by(Product.order_count.desc().nullslast()).limit(count).all()
         elif category_pref == "healthy":
-            return query.filter(Product.calories < 200).order_by(Product.calories.asc()).first()
+            results = query.filter(Product.calories < 200).order_by(Product.calories.asc()).limit(count).all()
         
-        return None
+        return results
     
     def _extract_products_from_input(
         self, 
@@ -336,4 +349,35 @@ class OrderAgent(BaseAgent):
             .filter(Product.is_available == True, Product.is_deleted == False)
             .all()
         )
+    
+    def _extract_product_count(self, user_input: str) -> int:
+        """
+        Extract how many products user wants from the input.
+        E.g., "2 buah produk terlaris" -> 2
+              "dua produk termurah" -> 2
+              "tiga item paling laris" -> 3
+        """
+        # Number words mapping
+        number_words = {
+            "satu": 1, "one": 1,
+            "dua": 2, "two": 2,
+            "tiga": 3, "three": 3,
+            "empat": 4, "four": 4,
+            "lima": 5, "five": 5,
+        }
+        
+        # Pattern: digit followed by product-related words
+        digit_pattern = r'(\d+)\s*(?:buah|porsi|pcs|macam|jenis|item|produk|product)?'
+        match = re.search(digit_pattern, user_input)
+        if match:
+            count = int(match.group(1))
+            if 1 <= count <= 10:  # Reasonable limit
+                return count
+        
+        # Pattern: number word followed by product-related words
+        for word, num in number_words.items():
+            if re.search(rf'\b{word}\b\s*(?:buah|porsi|pcs|macam|jenis|item|produk|product)?', user_input):
+                return num
+        
+        return 1  # Default to 1 product
 

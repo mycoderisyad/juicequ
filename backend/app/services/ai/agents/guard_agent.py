@@ -10,6 +10,7 @@ class GuardAgent(BaseAgent):
     """
     Guards against off-topic requests.
     Ensures AI only responds to juice store related queries.
+    Now also allows health/nutrition questions related to juice benefits.
     """
     
     # Off-topic patterns that should be rejected
@@ -18,8 +19,8 @@ class GuardAgent(BaseAgent):
         r"\b(python|javascript|java|coding|programming|code|debug|error|bug|function|class|variable|loop|array|database|sql|api|html|css|react|vue|angular)\b",
         r"\b(compile|runtime|syntax|algorithm|data structure|framework|library|npm|pip|git|github)\b",
         
-        # Academic subjects
-        r"\b(matematika|math|fisika|physics|kimia|chemistry|biologi|biology|sejarah|history|geografi|geography)\b",
+        # Academic subjects (not health related)
+        r"\b(matematika|math|fisika|physics|kimia|chemistry|sejarah|history|geografi|geography)\b",
         r"\b(rumus|formula|teori|theory|hitung|calculate|soal|problem|ujian|exam|tugas|homework|pr|assignment)\b",
         
         # Unrelated topics
@@ -28,7 +29,7 @@ class GuardAgent(BaseAgent):
         
         # General knowledge that's not store-related
         r"\b(siapa presiden|who is president|capital of|ibukota|negara mana|which country)\b",
-        r"\b(translate|terjemahkan|artinya|meaning of)\b",
+        r"\b(translate|terjemahkan|artinya apa|meaning of)\b",
     ]
     
     # Store-related keywords that indicate valid queries
@@ -48,6 +49,34 @@ class GuardAgent(BaseAgent):
         # AI assistant
         "rekomendasi", "recommend", "saran", "suggest", "favorit", "favorite",
         "terlaris", "bestseller", "populer", "popular",
+    ]
+    
+    # Health/wellness keywords - ALLOWED topics (related to juice/fruits)
+    HEALTH_KEYWORDS = [
+        # Nutrition
+        "nutrisi", "nutrition", "gizi", "vitamin", "mineral", "protein",
+        "karbohidrat", "carbohydrate", "serat", "fiber", "lemak", "fat",
+        "kalori", "calorie", "kkal", "kcal",
+        
+        # Health benefits
+        "khasiat", "manfaat", "benefit", "kebaikan", "fungsi",
+        "antioksidan", "antioxidant", "imun", "immune", "imunitas", "immunity",
+        "detox", "detoksifikasi", "cleanse",
+        
+        # Conditions & wellness
+        "diet", "sehat", "healthy", "kesehatan", "health", "wellness",
+        "stamina", "energi", "energy", "lelah", "tired", "capek",
+        "pencernaan", "digestion", "metabolisme", "metabolism",
+        "kulit", "skin", "rambut", "hair", "kecantikan", "beauty",
+        
+        # Allergies & warnings
+        "alergi", "allergy", "allergen", "intoleransi", "intolerance",
+        "aman", "safe", "bahaya", "danger", "peringatan", "warning",
+        "diabetes", "gula darah", "blood sugar", "kolesterol", "cholesterol",
+        
+        # Tips & recipes
+        "tips", "resep", "recipe", "cara buat", "how to make", "cara membuat",
+        "kombinasi", "combination", "campuran", "mix",
     ]
     
     # Greetings are always allowed
@@ -78,16 +107,20 @@ class GuardAgent(BaseAgent):
         # Check if query contains store-related keywords
         has_store_context = any(kw in user_input for kw in self.STORE_KEYWORDS)
         
+        # Check if query contains health-related keywords
+        has_health_context = any(kw in user_input for kw in self.HEALTH_KEYWORDS)
+        
         # Check for off-topic patterns
         for pattern in self.OFF_TOPIC_PATTERNS:
             if re.search(pattern, user_input, re.IGNORECASE):
-                # If it also has store context, allow it (e.g., "harga berry blast berapa")
-                if has_store_context:
+                # If it also has store or health context, allow it
+                if has_store_context or has_health_context:
+                    intent = Intent.HEALTH_INQUIRY if has_health_context else Intent.INQUIRY
                     return AgentResponse(
                         success=True,
                         message="",
-                        intent=Intent.INQUIRY,
-                        data={"allowed": True, "reason": "has_store_context"},
+                        intent=intent,
+                        data={"allowed": True, "reason": "has_valid_context"},
                     )
                 
                 # Reject off-topic query
@@ -97,6 +130,15 @@ class GuardAgent(BaseAgent):
                     intent=Intent.OFF_TOPIC,
                     data={"allowed": False, "reason": "off_topic"},
                 )
+        
+        # Allow if has health context - route to health inquiry
+        if has_health_context:
+            return AgentResponse(
+                success=True,
+                message="",
+                intent=Intent.HEALTH_INQUIRY,
+                data={"allowed": True, "reason": "health_topic"},
+            )
         
         # Allow if has store context or is a general inquiry
         return AgentResponse(
@@ -110,14 +152,20 @@ class GuardAgent(BaseAgent):
         """Get polite rejection message."""
         if context.locale == "id":
             return (
-                "Maaf, saya adalah asisten JuiceQu yang hanya bisa membantu "
-                "hal-hal terkait produk jus dan layanan toko kami. "
-                "Ada yang bisa saya bantu tentang menu atau pesanan Anda?"
+                "Maaf, saya adalah asisten JuiceQu dan hanya bisa membantu tentang:\n"
+                "🍹 Produk jus, smoothie, dan bowl\n"
+                "🥗 Nutrisi dan manfaat buah/sayur\n"
+                "💪 Tips kesehatan terkait jus\n"
+                "🛒 Pemesanan produk\n\n"
+                "Ada yang bisa saya bantu tentang topik di atas?"
             )
         else:
             return (
-                "Sorry, I'm JuiceQu's assistant and can only help with "
-                "matters related to our juice products and store services. "
-                "Is there anything I can help you with about our menu or your order?"
+                "Sorry, I'm JuiceQu's assistant and can only help with:\n"
+                "🍹 Juice, smoothie, and bowl products\n"
+                "🥗 Nutrition and fruit/vegetable benefits\n"
+                "💪 Health tips related to juice\n"
+                "🛒 Product ordering\n\n"
+                "Can I help you with any of these topics?"
             )
 

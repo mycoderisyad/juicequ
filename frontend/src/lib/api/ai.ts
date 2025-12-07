@@ -10,6 +10,7 @@ export interface ChatRequest {
   session_id?: string;
   locale?: string;
   conversation_history?: ChatMessageHistory[];
+  is_voice_command?: boolean;
 }
 
 export interface ChatOrderItem {

@@ -65,6 +65,7 @@ async def chat_with_ai(
             request.session_id,
             request.locale or "id",
             conversation_history,
+            is_voice_command=request.is_voice_command,
         )
         await service.close()
         
@@ -122,6 +123,8 @@ async def chat_with_ai(
             order_data=order_data,
             show_checkout=result.get("show_checkout", False),
             featured_products=featured_products,
+            should_navigate=result.get("should_navigate", False),
+            destination=result.get("destination"),
         )
     except ExternalServiceException:
         raise
