@@ -79,7 +79,7 @@ chroma_data/
 uploads/
 static/uploads/
 
-# Secrets & credentials (WAJIB)
+# Secrets & credentials
 *.pem
 *.key
 service-account*.json
@@ -88,7 +88,18 @@ google-credentials.json
 
 # Docker
 docker-compose.override.yml
+backups/
 
+# Nginx SSL (production certs)
+nginx/ssl/*.pem
+nginx/ssl/*.crt
+nginx/ssl/*.key
+!nginx/ssl/.gitkeep
+
+# Allow .env.example files
+!.env.example
+!backend/.env.example
+!frontend/.env.example
 
 # Ignore
 CONTEXT.md
@@ -97,3 +108,4 @@ HACKATHON_RULES.md
 INSTRUCTIONS.md
 RULES.md
 docs/screenshots/README.md
+DEPLOYMENT.md

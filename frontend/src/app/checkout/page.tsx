@@ -26,15 +26,15 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [notes, setNotes] = useState("");
-  
+
   // Pre-order scheduling state
   const [isPreorder, setIsPreorder] = useState(false);
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState("");
-  
+
   // Voucher state
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
@@ -47,7 +47,7 @@ export default function CheckoutPage() {
     discount_amount: number;
   } | null>(null);
   const [enabledPayments, setEnabledPayments] = useState<PaymentMethod[]>([]);
-  
+
   const cartTotal = total();
   const tax = cartTotal * 0.1;
   const voucherDiscount = appliedVoucher?.discount_amount || 0;
@@ -87,7 +87,7 @@ export default function CheckoutPage() {
 
     try {
       const result = await vouchersApi.validate(voucherCode.trim(), cartTotal);
-      
+
       if (result.valid && result.voucher) {
         setAppliedVoucher({
           ...result.voucher,
@@ -142,7 +142,7 @@ export default function CheckoutPage() {
 
   const isPaymentEnabled = (method: PaymentMethod) => enabledPayments.includes(method);
 
-  const paymentButtons: Array<{ id: PaymentMethod; label: string; icon: JSX.Element }> = [
+  const paymentButtons: Array<{ id: PaymentMethod; label: string; icon: React.ReactNode }> = [
     { id: "cash", label: "Cash", icon: <Banknote className="h-6 w-6 text-green-600" /> },
     { id: "qris", label: "QRIS", icon: <Smartphone className="h-6 w-6 text-blue-600" /> },
     { id: "transfer", label: "Transfer", icon: <CreditCard className="h-6 w-6 text-purple-600" /> },
@@ -167,7 +167,7 @@ export default function CheckoutPage() {
     }
     return null;
   };
-  
+
   const resolveProductId = (item: CartItem) => {
     if (item.productId) return String(item.productId);
     return String(item.id).replace(/-(small|medium|large)$/i, "");
@@ -221,7 +221,7 @@ export default function CheckoutPage() {
       };
 
       const response = await apiClient.post("/customer/orders", orderData);
-      
+
       if (response.data.success) {
         clearCart();
         setOrderSuccess(response.data.order.order_number || response.data.order.id);
@@ -298,7 +298,7 @@ export default function CheckoutPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
-      
+
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
           <Link
@@ -369,9 +369,8 @@ export default function CheckoutPage() {
                         key={btn.id}
                         onClick={() => enabled && setPaymentMethod(btn.id)}
                         disabled={!enabled}
-                        className={`flex items-center gap-3 rounded-2xl border-2 p-4 transition-colors ${
-                          active ? "border-green-600 bg-green-50" : "border-gray-200 hover:border-gray-300"
-                        } ${!enabled ? "opacity-60 cursor-not-allowed bg-gray-50 hover:border-gray-200" : ""}`}
+                        className={`flex items-center gap-3 rounded-2xl border-2 p-4 transition-colors ${active ? "border-green-600 bg-green-50" : "border-gray-200 hover:border-gray-300"
+                          } ${!enabled ? "opacity-60 cursor-not-allowed bg-gray-50 hover:border-gray-200" : ""}`}
                       >
                         {btn.icon}
                         <span className="font-medium text-gray-900">{btn.label}</span>
@@ -405,7 +404,7 @@ export default function CheckoutPage() {
                     <span className="ml-2 text-sm text-gray-600">Pre-order</span>
                   </label>
                 </div>
-                
+
                 {isPreorder ? (
                   <div className="space-y-4">
                     <p className="text-sm text-gray-500">
@@ -470,7 +469,7 @@ export default function CheckoutPage() {
                   <Ticket className="h-5 w-5 text-green-600" />
                   Kode Voucher
                 </h2>
-                
+
                 {appliedVoucher ? (
                   <div className="flex items-center justify-between rounded-xl bg-green-50 px-4 py-3">
                     <div>
@@ -479,7 +478,7 @@ export default function CheckoutPage() {
                         <span className="font-semibold text-green-700">{appliedVoucher.code}</span>
                       </div>
                       <span className="text-sm text-green-600">
-                        {appliedVoucher.discount_type === "percentage" 
+                        {appliedVoucher.discount_type === "percentage"
                           ? `Diskon ${appliedVoucher.discount_value}%`
                           : `Diskon ${formatCurrency(appliedVoucher.discount_value)}`
                         } (-{formatCurrency(appliedVoucher.discount_amount)})
@@ -517,7 +516,7 @@ export default function CheckoutPage() {
                     </Button>
                   </div>
                 )}
-                
+
                 {voucherError && (
                   <p className="mt-2 text-sm text-red-500">{voucherError}</p>
                 )}
@@ -574,13 +573,13 @@ export default function CheckoutPage() {
                     !isAuthenticated
                       ? "Login to Order"
                       : isSubmitting
-                      ? "Placing Order..."
-                      : isPreorder
-                      ? "Place Pre-order"
-                      : "Place Order"
+                        ? "Placing Order..."
+                        : isPreorder
+                          ? "Place Pre-order"
+                          : "Place Order"
                   }
                 />
-                
+
                 {!isAuthenticated && (
                   <div className="mt-4 rounded-xl bg-yellow-50 p-4 text-center text-sm text-yellow-700">
                     <Link href="/login?redirect=/checkout" className="font-medium hover:underline">

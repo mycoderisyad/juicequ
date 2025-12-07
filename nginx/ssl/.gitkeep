@@ -1,0 +1,9 @@
+# SSL certificates will be placed here
+# For Let's Encrypt, use certbot to generate certificates
+
+# Example:
+# certbot certonly --standalone -d juicequ.app -d www.juicequ.app -d api.juicequ.app
+
+# Then copy:
+# - fullchain.pem
+# - privkey.pem

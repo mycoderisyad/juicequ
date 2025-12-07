@@ -16,19 +16,19 @@ export default function CartPage() {
   const { items, removeItem, updateQuantity, total } = useCartStore();
   const { t } = useTranslation();
   const { format: formatCurrency } = useCurrency();
-  
+
   // Voucher state
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [voucherError, setVoucherError] = useState<string | null>(null);
   const [appliedVoucher, setAppliedVoucher] = useState<{
-    id: number;
+    id: string;
     code: string;
     discount_type: "percentage" | "fixed_amount";
     discount_value: number;
     discount_amount: number;
   } | null>(null);
-  
+
   const cartTotal = total();
   const tax = cartTotal * 0.1; // 10% tax
   const voucherDiscount = appliedVoucher?.discount_amount || 0;
@@ -46,7 +46,7 @@ export default function CartPage() {
 
     try {
       const result = await vouchersApi.validate(voucherCode.trim(), cartTotal);
-      
+
       if (result.valid && result.voucher) {
         setAppliedVoucher({
           ...result.voucher,
@@ -87,7 +87,7 @@ export default function CartPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
-      
+
       <main id="main-content" className="flex-1 py-10">
         <div className="container mx-auto px-4">
           <h1 className="mb-8 text-3xl font-bold text-gray-900">{t("cart.title")}</h1>
@@ -141,22 +141,22 @@ export default function CartPage() {
 
                         <div className="mt-4 flex items-center gap-6 sm:mt-0">
                           <div className="flex items-center rounded-full border border-gray-200 bg-gray-50">
-                            <button 
+                            <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               className="p-2 text-gray-600 hover:text-gray-900"
                             >
                               <Minus className="h-4 w-4" />
                             </button>
                             <span className="w-8 text-center text-sm font-medium text-gray-900">{item.quantity}</span>
-                            <button 
+                            <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               className="p-2 text-gray-600 hover:text-gray-900"
                             >
                               <Plus className="h-4 w-4" />
                             </button>
                           </div>
-                          
-                          <button 
+
+                          <button
                             onClick={() => removeItem(item.id)}
                             className="rounded-full p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
                           >
@@ -173,14 +173,14 @@ export default function CartPage() {
               <div className="lg:col-span-1">
                 <div className="sticky top-24 rounded-3xl bg-white p-6 shadow-xl shadow-gray-200/50">
                   <h2 className="text-xl font-bold text-gray-900">{t("cart.summary.title")}</h2>
-                  
+
                   {/* Voucher Input */}
                   <div className="mt-6 border-b border-gray-100 pb-6">
                     <div className="flex items-center gap-2 text-gray-700 mb-3">
                       <Ticket className="h-4 w-4" />
                       <span className="text-sm font-medium">Punya Voucher?</span>
                     </div>
-                    
+
                     {appliedVoucher ? (
                       <div className="flex items-center justify-between rounded-xl bg-green-50 px-4 py-3">
                         <div>
@@ -189,7 +189,7 @@ export default function CartPage() {
                             <span className="font-semibold text-green-700">{appliedVoucher.code}</span>
                           </div>
                           <span className="text-sm text-green-600">
-                            {appliedVoucher.discount_type === "percentage" 
+                            {appliedVoucher.discount_type === "percentage"
                               ? `Diskon ${appliedVoucher.discount_value}%`
                               : `Diskon ${formatCurrency(appliedVoucher.discount_value)}`
                             }
@@ -227,12 +227,12 @@ export default function CartPage() {
                         </Button>
                       </div>
                     )}
-                    
+
                     {voucherError && (
                       <p className="mt-2 text-sm text-red-500">{voucherError}</p>
                     )}
                   </div>
-                  
+
                   <div className="mt-6 space-y-4 border-b border-gray-100 pb-6">
                     <div className="flex justify-between text-gray-600">
                       <span>{t("cart.summary.subtotal")}</span>
@@ -265,7 +265,7 @@ export default function CartPage() {
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
-                  
+
                   <p className="mt-4 text-center text-xs text-gray-400">
                     {t("cart.secureCheckout")}
                   </p>

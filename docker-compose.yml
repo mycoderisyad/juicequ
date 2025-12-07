@@ -1,71 +1,166 @@
 version: "3.8"
 
 services:
+  # ===========================================
   # PostgreSQL Database
+  # ===========================================
   db:
     image: postgres:15-alpine
     container_name: juicequ-db
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: juicequ
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - juicequ-network
 
-  # Backend API
+  # ===========================================
+  # Backend API (FastAPI)
+  # ===========================================
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: juicequ-backend
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      - APP_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/juicequ
-      - SECRET_KEY=your-secret-key-here
-      - CORS_ORIGINS=http://localhost:3000
-      # Local storage configuration
+      - APP_ENV=${APP_ENV}
+      - DEBUG=${DEBUG}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - KOLOSAL_API_KEY=${KOLOSAL_API_KEY}
+      - KOLOSAL_API_BASE=${KOLOSAL_API_BASE}
       - UPLOAD_BASE_PATH=/app/uploads
-      - UPLOAD_MAX_SIZE_MB=10
-      - UPLOAD_ALLOWED_EXTENSIONS=jpg,jpeg,png,webp,gif
+      - UPLOAD_MAX_SIZE_MB=${UPLOAD_MAX_SIZE_MB}
+      - UPLOAD_ALLOWED_EXTENSIONS=${UPLOAD_ALLOWED_EXTENSIONS}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-      # Persistent volume for uploaded files (local storage on VPS)
       - uploads_data:/app/uploads
+      - chroma_data:/app/chroma_data
     depends_on:
       db:
         condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - juicequ-network
 
-  # Frontend
+  # ===========================================
+  # Frontend (Next.js)
+  # ===========================================
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_STORAGE_URL=${NEXT_PUBLIC_STORAGE_URL}
+        - NEXT_PUBLIC_APP_ENV=${NEXT_PUBLIC_APP_ENV}
+        - NEXT_PUBLIC_ENABLE_VOICE=${NEXT_PUBLIC_ENABLE_VOICE}
+        - NEXT_PUBLIC_ENABLE_AI_CHAT=${NEXT_PUBLIC_ENABLE_AI_CHAT}
     container_name: juicequ-frontend
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-      # Local storage - no cloud storage URL needed
-      - NEXT_PUBLIC_STORAGE_URL=http://localhost:8000
+    restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
     depends_on:
       - backend
-    command: npm run dev
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - juicequ-network
 
+  # ===========================================
+  # Nginx Reverse Proxy (Production)
+  # ===========================================
+  nginx:
+    image: nginx:alpine
+    container_name: juicequ-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - juicequ-network
+    profiles:
+      - production
+
+  # ===========================================
+  # Backup Service
+  # ===========================================
+  backup:
+    image: postgres:15-alpine
+    container_name: juicequ-backup
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS}
+    volumes:
+      - ./scripts/backup.sh:/backup.sh:ro
+      - backups_data:/backups
+      - uploads_data:/uploads:ro
+    entrypoint: ["/bin/sh", "-c", "chmod +x /backup.sh && /backup.sh"]
+    depends_on:
+      - db
+    networks:
+      - juicequ-network
+    profiles:
+      - backup
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  juicequ-network:
+    driver: bridge
+
+# ===========================================
+# Volumes
+# ===========================================
 volumes:
   postgres_data:
-  # Persistent volume for uploaded images - stored on VPS
+    name: juicequ-postgres-data
   uploads_data:
+    name: juicequ-uploads
+  chroma_data:
+    name: juicequ-chroma
+  backups_data:
+    name: juicequ-backups
