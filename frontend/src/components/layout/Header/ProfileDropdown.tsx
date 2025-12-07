@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useRef, useEffect } from "react";
-import { 
-  User, 
-  LogOut, 
-  Settings, 
-  ClipboardList, 
-  ChevronDown, 
-  LayoutDashboard, 
-  Store 
+import {
+  User,
+  LogOut,
+  Settings,
+  ClipboardList,
+  ChevronDown,
+  LayoutDashboard,
+  Store
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
@@ -24,13 +24,13 @@ interface ProfileDropdownProps {
   onLogout: () => void;
 }
 
-export function ProfileDropdown({ 
-  user, 
-  mounted, 
-  isOpen, 
-  onToggle, 
-  onClose, 
-  onLogout 
+export function ProfileDropdown({
+  user,
+  mounted,
+  isOpen,
+  onToggle,
+  onClose,
+  onLogout
 }: ProfileDropdownProps) {
   const { t } = useTranslation();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -60,7 +60,7 @@ export function ProfileDropdown({
 
   return (
     <div className="hidden sm:flex relative" ref={dropdownRef}>
-      <button 
+      <button
         onClick={onToggle}
         className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100"
       >
@@ -82,11 +82,10 @@ export function ProfileDropdown({
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-gray-900">{user.full_name}</p>
               {user.role && user.role !== 'customer' && (
-                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                  user.role === 'admin' 
-                    ? 'bg-green-100 text-green-700' 
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${user.role === 'admin'
+                    ? 'bg-green-100 text-green-700'
                     : 'bg-blue-100 text-blue-700'
-                }`}>
+                  }`}>
                   {user.role}
                 </span>
               )}
@@ -98,8 +97,8 @@ export function ProfileDropdown({
           <div className="py-1">
             {/* Admin Panel - Only for Admin */}
             {user.role === 'admin' && (
-              <Link 
-                href="/admin" 
+              <Link
+                href="/admin"
                 onClick={onClose}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
               >
@@ -108,9 +107,9 @@ export function ProfileDropdown({
               </Link>
             )}
             {/* Cashier Panel - For Admin and Cashier */}
-            {(user.role === 'admin' || user.role === 'cashier') && (
-              <Link 
-                href="/cashier" 
+            {(user.role === 'admin' || user.role === 'kasir') && (
+              <Link
+                href="/cashier"
                 onClick={onClose}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
               >
@@ -119,27 +118,27 @@ export function ProfileDropdown({
               </Link>
             )}
             {/* Divider if has panel access */}
-            {(user.role === 'admin' || user.role === 'cashier') && (
+            {(user.role === 'admin' || user.role === 'kasir') && (
               <div className="my-1 border-t border-gray-100" />
             )}
-            <Link 
-              href="/profile" 
+            <Link
+              href="/profile"
               onClick={onClose}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <User className="h-4 w-4 text-gray-500" />
               My Profile
             </Link>
-            <Link 
-              href="/orders" 
+            <Link
+              href="/orders"
               onClick={onClose}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <ClipboardList className="h-4 w-4 text-gray-500" />
               Order History
             </Link>
-            <Link 
-              href="/profile/settings" 
+            <Link
+              href="/profile/settings"
               onClick={onClose}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
@@ -150,7 +149,7 @@ export function ProfileDropdown({
 
           {/* Logout */}
           <div className="border-t border-gray-100 pt-1">
-            <button 
+            <button
               onClick={() => {
                 onLogout();
                 onClose();

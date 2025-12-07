@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  ShoppingBag, 
-  User, 
-  X, 
-  LogOut, 
-  ChevronRight, 
-  LayoutDashboard, 
-  Store, 
-  Globe, 
-  Coins 
+import {
+  ShoppingBag,
+  User,
+  X,
+  LogOut,
+  ChevronRight,
+  LayoutDashboard,
+  Store,
+  Globe,
+  Coins
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { CurrencySwitcher } from "@/components/ui/CurrencySwitcher";
@@ -28,18 +28,18 @@ interface MobileDrawerProps {
   onLogout: () => void;
 }
 
-export function MobileDrawer({ 
-  isOpen, 
-  onClose, 
-  navLinks, 
-  user, 
-  mounted, 
-  onLogout 
+export function MobileDrawer({
+  isOpen,
+  onClose,
+  navLinks,
+  user,
+  mounted,
+  onLogout
 }: MobileDrawerProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
   const items = useCartStore((state) => state.items);
-  
+
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   const isActive = (href: string) => {
@@ -52,30 +52,30 @@ export function MobileDrawer({
   return (
     <div className="fixed inset-0 z-[9999] lg:hidden">
       {/* Backdrop - covers entire screen */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Drawer Container - slides from right */}
-      <div 
+      <div
         id="mobile-menu"
         role="navigation"
         aria-label={t("nav.mobileNavigation")}
         className="absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 overflow-hidden"
       >
-        
+
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
           <Link href="/" onClick={onClose} className="flex items-center gap-1">
             <span className="text-xl font-bold text-green-600">Juice</span>
             <span className="text-xl font-bold text-slate-800">Qu</span>
           </Link>
-          
+
           <div className="flex items-center gap-3">
-            <Link 
-              href="/cart" 
+            <Link
+              href="/cart"
               onClick={onClose}
               className="relative p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
             >
@@ -84,7 +84,7 @@ export function MobileDrawer({
                 <span className="absolute top-1 right-1 h-3.5 w-3.5 bg-red-500 rounded-full border-2 border-white" />
               )}
             </Link>
-            <button 
+            <button
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
             >
@@ -95,7 +95,7 @@ export function MobileDrawer({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6 bg-white">
-          
+
           {/* Main Navigation */}
           <div className="space-y-1">
             <p className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
@@ -108,14 +108,13 @@ export function MobileDrawer({
                   key={link.href}
                   href={link.href}
                   onClick={onClose}
-                  className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-200 ${
-                    active 
-                      ? 'bg-green-50 text-green-700 font-medium shadow-sm ring-1 ring-green-100' 
+                  className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-200 ${active
+                      ? 'bg-green-50 text-green-700 font-medium shadow-sm ring-1 ring-green-100'
                       : 'text-slate-600 hover:bg-slate-50'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
-                    <link.icon 
+                    <link.icon
                       className={`h-5 w-5 ${link.special ? "text-orange-500" : ""}`}
                     />
                     <span suppressHydrationWarning>{t(link.labelKey)}</span>
@@ -134,14 +133,14 @@ export function MobileDrawer({
           <hr className="border-slate-100" />
 
           {/* Quick Access - Admin/Cashier Panels */}
-          {mounted && user && (user.role === 'admin' || user.role === 'cashier') && (
+          {mounted && user && (user.role === 'admin' || user.role === 'kasir') && (
             <div>
               <p className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                 Quick Access
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {user.role === 'admin' && (
-                  <Link 
+                  <Link
                     href="/admin"
                     onClick={onClose}
                     className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all bg-green-50/30"
@@ -152,7 +151,7 @@ export function MobileDrawer({
                     <span className="text-xs font-semibold text-slate-700">Admin Panel</span>
                   </Link>
                 )}
-                <Link 
+                <Link
                   href="/cashier"
                   onClick={onClose}
                   className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all bg-blue-50/30"
@@ -170,7 +169,7 @@ export function MobileDrawer({
 
         {/* Footer - Settings & Profile */}
         <div className="border-t border-slate-100 bg-slate-50/50 p-4 space-y-4">
-          
+
           {/* Currency & Language Buttons */}
           <div className="flex gap-2">
             <div className="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 py-2.5 rounded-lg text-sm font-medium text-slate-600">
@@ -186,8 +185,8 @@ export function MobileDrawer({
           {/* User Profile Card */}
           {mounted && user ? (
             <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-              <Link 
-                href="/profile" 
+              <Link
+                href="/profile"
                 onClick={onClose}
                 className="flex items-center gap-3 flex-1 min-w-0"
               >
@@ -199,7 +198,7 @@ export function MobileDrawer({
                   <p className="text-xs text-slate-500 truncate">{user.email}</p>
                 </div>
               </Link>
-              <button 
+              <button
                 onClick={() => {
                   onLogout();
                   onClose();
@@ -211,8 +210,8 @@ export function MobileDrawer({
               </button>
             </div>
           ) : (
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               onClick={onClose}
               className="flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 transition-colors"
             >
