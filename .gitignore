@@ -90,11 +90,8 @@ google-credentials.json
 docker-compose.override.yml
 backups/
 
-# Nginx SSL (production certs)
-nginx/ssl/*.pem
-nginx/ssl/*.crt
-nginx/ssl/*.key
-!nginx/ssl/.gitkeep
+# Nginx
+nginx/
 
 # Allow .env.example files
 !.env.example

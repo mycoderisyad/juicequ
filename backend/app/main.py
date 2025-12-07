@@ -68,8 +68,8 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="E-commerce API for JuiceQu juice store with AI integration",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None,  # Disabled - protected endpoint below
+    redoc_url=None,  # Disabled - protected endpoint below
     lifespan=lifespan,
 )
 
@@ -234,3 +234,115 @@ async def readiness_check() -> dict[str, str]:
 async def liveness_check() -> dict[str, str]:
     """Kubernetes liveness probe endpoint."""
     return {"status": "alive"}
+
+
+# ===========================================
+# Protected API Documentation (Admin Only)
+# ===========================================
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.responses import HTMLResponse, JSONResponse
+from app.core.dependencies import get_current_user
+
+
+@app.get("/docs", tags=["Documentation"], include_in_schema=False)
+async def get_docs(request: Request) -> HTMLResponse:
+    """
+    Swagger UI documentation.
+    Protected: Requires admin authentication via cookie.
+    """
+    # Check for access_token cookie
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        return HTMLResponse(
+            content="""
+            <html>
+                <head><title>Access Denied</title></head>
+                <body style="font-family: sans-serif; padding: 50px; text-align: center;">
+                    <h1>Access Denied</h1>
+                    <p>API documentation is restricted to administrators.</p>
+                    <p><a href="/">Go to Home</a></p>
+                </body>
+            </html>
+            """,
+            status_code=403
+        )
+    
+    # Validate token and check role
+    try:
+        from jose import jwt
+        payload = jwt.decode(
+            access_token.replace("Bearer ", ""),
+            settings.secret_key,
+            algorithms=["HS256"]
+        )
+        role = payload.get("role", "")
+        if role != "admin":
+            return HTMLResponse(
+                content="""
+                <html>
+                    <head><title>Access Denied</title></head>
+                    <body style="font-family: sans-serif; padding: 50px; text-align: center;">
+                        <h1>Access Denied</h1>
+                        <p>Only administrators can access API documentation.</p>
+                        <p><a href="/">Go to Home</a></p>
+                    </body>
+                </html>
+                """,
+                status_code=403
+            )
+    except Exception:
+        return HTMLResponse(
+            content="""
+            <html>
+                <head><title>Session Expired</title></head>
+                <body style="font-family: sans-serif; padding: 50px; text-align: center;">
+                    <h1>Session Expired</h1>
+                    <p>Please login again to access documentation.</p>
+                    <p><a href="/">Go to Home</a></p>
+                </body>
+            </html>
+            """,
+            status_code=401
+        )
+    
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title=f"{settings.app_name} - API Docs"
+    )
+
+
+@app.get("/redoc", tags=["Documentation"], include_in_schema=False)
+async def get_redoc(request: Request) -> HTMLResponse:
+    """
+    ReDoc documentation.
+    Protected: Requires admin authentication via cookie.
+    """
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        return HTMLResponse(
+            content="<h1>Access Denied</h1><p>Login as admin to access.</p>",
+            status_code=403
+        )
+    
+    try:
+        from jose import jwt
+        payload = jwt.decode(
+            access_token.replace("Bearer ", ""),
+            settings.secret_key,
+            algorithms=["HS256"]
+        )
+        if payload.get("role") != "admin":
+            return HTMLResponse(
+                content="<h1>Access Denied</h1><p>Admin only.</p>",
+                status_code=403
+            )
+    except Exception:
+        return HTMLResponse(
+            content="<h1>Session Expired</h1>",
+            status_code=401
+        )
+    
+    return get_redoc_html(
+        openapi_url="/openapi.json",
+        title=f"{settings.app_name} - API Docs"
+    )

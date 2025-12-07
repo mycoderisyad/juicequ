@@ -1,350 +1,309 @@
 # JuiceQu
 
-Website e-commerce toko juice dengan integrasi AI untuk pengalaman berbelanja yang personal dan efisien.
+A modern e-commerce platform for juice shops with AI-powered ordering, voice commands, and multi-role management system.
 
----
+## Table of Contents
 
-## Daftar Isi
-
-- [Screenshots](#screenshots)
-- [Demo](#demo)
-- [Fitur](#fitur)
+- [Overview](#overview)
+- [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Struktur Folder](#struktur-folder)
-- [Instalasi](#instalasi)
-- [Cara Penggunaan](#cara-penggunaan)
-- [Kontribusi](#kontribusi)
-- [Lisensi](#lisensi)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Usage Guide](#usage-guide)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## Screenshots
+## Overview
 
-| Home | Menu | Chatbot |
-|------|------|---------|
-| ![Home](./docs/screenshots/home.png) | ![Menu](./docs/screenshots/menu.png) | ![Chatbot](./docs/screenshots/chatbot.png) |
+JuiceQu is a full-stack e-commerce solution designed for juice shops. It provides three user roles (Customer, Cashier, Admin) with AI-powered features including:
 
-| POS Kasir | Admin Dashboard |
-|-----------|-----------------|
-| ![POS](./docs/screenshots/pos.png) | ![Admin](./docs/screenshots/admin.png) |
+- Natural language chatbot for product inquiries and ordering
+- Voice ordering with multi-language support (Indonesian, English, Javanese, Sundanese)
+- AI-powered product recommendations
+- Pre-order scheduling system
 
----
-
-## Demo
-
-- **Live URL**: [https://juicequ.app](https://juicequ.app)
-- **Video Demo**: [YouTube Link](https://youtube.com/...)
+**Live Demo**: [https://juicequ.app](https://juicequ.app)
 
 ---
 
-## Fitur
+## Gallery
 
-### Pembeli (Customer)
-- Pemesanan online dengan sistem pre-order
-- AI Chatbot untuk tanya produk, nutrisi, dan rekomendasi
-- Voice ordering dengan dukungan multi-bahasa (Indonesia, English, Jawa, Sunda)
-- Review produk dengan AI Fotobooth
-- Multi-currency support (IDR, USD)
+<div align="center">
+  <h3>Customer Interface</h3>
+  <img src="docs/screenshots/customer-app.png" alt="Customer Interface" width="800"/>
+  
+  <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+    <div>
+      <h3>Admin Dashboard</h3>
+      <img src="docs/screenshots/admin-dashboard.png" alt="Admin Dashboard" width="400"/>
+    </div>
+    <div>
+      <h3>Cashier POS</h3>
+      <img src="docs/screenshots/cashier-pos.png" alt="Cashier POS" width="400"/>
+    </div>
+  </div>
+</div>
 
-### Kasir
-- POS (Point of Sale) dengan voice input
-- Laporan penjualan harian
-- Manajemen stok realtime
-- AI Assistant untuk membantu transaksi
+---
 
-### Admin
-- Manajemen produk dan kategori
-- Manajemen user dan role (admin, kasir, customer)
-- Manajemen promo dan diskon
-- Analytics dan monitoring
-- Pengaturan toko (jam operasional, pembayaran, dll)
+## Features
 
-### Sistem AI
-- Multi-Agent RAG Architecture
-- Intent Router untuk deteksi maksud pengguna
-- Product Agent untuk informasi dan rekomendasi produk
-- Order Agent untuk pemesanan via chat/voice
-- Navigation Agent untuk navigasi halaman
-- Guard Agent untuk menjaga konteks domain toko
+### Customer Features
+- Browse and search products with filters
+- AI Chatbot for product questions, nutrition info, and recommendations
+- Voice ordering with natural language processing
+- Shopping cart and checkout with voucher support
+- Pre-order scheduling (1-7 days ahead)
+- Order history tracking
+- Multi-language interface (ID, EN, JV, SU)
+- Multi-currency display (IDR, USD)
+
+### Cashier Features
+- Point of Sale (POS) interface
+- Daily sales reports
+- Transaction management
+- Order status updates
+
+### Admin Features
+- Product and category management
+- User role management (admin, cashier, customer)
+- Voucher and promotion management
+- Store settings (operating hours, payment methods)
+- Analytics dashboard
+
+### AI System
+The application uses a Multi-Agent RAG (Retrieval-Augmented Generation) architecture:
+
+| Agent | Purpose |
+|-------|---------|
+| Intent Router | Classifies user intent and routes to appropriate agent |
+| Product Agent | Handles product info, recommendations, nutrition queries |
+| Order Agent | Processes cart operations and order placement |
+| Navigation Agent | Guides users to relevant pages |
+| Guard Agent | Maintains context within juicequ domain |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
+| Component | Technology |
+|-----------|------------|
 | Frontend | Next.js 16, TypeScript, Tailwind CSS, Zustand |
-| Backend | Python 3.12+, FastAPI, SQLAlchemy, Pydantic |
-| Database | PostgreSQL / SQLite |
-| AI/LLM | Kolosal AI API, ChromaDB (Vector DB) |
-| Voice | Google Cloud Speech-to-Text |
-| Authentication | JWT, Google OAuth 2.0, CSRF Protection |
-| Storage | Local VPS Storage |
-| Deploy | VPS / Docker / Cloud Run |
+| Backend | Python 3.11+, FastAPI, SQLAlchemy, Pydantic |
+| Database | PostgreSQL (production), SQLite (development) |
+| AI/LLM | Kolosal AI API, Google Gemini |
+| Vector DB | ChromaDB |
+| Voice | Google Cloud Speech-to-Text(optional), webkitSpeechRecognition |
+| Auth | JWT, Google OAuth 2.0 |
+| Container | Docker, Docker Compose |
+| CI/CD | GitHub Actions |
 
 ---
 
-## Struktur Folder
+## Project Structure
 
 ```
 juicequ/
-├── backend/                    # Python FastAPI Backend
+├── backend/                      # FastAPI Backend
 │   ├── app/
-│   │   ├── api/               # API endpoints
-│   │   │   └── v1/
-│   │   │       └── endpoints/
-│   │   │           ├── admin/     # Admin endpoints
-│   │   │           ├── cashier/   # Kasir endpoints
-│   │   │           └── customer/  # Customer endpoints
-│   │   ├── core/              # Auth, security, middleware
-│   │   ├── db/                # Database config & seeding
-│   │   ├── models/            # SQLAlchemy models
-│   │   ├── schemas/           # Pydantic schemas
-│   │   └── services/          # Business logic
-│   │       └── ai/            # AI services
-│   │           ├── agents/    # Multi-Agent system
-│   │           │   ├── base.py
-│   │           │   ├── guard_agent.py
-│   │           │   ├── navigation_agent.py
-│   │           │   ├── orchestrator.py
-│   │           │   ├── order_agent.py
-│   │           │   ├── product_agent.py
-│   │           │   └── router.py
-│   │           ├── locales/   # STT language config
-│   │           ├── kolosal_client.py
+│   │   ├── api/v1/endpoints/    # REST API endpoints
+│   │   │   ├── admin/           # Admin routes
+│   │   │   ├── cashier/         # Cashier routes
+│   │   │   └── customer/        # Customer routes
+│   │   ├── core/                # Config, auth, middleware
+│   │   ├── db/                  # Database setup
+│   │   ├── models/              # SQLAlchemy models
+│   │   ├── schemas/             # Pydantic schemas
+│   │   └── services/            # Business logic
+│   │       └── ai/              # AI services
+│   │           ├── agents/      # Multi-agent system
 │   │           ├── rag_service.py
 │   │           └── stt_service.py
-│   ├── alembic/               # Database migrations
-│   ├── scripts/               # Utility scripts
+│   ├── alembic/                 # Database migrations
+│   ├── Dockerfile
 │   └── requirements.txt
 │
-├── frontend/                   # Next.js 15 Frontend
+├── frontend/                     # Next.js Frontend
 │   └── src/
-│       ├── app/               # Pages (App Router)
-│       │   ├── admin/         # Admin pages
-│       │   ├── cashier/       # Kasir pages
-│       │   ├── cart/
-│       │   ├── checkout/
-│       │   ├── menu/
-│       │   └── ...
-│       ├── components/        # React components
-│       │   ├── admin/
-│       │   ├── cart/
-│       │   ├── home/
-│       │   ├── layout/
-│       │   ├── products/
-│       │   └── ui/
-│       ├── hooks/             # Custom React hooks
-│       ├── lib/               # Utilities & API clients
-│       │   └── api/           # API service modules
-│       ├── locales/           # i18n translations (id, en, jv, su)
-│       ├── store/             # Zustand stores
-│       └── types/             # TypeScript types
+│       ├── app/                 # App Router pages
+│       │   ├── admin/           # Admin pages
+│       │   ├── cashier/         # Cashier pages
+│       │   ├── cart/            # Shopping cart
+│       │   ├── checkout/        # Checkout flow
+│       │   ├── menu/            # Product listing
+│       │   ├── orders/          # Order history
+│       │   └── profile/         # User profile
+│       ├── components/          # React components
+│       │   ├── admin/           # Admin components
+│       │   ├── layout/          # Header, Footer, etc
+│       │   ├── products/        # Product cards, filters
+│       │   └── ui/              # Reusable UI components
+│       ├── lib/                 # Utilities
+│       │   ├── api/             # API client modules
+│       │   ├── hooks/           # Custom React hooks
+│       │   └── store.ts         # Zustand stores
+│       └── locales/             # i18n translations
 │
-├── docs/                       # Documentation & screenshots
-│   └── screenshots/
-│
-├── infra/                      # Infrastructure configs
-│   ├── cloudbuild.yaml
-│   └── docker/
-│
-├── .env.example               # Environment template
-├── docker-compose.yml
-├── LICENSE
+├── docs/                        # Documentation site
+├── nginx/                       # Nginx config
+├── scripts/                     # Utility scripts
+├── .github/workflows/           # CI/CD pipelines
+├── docker-compose.yml           # Docker orchestration
+├── .env.example                 # Environment template
 └── README.md
 ```
 
 ---
 
-## Instalasi
+## Getting Started
 
 ### Prerequisites
 
 - Python 3.11+
-- Node.js 18+
-- PostgreSQL 14+ (atau SQLite untuk development)
+- Node.js 20+
+- PostgreSQL 15+ (or SQLite for development)
 - Kolosal AI API key
-- (Optional) Google Cloud account untuk Speech-to-Text
-- (Optional) Google OAuth credentials untuk login dengan Google
+- (Optional) Google Cloud credentials for Speech-to-Text
 
-### Langkah 1: Clone Repository
+### Installation
+
+**1. Clone the repository**
 
 ```bash
-git clone https://github.com/[username]/juicequ.git
+git clone https://github.com/mycoderisyad/juicequ.git
 cd juicequ
 ```
 
-### Langkah 2: Setup Backend
+**2. Backend Setup**
 
-```powershell
-# Masuk ke folder backend
+```bash
 cd backend
 
-# Buat virtual environment
+# Create virtual environment
 python -m venv venv
 
-# Aktivasi virtual environment (Windows)
+# Activate (Windows)
 .\venv\Scripts\Activate.ps1
 
-# Atau untuk Linux/Mac
-# source venv/bin/activate
+# Activate (Linux/Mac)
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy environment file dan sesuaikan konfigurasi
-copy .env.example .env
-# Edit file .env dengan credentials Anda
+# Configure environment
+cp .env.example .env
+# Edit .env with your API keys
 
-# Jalankan database migrations
+# Run migrations
 alembic upgrade head
 
-# (Optional) Seed data demo
-python scripts/seed_all.py
-
-# Jalankan server
+# Start server
 uvicorn app.main:app --reload --port 8000
 ```
 
-Backend akan berjalan di: `http://localhost:8000`
-API Docs: `http://localhost:8000/docs`
+Backend runs at: http://localhost:8000
+API Docs: http://localhost:8000/docs
 
-### Langkah 3: Setup Frontend
+**3. Frontend Setup**
 
-```powershell
-# Buka terminal baru, masuk ke folder frontend
+```bash
 cd frontend
 
 # Install dependencies
 npm install
 
-# Copy environment file dan sesuaikan konfigurasi
-copy .env.example .env.local
-# Edit file .env.local
+# Configure environment
+cp .env.example .env.local
+# Edit .env.local
 
-# Jalankan development server
+# Start development server
 npm run dev
 ```
 
-Frontend akan berjalan di: `http://localhost:3000`
+Frontend runs at: http://localhost:3000
 
-### Langkah 4: (Optional) Docker
+**4. Docker (Alternative)**
 
-```powershell
-# Jalankan semua services dengan Docker
+```bash
+# Copy environment file
+cp .env.example .env
+# Edit .env with your configuration
+
+# Start all services
 docker-compose up -d
+
+# Run migrations
+docker-compose exec backend alembic upgrade head
 ```
 
 ---
 
-## Cara Penggunaan
+## Usage Guide
 
-### Untuk Pembeli
+### For Customers
 
-1. Buka website di browser (`http://localhost:3000`)
-2. Browse menu juice yang tersedia di halaman Menu
-3. Gunakan chatbot untuk bertanya tentang produk atau nutrisi
-4. Atau gunakan voice ordering: klik icon microphone, ucapkan pesanan dalam bahasa Indonesia, Inggris, Jawa, atau Sunda
-5. Tambah produk ke keranjang dan lakukan checkout
-6. Login dengan email atau akun Google untuk melanjutkan pemesanan
+1. Visit the homepage and browse the menu
+2. Use the chatbot (bottom-right) to ask about products
+3. Click the microphone icon for voice ordering
+4. Add items to cart and proceed to checkout
+5. Apply voucher codes if available
+6. Schedule pre-orders for future pickup
 
-### Untuk Kasir
+### For Cashiers
 
-1. Login dengan akun kasir
-2. Akses POS di halaman `/cashier/pos`
-3. Input pesanan manual atau via voice
-4. Kelola transaksi dan lihat laporan penjualan
+1. Login with cashier credentials
+2. Access POS at `/cashier/pos`
+3. Process orders using voice or manual input
+4. View daily reports at `/cashier/reports`
 
-### Untuk Admin
+### For Admins
 
-1. Login dengan akun admin
-2. Akses dashboard di halaman `/admin`
-3. Kelola produk, kategori, dan user
-4. Atur promo dan pengaturan toko
-5. Lihat analytics dan laporan
+1. Login with admin credentials
+2. Access dashboard at `/admin`
+3. Manage products, categories, and users
+4. Configure store settings and promotions
+5. Monitor analytics
 
-### Contoh Perintah Voice/Chat
+### Voice/Chat Commands
 
-| Perintah | Aksi |
-|----------|------|
-| "Tampilkan menu" | Navigasi ke halaman menu |
-| "Rekomendasi jus yang segar" | Menampilkan rekomendasi produk |
-| "Tambahkan Berry Blast ke keranjang" | Menambah produk ke cart |
-| "Apa yang paling laris?" | Menampilkan produk bestseller |
-| "Checkout" | Navigasi ke halaman checkout |
-| "Berapa harga Tropical Paradise?" | Memberikan informasi harga |
+| Command | Action |
+|---------|--------|
+| "Show menu" | Navigate to menu page |
+| "Recommend fresh juice" | Get product recommendations |
+| "Add Berry Blast to cart" | Add item to cart |
+| "What's popular?" | Show bestsellers |
+| "Checkout" | Go to checkout |
 
----
 
-## Kontribusi
+## Contributing
 
-Kami menyambut kontribusi dari siapa saja. Berikut langkah-langkah untuk berkontribusi:
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/my-feature`
+3. Commit changes: `git commit -m "feat: add feature"`
+4. Push to branch: `git push origin feature/my-feature`
+5. Open a Pull Request
 
-### Langkah Kontribusi
+### Commit Convention
 
-1. **Fork** repository ini
-2. **Clone** fork Anda ke lokal
-   ```bash
-   git clone https://github.com/[username-anda]/juicequ.git
-   cd juicequ
-   ```
-3. **Buat branch** untuk fitur atau perbaikan
-   ```bash
-   git checkout -b feature/nama-fitur
-   ```
-4. **Lakukan perubahan** dan pastikan:
-   - Kode mengikuti style guide yang ada
-   - Tidak ada dead code atau console.log yang tidak perlu
-   - Semua tests passing (jika ada)
-   - Linter tidak menampilkan error
-5. **Commit** dengan pesan yang jelas
-   ```bash
-   git commit -m "feat: menambahkan fitur X"
-   ```
-6. **Push** ke fork Anda
-   ```bash
-   git push origin feature/nama-fitur
-   ```
-7. **Buat Pull Request** ke branch `main` repository utama
+Use [Conventional Commits](https://conventionalcommits.org):
 
-### Konvensi Commit
-
-Gunakan format [Conventional Commits](https://www.conventionalcommits.org/):
-
-- `feat:` - Fitur baru
-- `fix:` - Perbaikan bug
-- `docs:` - Perubahan dokumentasi
-- `style:` - Formatting, tidak ada perubahan kode
-- `refactor:` - Refactoring kode
-- `test:` - Menambah atau memperbaiki tests
-- `chore:` - Maintenance tasks
-
-### Code Style
-
-- **Frontend**: ESLint + Prettier (otomatis via npm run lint)
-- **Backend**: Ruff/Black formatter
-- Penamaan variabel dalam bahasa Inggris
-- Komentar seperlunya, jelaskan "why" bukan "what"
+| Prefix | Usage |
+|--------|-------|
+| feat: | New feature |
+| fix: | Bug fix |
+| docs: | Documentation |
+| refactor: | Code refactoring |
+| test: | Tests |
 
 ---
 
-## Accessibility
+## License
 
-Project ini mengikuti standar **WCAG 2.1 Level AA**:
-
-- Semantic HTML
-- Keyboard navigation
-- Screen reader compatible
-- Color contrast 4.5:1+
-- Focus indicators
-- Skip links
+MIT License - see [LICENSE](./LICENSE)
 
 ---
 
-## Lisensi
-
-MIT License - lihat file [LICENSE](./LICENSE)
-
----
-
-Built for Hackathon 2025
+**Documentation**: [https://juicequ.app/docs](https://juicequ.app/docs)
