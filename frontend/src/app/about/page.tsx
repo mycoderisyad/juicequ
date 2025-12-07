@@ -55,17 +55,17 @@ export default function AboutPage() {
 
   const team = [
     {
-      name: "Sarah Johnson",
+      name: "Raflan",
       role: t("about.team.founder"),
       image: "/images/products/hero/berry-blast.webp"
     },
     {
-      name: "Michael Chen",
+      name: "Sasya",
       role: t("about.team.headChef"),
       image: "/images/products/hero/green-goddess.webp"
     },
     {
-      name: "Emily Davis",
+      name: "Fauzan",
       role: t("about.team.operations"),
       image: "/images/products/hero/tropical-paradise.webp"
     }

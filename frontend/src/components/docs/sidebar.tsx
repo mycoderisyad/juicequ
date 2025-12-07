@@ -34,12 +34,12 @@ export function DocsSidebar({ className, onClose }: DocsSidebarProps) {
             title: "Getting Started",
             items: [
                 { title: "Introduction", href: "/docs", icon: Book },
-                { title: "Installation", href: "/docs/installation", icon: Terminal },
             ],
         },
         {
             title: "User Guides",
             items: [
+                { title: "Installation", href: "/docs/guide/installation", icon: Terminal },
                 { title: "Customer Guide", href: "/docs/guide/customer", icon: ShoppingCart },
                 { title: "Cashier Guide", href: "/docs/guide/cashier", icon: Monitor },
                 { title: "Admin Guide", href: "/docs/guide/admin", icon: Settings },
@@ -106,11 +106,14 @@ export function DocsSidebar({ className, onClose }: DocsSidebarProps) {
                 </nav>
             </div>
 
-            <div className="border-t p-4">
-                <div className="rounded-xl bg-gradient-to-br from-green-600 to-lime-600 p-4 text-white">
-                    <h4 className="font-semibold">Need Help?</h4>
-                    <p className="mt-1 text-xs text-green-100">
-                        Check the API reference or contact support for assistance.
+            <div className="border-t p-4 bg-gray-50">
+                <div className="rounded-lg bg-green-600 p-4 text-white">
+                    <h4 className="font-semibold flex items-center gap-2">
+                        <Code className="h-4 w-4" />
+                        Need Help?
+                    </h4>
+                    <p className="mt-1 text-xs text-green-50">
+                        Check the API reference for detailed endpoint documentation.
                     </p>
                     <Link href="/docs/api">
                         <Button size="sm" variant="secondary" className="mt-3 w-full bg-white text-green-700 hover:bg-green-50">

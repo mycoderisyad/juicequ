@@ -22,18 +22,18 @@ export default function DocsLayout({
                 />
             )}
 
-            {/* Sidebar */}
+            {/* Sidebar - Fixed/Sticky on Desktop */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-white transition-transform duration-200 ease-in-out md:static md:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-white border-r border-gray-200 transition-transform duration-200 ease-in-out md:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
             >
                 <DocsSidebar onClose={() => setIsSidebarOpen(false)} />
             </aside>
 
-            {/* Main Content */}
-            <div className="flex flex-1 flex-col overflow-hidden">
+            {/* Main Content - Add left margin to account for fixed sidebar on desktop */}
+            <div className="flex flex-1 flex-col md:ml-72">
                 {/* Mobile Header */}
-                <header className="flex items-center border-b bg-white px-4 py-3 md:hidden">
+                <header className="sticky top-0 z-30 flex items-center border-b bg-white px-4 py-3 md:hidden">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -45,12 +45,14 @@ export default function DocsLayout({
                     <span className="font-semibold">JuiceQu Docs</span>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12">
-                    <div className="mx-auto max-w-4xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-100 md:p-12">
-                        {children}
-                    </div>
-                    <div className="mt-8 text-center text-sm text-gray-500">
-                        &copy; {new Date().getFullYear()} JuiceQu. All rights reserved.
+                <main className="flex-1 p-6 md:p-10 lg:p-12">
+                    <div className="mx-auto max-w-5xl">
+                        <div className="rounded-2xl bg-white p-8 shadow-sm border border-gray-100 md:p-12">
+                            {children}
+                        </div>
+                        <div className="mt-8 text-center text-sm text-gray-400">
+                            &copy; {new Date().getFullYear()} JuiceQu. All rights reserved.
+                        </div>
                     </div>
                 </main>
             </div>

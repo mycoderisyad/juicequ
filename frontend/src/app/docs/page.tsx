@@ -21,7 +21,7 @@ export default function DocsHomePage() {
                     Learn how to install, configure, and use the AI-powered juice shop system.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                    <Link href="/docs/installation">
+                    <Link href="/docs/guide/installation">
                         <Button size="lg" className="rounded-full bg-green-600 hover:bg-green-700">
                             Get Started <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>

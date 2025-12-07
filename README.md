@@ -10,6 +10,7 @@ A modern e-commerce platform for juice shops with AI-powered ordering, voice com
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Usage Guide](#usage-guide)
+- [Team](#team)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -24,6 +25,7 @@ JuiceQu is a full-stack e-commerce solution designed for juice shops. It provide
 - AI-powered product recommendations
 - Pre-order scheduling system
 
+**docs**: [https://juicequ.app/docs](https://juicequ.app/docs)
 **Live Demo**: [https://juicequ.app](https://juicequ.app)
 
 ---
@@ -240,12 +242,6 @@ docker-compose up -d
 docker-compose exec backend alembic upgrade head
 ```
 
-**5. VPS Deployment**
-
-For production deployment to VPS, see detailed guide: [docs/VPS_DEPLOYMENT.md](docs/VPS_DEPLOYMENT.md)
-
----
-
 ## Usage Guide
 
 ### For Customers
@@ -305,11 +301,16 @@ Use [Conventional Commits](https://conventionalcommits.org):
 
 ---
 
-## Deployment
+## Team
 
-This application is designed to run on a VPS using Docker Compose. For detailed deployment instructions, see:
+**Team Name**: Kata mamah gak boleh aneh-aneh
 
-📖 **[VPS Deployment Guide](docs/VPS_DEPLOYMENT.md)**
+**Hackathon**: IMPHNEN X KOLOSAL AI
+
+**Members**:
+- **Raflan** - Full Stack Developer
+- **Sasya** - Product Designer
+- **Fauzan** - Product Manager
 
 ---
 

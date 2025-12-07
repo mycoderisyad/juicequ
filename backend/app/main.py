@@ -248,9 +248,17 @@ from app.core.dependencies import get_current_user
 async def get_docs(request: Request) -> HTMLResponse:
     """
     Swagger UI documentation.
-    Protected: Requires admin authentication via cookie.
+    Protected: Requires admin authentication via cookie (production only).
+    In development mode, accessible without authentication.
     """
-    # Check for access_token cookie
+    # In development, allow access without authentication
+    if settings.app_env == "development":
+        return get_swagger_ui_html(
+            openapi_url="/openapi.json",
+            title=f"{settings.app_name} - API Docs (Development)"
+        )
+    
+    # Production: Check for access_token cookie
     access_token = request.cookies.get("access_token")
     if not access_token:
         return HTMLResponse(
@@ -315,8 +323,17 @@ async def get_docs(request: Request) -> HTMLResponse:
 async def get_redoc(request: Request) -> HTMLResponse:
     """
     ReDoc documentation.
-    Protected: Requires admin authentication via cookie.
+    Protected: Requires admin authentication via cookie (production only).
+    In development mode, accessible without authentication.
     """
+    # In development, allow access without authentication
+    if settings.app_env == "development":
+        return get_redoc_html(
+            openapi_url="/openapi.json",
+            title=f"{settings.app_name} - API Docs (Development)"
+        )
+    
+    # Production: Check for access_token cookie
     access_token = request.cookies.get("access_token")
     if not access_token:
         return HTMLResponse(

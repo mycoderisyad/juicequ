@@ -179,7 +179,7 @@ export function Footer() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500">
             <p className="text-center sm:text-left">{t("footer.copyright")}</p>
             <p className="flex items-center gap-1">
-              {t("footer.madeWith")} <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500 fill-red-500" aria-label="love" /> {t("footer.inIndonesia")}
+              {t("footer.madeWith")} {t("footer.inIndonesia")}
             </p>
           </div>
         </div>

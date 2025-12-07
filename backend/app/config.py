@@ -67,8 +67,6 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:3000/api/auth/google/callback"
 
-    # Local File Storage (VPS-based storage)
-    # Files are stored on the same server as the application
     upload_base_path: str = "./uploads"  # Path to uploads directory
     upload_max_size_mb: int = 10  # Maximum file size in MB
     upload_allowed_extensions: str = "jpg,jpeg,png,webp,gif"  # Comma-separated
