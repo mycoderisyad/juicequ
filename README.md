@@ -98,6 +98,7 @@ The application uses a Multi-Agent RAG (Retrieval-Augmented Generation) architec
 | Voice | Google Cloud Speech-to-Text(optional), webkitSpeechRecognition |
 | Auth | JWT, Google OAuth 2.0 |
 | Container | Docker, Docker Compose |
+| Deployment | VPS with Docker Compose |
 | CI/CD | GitHub Actions |
 
 ---
@@ -146,8 +147,8 @@ juicequ/
 │       │   └── store.ts         # Zustand stores
 │       └── locales/             # i18n translations
 │
-├── docs/                        # Documentation site
-├── nginx/                       # Nginx config
+├── docs/                        # Documentation
+│   └── VPS_DEPLOYMENT.md        # VPS deployment guide
 ├── scripts/                     # Utility scripts
 ├── .github/workflows/           # CI/CD pipelines
 ├── docker-compose.yml           # Docker orchestration
@@ -225,7 +226,7 @@ npm run dev
 
 Frontend runs at: http://localhost:3000
 
-**4. Docker (Alternative)**
+**4. Docker Compose**
 
 ```bash
 # Copy environment file
@@ -238,6 +239,10 @@ docker-compose up -d
 # Run migrations
 docker-compose exec backend alembic upgrade head
 ```
+
+**5. VPS Deployment**
+
+For production deployment to VPS, see detailed guide: [docs/VPS_DEPLOYMENT.md](docs/VPS_DEPLOYMENT.md)
 
 ---
 
@@ -300,10 +305,18 @@ Use [Conventional Commits](https://conventionalcommits.org):
 
 ---
 
+## Deployment
+
+This application is designed to run on a VPS using Docker Compose. For detailed deployment instructions, see:
+
+📖 **[VPS Deployment Guide](docs/VPS_DEPLOYMENT.md)**
+
+---
+
 ## License
 
 MIT License - see [LICENSE](./LICENSE)
 
 ---
 
-**Documentation**: [https://juicequ.app/docs](https://juicequ.app/docs)
+**Live Demo**: [https://juicequ.app](https://juicequ.app)
