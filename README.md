@@ -24,30 +24,6 @@ JuiceQu is a full-stack e-commerce solution designed for juice shops. It provide
 - Voice ordering with multi-language support (Indonesian, English, Javanese, Sundanese)
 - AI-powered product recommendations
 - Pre-order scheduling system
-
-**docs**: [https://juicequ.app/docs](https://juicequ.app/docs)
-**Live Demo**: [https://juicequ.app](https://juicequ.app)
-
----
-
-## Gallery
-
-<div align="center">
-  <h3>Customer Interface</h3>
-  <img src="docs/screenshots/customer-app.png" alt="Customer Interface" width="800"/>
-  
-  <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
-    <div>
-      <h3>Admin Dashboard</h3>
-      <img src="docs/screenshots/admin-dashboard.png" alt="Admin Dashboard" width="400"/>
-    </div>
-    <div>
-      <h3>Cashier POS</h3>
-      <img src="docs/screenshots/cashier-pos.png" alt="Cashier POS" width="400"/>
-    </div>
-  </div>
-</div>
-
 ---
 
 ## Features
@@ -102,61 +78,6 @@ The application uses a Multi-Agent RAG (Retrieval-Augmented Generation) architec
 | Container | Docker, Docker Compose |
 | Deployment | VPS with Docker Compose |
 | CI/CD | GitHub Actions |
-
----
-
-## Project Structure
-
-```
-juicequ/
-├── backend/                      # FastAPI Backend
-│   ├── app/
-│   │   ├── api/v1/endpoints/    # REST API endpoints
-│   │   │   ├── admin/           # Admin routes
-│   │   │   ├── cashier/         # Cashier routes
-│   │   │   └── customer/        # Customer routes
-│   │   ├── core/                # Config, auth, middleware
-│   │   ├── db/                  # Database setup
-│   │   ├── models/              # SQLAlchemy models
-│   │   ├── schemas/             # Pydantic schemas
-│   │   └── services/            # Business logic
-│   │       └── ai/              # AI services
-│   │           ├── agents/      # Multi-agent system
-│   │           ├── rag_service.py
-│   │           └── stt_service.py
-│   ├── alembic/                 # Database migrations
-│   ├── Dockerfile
-│   └── requirements.txt
-│
-├── frontend/                     # Next.js Frontend
-│   └── src/
-│       ├── app/                 # App Router pages
-│       │   ├── admin/           # Admin pages
-│       │   ├── cashier/         # Cashier pages
-│       │   ├── cart/            # Shopping cart
-│       │   ├── checkout/        # Checkout flow
-│       │   ├── menu/            # Product listing
-│       │   ├── orders/          # Order history
-│       │   └── profile/         # User profile
-│       ├── components/          # React components
-│       │   ├── admin/           # Admin components
-│       │   ├── layout/          # Header, Footer, etc
-│       │   ├── products/        # Product cards, filters
-│       │   └── ui/              # Reusable UI components
-│       ├── lib/                 # Utilities
-│       │   ├── api/             # API client modules
-│       │   ├── hooks/           # Custom React hooks
-│       │   └── store.ts         # Zustand stores
-│       └── locales/             # i18n translations
-│
-├── docs/                        # Documentation
-│   └── VPS_DEPLOYMENT.md        # VPS deployment guide
-├── scripts/                     # Utility scripts
-├── .github/workflows/           # CI/CD pipelines
-├── docker-compose.yml           # Docker orchestration
-├── .env.example                 # Environment template
-└── README.md
-```
 
 ---
 
@@ -313,11 +234,3 @@ Use [Conventional Commits](https://conventionalcommits.org):
 - **Fauzan** - Product Manager
 
 ---
-
-## License
-
-MIT License - see [LICENSE](./LICENSE)
-
----
-
-**Live Demo**: [https://juicequ.app](https://juicequ.app)
