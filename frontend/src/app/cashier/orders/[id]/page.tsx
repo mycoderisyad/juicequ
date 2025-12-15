@@ -51,8 +51,7 @@ export default function CashierOrderDetailPage() {
       setError(null);
       const data = await cashierOrdersApi.getById(orderId);
       setOrder(data);
-    } catch (err) {
-      console.error("Failed to fetch order:", err);
+    } catch {
       setError("Order tidak ditemukan");
     } finally {
       setLoading(false);
@@ -90,8 +89,7 @@ export default function CashierOrderDetailPage() {
       setProcessing(true);
       await cashierOrdersApi.updateStatus(orderId, newStatus);
       await fetchOrder();
-    } catch (err) {
-      console.error("Failed to update status:", err);
+    } catch {
       alert("Gagal mengupdate status order");
     } finally {
       setProcessing(false);
@@ -136,7 +134,7 @@ export default function CashierOrderDetailPage() {
         <p className="text-stone-500 mb-6">{error}</p>
         <Link 
           href="/cashier/orders"
-          className="rounded-full bg-stone-900 px-6 py-2 text-white hover:bg-stone-800 transition-colors"
+          className="rounded-full bg-emerald-600 px-6 py-2 text-white hover:bg-emerald-700 transition-colors"
         >
           Kembali ke Daftar Order
         </Link>
@@ -254,7 +252,7 @@ export default function CashierOrderDetailPage() {
               <button
                 onClick={() => handleUpdateStatus(nextStatus)}
                 disabled={processing}
-                className="w-full rounded-xl bg-stone-900 py-3 font-bold text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors shadow-lg shadow-stone-900/20 mb-3 flex items-center justify-center gap-2"
+                className="w-full rounded-xl bg-emerald-600 py-3 font-bold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-lg shadow-emerald-600/20 mb-3 flex items-center justify-center gap-2"
               >
                 {processing ? (
                   <Loader2 className="h-5 w-5 animate-spin" />

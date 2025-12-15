@@ -284,7 +284,7 @@ function ProductsHeader({
         </button>
         <button 
           onClick={onCreate} 
-          className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
+          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-full hover:bg-emerald-700 transition-colors font-medium"
         >
           <Plus size={18} />
           Tambah Produk
@@ -483,7 +483,7 @@ function ProductsTable({
         <p className="text-stone-500 mb-6">Mulai dengan menambahkan produk pertama</p>
         <button 
           onClick={onCreate} 
-          className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
+          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-full hover:bg-emerald-700 transition-colors font-medium"
         >
           <Plus size={18} />
           Tambah Produk

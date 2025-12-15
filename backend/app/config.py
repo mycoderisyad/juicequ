@@ -1,8 +1,4 @@
-"""
-Application configuration using pydantic-settings.
-All sensitive values are loaded from environment variables.
-"""
-
+"""Application configuration using pydantic-settings."""
 import logging
 import os
 import secrets
@@ -31,8 +27,11 @@ class Settings(BaseSettings):
     app_env: Literal["development", "staging", "production"] = "development"
     debug: bool = True
 
-    # Database
+    # Database (PostgreSQL only)
     database_url: str = ""
+
+    # Redis (Conversation Memory)
+    redis_url: str = "redis://localhost:6379/0"
 
     # Security
     secret_key: str = ""
@@ -44,22 +43,17 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = ""
 
-    # Kolosal AI
-    kolosal_api_key: str = ""
-    kolosal_api_base: str = ""
-    kolosal_model: str = ""
-
-    # Google Gemini AI (for image generation)
+    # Google Gemini AI (primary provider)
     gemini_api_key: str = ""
 
-    # Google Cloud (only for Speech-to-Text, optional)
-    gcp_project_id: str = ""
-    gcp_speech_credentials: str = ""
+    # OpenRouter AI (fallback provider)
+    openrouter_api_key: str = ""
+    openrouter_model: str = "mistralai/mistral-7b-instruct"
 
     # ChromaDB (for RAG)
     chroma_persist_directory: str = "./chroma_data"
 
-    # ExchangeRate API (optional - can be set in admin panel)
+    # ExchangeRate API (optional)
     exchangerate_api_key: str = ""
 
     # Google OAuth
@@ -67,10 +61,11 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:3000/api/auth/google/callback"
 
-    upload_base_path: str = "./uploads"  # Path to uploads directory
-    upload_max_size_mb: int = 10  # Maximum file size in MB
-    upload_allowed_extensions: str = "jpg,jpeg,png,webp,gif"  # Comma-separated
-    
+    # Upload
+    upload_base_path: str = "./uploads"
+    upload_max_size_mb: int = 10
+    upload_allowed_extensions: str = "jpg,jpeg,png,webp,gif"
+
     # Email
     smtp_host: str = ""
     smtp_port: int = 587
@@ -80,23 +75,20 @@ class Settings(BaseSettings):
     smtp_from_name: str = "JuiceQu"
     smtp_use_tls: bool = True
     smtp_use_ssl: bool = False
-    
+
     # Frontend
     frontend_url: str = "http://localhost:3000"
-    
+
     # Tokens
-    verification_token_expire_minutes: int = 60 * 24  # 24 hours
-    reset_token_expire_minutes: int = 60  # 1 hour
+    verification_token_expire_minutes: int = 1440
+    reset_token_expire_minutes: int = 60
 
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""
-        return [origin.strip() for origin in self.cors_origins.split(",")]
-
-    @property
-    def is_sqlite(self) -> bool:
-        """Check if using SQLite database."""
-        return self.database_url.startswith("sqlite")
+        if not self.cors_origins:
+            return []
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @property
     def upload_allowed_extensions_list(self) -> list[str]:
@@ -108,30 +100,38 @@ class Settings(BaseSettings):
         """Get max upload size in bytes."""
         return self.upload_max_size_mb * 1024 * 1024
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        """Validate database URL is PostgreSQL."""
+        app_env = os.getenv("APP_ENV", "development").lower()
+        if not v:
+            if app_env == "production":
+                raise ValueError("DATABASE_URL must be set in production")
+            return "postgresql://postgres:postgres@localhost:5432/juicequ"
+        if not v.startswith("postgresql"):
+            raise ValueError("Only PostgreSQL is supported. DATABASE_URL must start with 'postgresql://'")
+        return v
+
     @field_validator("secret_key", mode="before")
     @classmethod
     def validate_secret_key(cls, v: str) -> str:
         """Validate secret key is set and secure."""
-        # Get app_env from environment since we can't access other fields in validator
         app_env = os.getenv("APP_ENV", "development").lower()
-        
+
         if not v:
-            # In production, require explicit secret key
             if app_env == "production":
                 raise ValueError("SECRET_KEY environment variable must be set in production")
-            else:
-                # Auto-generate for development only
-                generated_key = secrets.token_urlsafe(32)
-                logger.warning(
-                    "⚠️ Using auto-generated SECRET_KEY - NOT FOR PRODUCTION! "
-                    "Set SECRET_KEY environment variable for production deployments."
-                )
-                return generated_key
-        
+            generated_key = secrets.token_urlsafe(32)
+            logger.warning(
+                "Using auto-generated SECRET_KEY - NOT FOR PRODUCTION! "
+                "Set SECRET_KEY environment variable for production deployments."
+            )
+            return generated_key
+
         if len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters")
-        
-        # Check for common weak/placeholder keys
+
         weak_keys = [
             "your-super-secret-key",
             "change-me",
@@ -153,12 +153,11 @@ class Settings(BaseSettings):
                     "SECRET_KEY is too weak. Use a cryptographically random key. "
                     "Generate one with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
                 )
-            else:
-                logger.warning(
-                    "⚠️ SECRET_KEY appears to be a placeholder. "
-                    "Please set a strong secret key for production."
-                )
-        
+            logger.warning(
+                "SECRET_KEY appears to be a placeholder. "
+                "Please set a strong secret key for production."
+            )
+
         return v
 
 

@@ -45,8 +45,7 @@ export default function CashierTransactionsPage() {
       }
       const data = await transactionsApi.getAll(params);
       setTransactions(data.transactions);
-    } catch (err) {
-      console.error("Failed to load transactions:", err);
+    } catch {
       setError("Gagal memuat data transaksi");
     } finally {
       setLoading(false);
@@ -82,8 +81,7 @@ export default function CashierTransactionsPage() {
       await transactionsApi.refund(selectedTransaction.id, refundReason);
       setShowRefundModal(false);
       await fetchTransactions();
-    } catch (err) {
-      console.error("Failed to process refund:", err);
+    } catch {
       alert("Gagal memproses refund");
     } finally {
       setProcessingRefund(false);
@@ -103,11 +101,11 @@ export default function CashierTransactionsPage() {
       case "cash":
         return <Banknote className="h-4 w-4 text-emerald-600" />;
       case "card":
-        return <CreditCard className="h-4 w-4 text-blue-600" />;
+        return <CreditCard className="h-4 w-4 text-stone-600" />;
       case "qris":
-        return <Smartphone className="h-4 w-4 text-purple-600" />;
+        return <Smartphone className="h-4 w-4 text-emerald-600" />;
       case "e-wallet":
-        return <Wallet className="h-4 w-4 text-orange-600" />;
+        return <Wallet className="h-4 w-4 text-amber-600" />;
       default:
         return <CreditCard className="h-4 w-4 text-stone-600" />;
     }

@@ -1,13 +1,13 @@
-"""
-AI Services Package.
-Contains AI-related services including Kolosal client, RAG, STT, and multi-agent system.
-"""
-from app.services.ai.kolosal_client import KolosalClient
+"""AI Services Package."""
+from app.services.ai.gemini_client import GeminiClient
+from app.services.ai.openrouter_client import OpenRouterClient
+from app.services.ai.llm_provider import LLMProvider, get_llm_provider
 from app.services.ai.rag_service import RAGService
-from app.services.ai.stt_service import STTService
 
 __all__ = [
-    "KolosalClient",
+    "GeminiClient",
+    "OpenRouterClient",
+    "LLMProvider",
+    "get_llm_provider",
     "RAGService",
-    "STTService",
 ]

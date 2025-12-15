@@ -23,7 +23,7 @@ def upgrade() -> None:
     op.create_table(
         'product_promos',
         sa.Column('id', sa.String(36), primary_key=True),
-        sa.Column('product_id', sa.Integer(), sa.ForeignKey('products.id', ondelete='CASCADE'), nullable=False, index=True),
+        sa.Column('product_id', sa.String(36), sa.ForeignKey('products.id', ondelete='CASCADE'), nullable=False, index=True),
         sa.Column('name', sa.String(100), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('promo_type', sa.Enum('percentage', 'fixed', name='promotype'), nullable=False, default='percentage'),
@@ -67,8 +67,8 @@ def upgrade() -> None:
         sa.Column('used_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
     
-    # Add pre-order and voucher columns to orders table (without FK for SQLite compatibility)
-    op.add_column('orders', sa.Column('is_preorder', sa.Boolean(), nullable=False, server_default='0'))
+    # Add pre-order and voucher columns to orders table
+    op.add_column('orders', sa.Column('is_preorder', sa.Boolean(), nullable=False, server_default='false'))
     op.add_column('orders', sa.Column('scheduled_pickup_date', sa.DateTime(timezone=True), nullable=True))
     op.add_column('orders', sa.Column('scheduled_pickup_time', sa.String(10), nullable=True))
     op.add_column('orders', sa.Column('voucher_id', sa.String(36), nullable=True))

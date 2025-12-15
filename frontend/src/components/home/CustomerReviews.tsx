@@ -120,7 +120,7 @@ export function CustomerReviews() {
         <div className="flex flex-wrap justify-center gap-8 md:gap-16 mb-12 sm:mb-16">
           {stats.map((stat, idx) => (
             <div key={idx} className="flex flex-col items-center group cursor-default">
-              <div className="text-3xl sm:text-4xl font-serif text-emerald-800 font-medium mb-1 transition-transform group-hover:-translate-y-1 duration-300">
+              <div className="text-3xl sm:text-4xl font-serif text-emerald-800 font-medium mb-1 transition-all group-hover:scale-105 duration-300">
                 {stat.value}
               </div>
               <div className="flex flex-col items-center">

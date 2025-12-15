@@ -41,8 +41,7 @@ export default function CashierOrdersPage() {
       }
       const data = await cashierOrdersApi.getAll(params);
       setOrders(data.orders);
-    } catch (err) {
-      console.error("Failed to load orders:", err);
+    } catch {
       setError("Gagal memuat data order");
     } finally {
       setLoading(false);
@@ -64,8 +63,7 @@ export default function CashierOrdersPage() {
       setUpdatingOrderId(orderId);
       await cashierOrdersApi.updateStatus(orderId, newStatus);
       await fetchOrders();
-    } catch (err) {
-      console.error("Failed to update order:", err);
+    } catch {
       alert("Gagal mengubah status order");
     } finally {
       setUpdatingOrderId(null);
@@ -291,7 +289,7 @@ export default function CashierOrdersPage() {
                           <button
                             onClick={() => handleUpdateStatus(order.id.toString(), getNextStatus(order.status)!)}
                             disabled={updatingOrderId === order.id.toString()}
-                            className="rounded-full bg-stone-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors shadow-sm"
+                            className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-sm"
                           >
                             {updatingOrderId === order.id.toString() ? (
                               <Loader2 className="h-3 w-3 animate-spin" />

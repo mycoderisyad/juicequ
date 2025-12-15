@@ -52,13 +52,20 @@ function StatCard({
   value: string | number;
   subValue?: string;
   icon: React.ElementType;
-  color: "emerald" | "blue" | "purple" | "orange";
+  color: "emerald" | "stone" | "amber";
 }) {
+  const colorClasses = {
+    emerald: { bg: "bg-emerald-100", text: "text-emerald-600" },
+    stone: { bg: "bg-stone-100", text: "text-stone-600" },
+    amber: { bg: "bg-amber-100", text: "text-amber-600" },
+  };
+  const { bg, text } = colorClasses[color];
+  
   return (
-    <div className="rounded-4xl bg-white p-6 shadow-sm">
+    <div className="rounded-4xl bg-white p-6 shadow-sm border border-stone-100">
       <div className="flex items-center justify-between">
-        <div className={`rounded-2xl p-3 ${color === "emerald" ? "bg-emerald-100" : color === "blue" ? "bg-blue-100" : color === "purple" ? "bg-purple-100" : "bg-orange-100"}`}>
-          <Icon className={`h-6 w-6 ${color === "emerald" ? "text-emerald-600" : color === "blue" ? "text-blue-600" : color === "purple" ? "text-purple-600" : "text-orange-600"}`} />
+        <div className={`rounded-2xl p-3 ${bg}`}>
+          <Icon className={`h-6 w-6 ${text}`} />
         </div>
       </div>
       <div className="mt-4">
@@ -93,8 +100,7 @@ export default function AdminAnalyticsPage() {
       setDashboard(dashboardRes);
       setSales(salesRes);
       setProducts(productsRes);
-    } catch (err) {
-      console.error("Failed to fetch analytics:", err);
+    } catch {
       setError("Failed to load analytics data");
     } finally {
       setIsLoading(false);
@@ -115,7 +121,7 @@ export default function AdminAnalyticsPage() {
 
   if (error) {
     return (
-      <div className="rounded-2xl bg-red-50 p-6 text-red-600">
+      <div className="rounded-2xl bg-rose-50 p-6 text-rose-600 border border-rose-200">
         <div className="flex items-center gap-2">
           <AlertCircle className="h-5 w-5" />
           {error}
@@ -161,21 +167,21 @@ export default function AdminAnalyticsPage() {
           value={dashboard?.orders.total || 0}
           subValue={`${dashboard?.orders.today || 0} today, ${dashboard?.orders.pending || 0} pending`}
           icon={ShoppingCart}
-          color="blue"
+          color="stone"
         />
         <StatCard
           title="Total Users"
           value={dashboard?.users.total || 0}
           subValue={`${dashboard?.users.active || 0} active`}
           icon={Users}
-          color="purple"
+          color="stone"
         />
         <StatCard
           title="Products"
           value={dashboard?.products.total || 0}
           subValue={`${dashboard?.products.available || 0} available`}
           icon={Package}
-          color="orange"
+          color="amber"
         />
       </div>
 
@@ -207,8 +213,8 @@ export default function AdminAnalyticsPage() {
                   {sales?.summary.total_transactions || 0}
                 </p>
               </div>
-              <div className="rounded-xl bg-blue-100 p-3">
-                <ShoppingCart className="h-6 w-6 text-blue-600" />
+              <div className="rounded-xl bg-stone-100 p-3">
+                <ShoppingCart className="h-6 w-6 text-stone-600" />
               </div>
             </div>
             <div className="flex items-center justify-between rounded-2xl bg-stone-50 p-4">
@@ -218,18 +224,18 @@ export default function AdminAnalyticsPage() {
                   {format(sales?.summary.average_transaction || 0)}
                 </p>
               </div>
-              <div className="rounded-xl bg-purple-100 p-3">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
+              <div className="rounded-xl bg-amber-100 p-3">
+                <TrendingUp className="h-6 w-6 text-amber-600" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Top Products */}
-        <div className="rounded-4xl bg-white p-6 shadow-sm">
+        <div className="rounded-4xl bg-white p-6 shadow-sm border border-stone-100">
           <h2 className="mb-6 flex items-center gap-2 font-serif text-lg font-semibold text-stone-900">
-            <div className="rounded-xl bg-orange-100 p-2">
-              <Package className="h-5 w-5 text-orange-600" />
+            <div className="rounded-xl bg-amber-100 p-2">
+              <Package className="h-5 w-5 text-amber-600" />
             </div>
             Top Products
           </h2>
@@ -242,9 +248,9 @@ export default function AdminAnalyticsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <span className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
-                      index === 0 ? "bg-amber-100 text-amber-700" :
+                      index === 0 ? "bg-emerald-100 text-emerald-700" :
                       index === 1 ? "bg-stone-200 text-stone-700" :
-                      index === 2 ? "bg-orange-100 text-orange-700" :
+                      index === 2 ? "bg-amber-100 text-amber-700" :
                       "bg-stone-100 text-stone-600"
                     }`}>
                       {index + 1}

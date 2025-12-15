@@ -94,8 +94,7 @@ export default function CashierDashboardPage() {
         todaySales: todaySales,
         todayTransactions: transactionsData.transactions.length,
       });
-    } catch (err) {
-      console.error("Failed to load cashier data:", err);
+    } catch {
       setError("Gagal memuat data");
     } finally {
       setLoading(false);
@@ -175,8 +174,7 @@ export default function CashierDashboardPage() {
       setProcessingOrderId(orderId);
       await cashierOrdersApi.updateStatus(orderId, nextStatus);
       await fetchData(); // Refresh data after update
-    } catch (err) {
-      console.error("Failed to update order status:", err);
+    } catch {
       alert("Gagal memproses order. Silakan coba lagi.");
     } finally {
       setProcessingOrderId(null);
@@ -332,7 +330,7 @@ export default function CashierDashboardPage() {
                         <button
                           onClick={() => handleProcessOrder(order.id.toString(), order.status)}
                           disabled={processingOrderId === order.id.toString()}
-                          className="inline-flex items-center justify-center rounded-full bg-stone-900 px-4 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+                          className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                         >
                           {processingOrderId === order.id.toString() ? (
                             <Loader2 size={14} className="animate-spin" />

@@ -1,15 +1,9 @@
-"""
-Product schemas for request/response validation.
-"""
+"""Product schemas for request/response validation."""
 from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 
-
-# =============================================================================
-# Category Schemas
-# =============================================================================
 
 class CategoryBase(BaseModel):
     """Base category schema."""
@@ -49,10 +43,6 @@ class CategoryListResponse(BaseModel):
     total: int
 
 
-# =============================================================================
-# Product Size Schemas
-# =============================================================================
-
 class SizePricing(BaseModel):
     """Schema for product size pricing."""
     small: Optional[float] = None
@@ -74,10 +64,6 @@ class SizeCalories(BaseModel):
     large: Optional[int] = None
 
 
-# =============================================================================
-# Nutrition Schemas
-# =============================================================================
-
 class NutritionInfo(BaseModel):
     """Schema for nutrition information."""
     calories: Optional[int] = None
@@ -89,10 +75,6 @@ class NutritionInfo(BaseModel):
     vitamin_c: Optional[float] = None
     vitamin_a: Optional[float] = None
 
-
-# =============================================================================
-# Product Schemas
-# =============================================================================
 
 class ProductBase(BaseModel):
     """Base product schema."""
@@ -178,10 +160,6 @@ class ProductListResponse(BaseModel):
     total_pages: int = 1
 
 
-# =============================================================================
-# Product Size Pricing
-# =============================================================================
-
 class ProductSizePrice(BaseModel):
     """Schema for product price by size."""
     size: str = Field(..., pattern="^(small|medium|large)$")
@@ -191,4 +169,55 @@ class ProductSizePrice(BaseModel):
 
 class ProductWithPrices(ProductResponse):
     """Schema for product with all size prices."""
-    prices: dict[str, float] = {}  # {"small": 8.0, "medium": 10.0, "large": 13.0}
+    prices: dict[str, float] = {}
+
+
+class AdminProductCreate(BaseModel):
+    """Request to create a product (admin)."""
+    name: str = Field(..., min_length=2, max_length=100)
+    description: str = Field(..., min_length=10, max_length=500)
+    price: float = Field(..., gt=0)
+    category: str
+    image: str | None = None
+    hero_image: str | None = None
+    bottle_image: str | None = None
+    thumbnail_image: str | None = None
+    is_available: bool = True
+    stock: int = Field(default=100, ge=0)
+    ingredients: list[str] = []
+    nutrition: dict | None = None
+    allergy_warning: str | None = None
+    calories: int | None = None
+    has_sizes: bool = True
+    size_prices: dict | None = None
+    size_volumes: dict | None = None
+    size_calories: dict | None = None
+    volume_unit: str = "ml"
+
+
+class AdminProductUpdate(BaseModel):
+    """Request to update a product (admin)."""
+    name: str | None = Field(None, min_length=2, max_length=100)
+    description: str | None = Field(None, max_length=500)
+    price: float | None = Field(None, gt=0)
+    category: str | None = None
+    image: str | None = None
+    hero_image: str | None = None
+    bottle_image: str | None = None
+    thumbnail_image: str | None = None
+    is_available: bool | None = None
+    stock: int | None = Field(None, ge=0)
+    ingredients: list[str] | None = None
+    nutrition: dict | None = None
+    allergy_warning: str | None = None
+    calories: int | None = None
+    has_sizes: bool | None = None
+    size_prices: dict | None = None
+    size_volumes: dict | None = None
+    size_calories: dict | None = None
+    volume_unit: str | None = None
+
+
+class BatchDeleteRequest(BaseModel):
+    """Request to batch delete products."""
+    product_ids: list[str] = Field(..., min_length=1)

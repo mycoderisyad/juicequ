@@ -1,18 +1,13 @@
-"""
-Authentication API endpoints.
-"""
+"""Authentication API endpoints."""
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.core.dependencies import CurrentUser, get_current_user
-from app.core.exceptions import (
-    BadRequestException,
-    ConflictException,
-    CredentialsException,
-)
+from app.core.dependencies import CurrentUser
+from app.core.exceptions import BadRequestException, ConflictException, CredentialsException
+from app.core.rate_limit import check_auth_rate_limit
 from app.db.session import get_db
 from app.schemas.auth import (
     GoogleAuthRequest,
@@ -34,34 +29,32 @@ from app.services.google_oauth_service import GoogleOAuthService
 router = APIRouter()
 
 
-def set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+def _set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
     """Set secure HttpOnly cookies for authentication tokens."""
     is_production = settings.app_env == "production"
-    
-    # Access token cookie - shorter lifetime
+
     response.set_cookie(
         key="access_token",
         value=access_token,
-        httponly=True,  # Prevent JavaScript access (XSS protection)
-        secure=is_production,  # HTTPS only in production
-        samesite="lax",  # CSRF protection
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
         max_age=settings.access_token_expire_minutes * 60,
         path="/",
     )
-    
-    # Refresh token cookie - longer lifetime
+
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
         secure=is_production,
         samesite="lax",
-        max_age=settings.refresh_token_expire_days * 24 * 60 * 60,
-        path="/api/v1/auth",  # Restrict to auth endpoints only
+        max_age=settings.refresh_token_expire_days * 86400,
+        path="/api/v1/auth",
     )
 
 
-def clear_auth_cookies(response: Response) -> None:
+def _clear_auth_cookies(response: Response) -> None:
     """Clear authentication cookies on logout."""
     response.delete_cookie(key="access_token", path="/")
     response.delete_cookie(key="refresh_token", path="/api/v1/auth")
@@ -72,7 +65,7 @@ def clear_auth_cookies(response: Response) -> None:
     response_model=UserProfileResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Register new user",
-    description="Register a new user account with email and password.",
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def register(
     data: RegisterRequest,
@@ -93,7 +86,7 @@ async def register(
     "/login",
     response_model=Token,
     summary="User login",
-    description="Authenticate user and return access and refresh tokens. Tokens are also set as HttpOnly cookies.",
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def login(
     data: LoginRequest,
@@ -104,23 +97,13 @@ async def login(
     try:
         service = AuthService(db)
         tokens = service.login(data)
-        
-        # Set HttpOnly cookies for enhanced security
-        set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
-        
-        # Also return tokens in response body for backward compatibility
-        # (allows clients to choose storage method)
+        _set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
         return tokens
     except Exception as e:
         raise CredentialsException(detail=str(e))
 
 
-@router.post(
-    "/refresh",
-    response_model=Token,
-    summary="Refresh token",
-    description="Get new access token using refresh token.",
-)
+@router.post("/refresh", response_model=Token, summary="Refresh token")
 async def refresh_token(
     data: RefreshTokenRequest,
     response: Response,
@@ -130,34 +113,19 @@ async def refresh_token(
     try:
         service = AuthService(db)
         tokens = service.refresh_token(data.refresh_token)
-        
-        # Update HttpOnly cookies
-        set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
-        
+        _set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
         return tokens
     except Exception as e:
         raise CredentialsException(detail=str(e))
 
 
-@router.get(
-    "/me",
-    response_model=UserProfileResponse,
-    summary="Get current user",
-    description="Get current authenticated user's profile.",
-)
-async def get_me(
-    current_user: CurrentUser,
-):
+@router.get("/me", response_model=UserProfileResponse, summary="Get current user")
+async def get_me(current_user: CurrentUser):
     """Get current user profile."""
     return current_user
 
 
-@router.post(
-    "/change-password",
-    response_model=MessageResponse,
-    summary="Change password",
-    description="Change current user's password.",
-)
+@router.post("/change-password", response_model=MessageResponse, summary="Change password")
 async def change_password(
     data: UserUpdatePassword,
     current_user: CurrentUser,
@@ -180,7 +148,7 @@ async def change_password(
     "/password/forgot",
     response_model=MessageResponse,
     summary="Request password reset",
-    description="Send password reset link to email.",
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def forgot_password(
     data: PasswordResetRequest,
@@ -199,7 +167,7 @@ async def forgot_password(
     "/password/reset",
     response_model=MessageResponse,
     summary="Reset password",
-    description="Reset password using token.",
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def reset_password(
     data: PasswordResetConfirm,
@@ -218,7 +186,7 @@ async def reset_password(
     "/verify-email/send",
     response_model=MessageResponse,
     summary="Send verification email",
-    description="Send verification link to email.",
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def send_verification_email(
     data: VerifyEmailRequest,
@@ -237,7 +205,6 @@ async def send_verification_email(
     "/verify-email/confirm",
     response_model=MessageResponse,
     summary="Confirm email verification",
-    description="Verify email using token from email link.",
 )
 async def confirm_verification(
     data: VerifyEmailConfirm,
@@ -252,38 +219,17 @@ async def confirm_verification(
         raise BadRequestException(str(e))
 
 
-@router.post(
-    "/logout",
-    response_model=MessageResponse,
-    summary="User logout",
-    description="Logout user and clear authentication cookies.",
-)
-async def logout(
-    response: Response,
-    current_user: CurrentUser,
-):
-    """
-    Logout user.
-    
-    Clears HttpOnly cookies. For full token invalidation,
-    a token blacklist can be implemented later.
-    """
-    clear_auth_cookies(response)
+@router.post("/logout", response_model=MessageResponse, summary="User logout")
+async def logout(response: Response, current_user: CurrentUser):
+    """Logout user and clear cookies."""
+    _clear_auth_cookies(response)
     return MessageResponse(message="Logged out successfully")
 
 
-# ============== Google OAuth Endpoints ==============
-
-
-@router.get(
-    "/google/url",
-    response_model=GoogleAuthUrlResponse,
-    summary="Get Google OAuth URL",
-    description="Generate Google OAuth authorization URL for login.",
-)
+@router.get("/google/url", response_model=GoogleAuthUrlResponse, summary="Get Google OAuth URL")
 async def get_google_auth_url(
     db: Annotated[Session, Depends(get_db)],
-    redirect_uri: str | None = Query(None, description="Custom redirect URI"),
+    redirect_uri: str | None = Query(None),
 ):
     """Get Google OAuth authorization URL."""
     try:
@@ -298,26 +244,19 @@ async def get_google_auth_url(
     "/google/callback",
     response_model=Token,
     summary="Google OAuth callback",
-    description="Handle Google OAuth callback and authenticate user.",
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def google_auth_callback(
     data: GoogleAuthRequest,
     response: Response,
     db: Annotated[Session, Depends(get_db)],
-    redirect_uri: str | None = Query(None, description="Redirect URI used in auth request"),
+    redirect_uri: str | None = Query(None),
 ):
-    """
-    Handle Google OAuth callback.
-    
-    Exchanges authorization code for tokens and creates/logs in user.
-    """
+    """Handle Google OAuth callback."""
     try:
         service = GoogleOAuthService(db)
         tokens = await service.authenticate_with_google(data.code, redirect_uri)
-        
-        # Set HttpOnly cookies for enhanced security
-        set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
-        
+        _set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
         return tokens
     except Exception as e:
         raise CredentialsException(detail=str(e))

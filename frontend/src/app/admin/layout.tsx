@@ -50,7 +50,7 @@ function NavItem({
         collapsed ? "justify-center w-12 h-12" : "justify-start w-full h-12 px-4 gap-3"
       } ${
         active 
-          ? "bg-stone-900 text-white shadow-lg shadow-stone-900/20" 
+          ? "bg-emerald-50 text-emerald-600 font-semibold" 
           : "text-stone-400 hover:bg-stone-50 hover:text-emerald-600"
       }`}
     >

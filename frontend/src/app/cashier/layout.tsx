@@ -49,7 +49,7 @@ function NavItem({
         collapsed ? "justify-center w-12 h-12" : "justify-start w-full h-12 px-4 gap-3"
       } ${
         active 
-          ? "bg-stone-900 text-white shadow-lg shadow-stone-900/20" 
+          ? "bg-emerald-50 text-emerald-600 font-semibold" 
           : "text-stone-400 hover:bg-stone-50 hover:text-emerald-600"
       }`}
     >
@@ -170,7 +170,7 @@ export default function CashierLayout({ children }: CashierLayoutProps) {
         {sidebarCollapsed && (
            <div className="flex justify-center mb-6">
              <div 
-               className={`w-3 h-3 rounded-full ${isStoreOpen ? "bg-green-500" : "bg-red-500"}`}
+               className={`w-3 h-3 rounded-full ${isStoreOpen ? "bg-emerald-500" : "bg-rose-500"}`}
                title={isStoreOpen ? "Toko Buka" : "Toko Tutup"}
              />
            </div>

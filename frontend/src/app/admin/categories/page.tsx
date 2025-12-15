@@ -301,8 +301,7 @@ function CategoryModal({
       setIsUploadingIcon(true);
       const result = await uploadApi.uploadImage(file, "catalog");
       setFormData({ ...formData, icon: result.url });
-    } catch (error) {
-      console.error("Failed to upload icon:", error);
+    } catch {
       alert("Failed to upload icon. Please try again.");
     } finally {
       setIsUploadingIcon(false);
@@ -487,8 +486,7 @@ export default function AdminCategoriesPage() {
       setIsLoading(true);
       const response = await categoriesApi.getAll();
       setCategories(response.categories || []);
-    } catch (err) {
-      console.error("Failed to fetch categories:", err);
+    } catch {
       setError("Failed to load categories");
     } finally {
       setIsLoading(false);
@@ -529,8 +527,7 @@ export default function AdminCategoriesPage() {
       }
       setIsCategoryModalOpen(false);
       fetchCategories();
-    } catch (err) {
-      console.error("Failed to save category:", err);
+    } catch {
       setError("Failed to save category");
     } finally {
       setIsSaving(false);
@@ -546,7 +543,6 @@ export default function AdminCategoriesPage() {
       setIsDeleteModalOpen(false);
       fetchCategories();
     } catch (err: unknown) {
-      console.error("Failed to delete category:", err);
       // Extract error message from API response
       const axiosError = err as { response?: { data?: { detail?: string } } };
       const errorMessage = axiosError.response?.data?.detail || "Failed to delete category";

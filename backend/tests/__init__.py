@@ -1,3 +1,0 @@
-"""
-JuiceQu Backend Test Suite
-"""

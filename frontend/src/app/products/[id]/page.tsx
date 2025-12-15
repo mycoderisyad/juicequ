@@ -160,8 +160,7 @@ export default function ProductPage() {
 
       const response = await productsApi.getById(idString);
       setProduct(transformProduct(response));
-    } catch (err) {
-      console.error("Failed to fetch product:", err);
+    } catch {
       setError("Product not found or failed to load.");
     } finally {
       setIsLoading(false);

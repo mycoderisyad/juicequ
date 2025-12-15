@@ -20,10 +20,10 @@ import { adminOrdersApi, type AdminOrder, type OrderStats } from "@/lib/api/admi
 const ORDER_STATUSES = [
   { value: "", label: "Semua Status", icon: Package },
   { value: "pending", label: "Pending", icon: Clock, color: "text-amber-600 bg-amber-50" },
-  { value: "paid", label: "Paid", icon: CreditCard, color: "text-blue-600 bg-blue-50" },
-  { value: "preparing", label: "Preparing", icon: ChefHat, color: "text-purple-600 bg-purple-50" },
-  { value: "ready", label: "Ready", icon: Coffee, color: "text-cyan-600 bg-cyan-50" },
-  { value: "completed", label: "Completed", icon: CheckCircle, color: "text-emerald-600 bg-emerald-50" },
+  { value: "paid", label: "Paid", icon: CreditCard, color: "text-emerald-600 bg-emerald-50" },
+  { value: "preparing", label: "Preparing", icon: ChefHat, color: "text-amber-700 bg-amber-100" },
+  { value: "ready", label: "Ready", icon: Coffee, color: "text-emerald-700 bg-emerald-100" },
+  { value: "completed", label: "Completed", icon: CheckCircle, color: "text-stone-600 bg-stone-100" },
   { value: "cancelled", label: "Cancelled", icon: XCircle, color: "text-rose-600 bg-rose-50" },
 ];
 
@@ -213,8 +213,7 @@ export default function AdminOrdersPage() {
       ]);
       setOrders(ordersRes.orders || []);
       setStats(statsRes);
-    } catch (err) {
-      console.error("Failed to fetch orders:", err);
+    } catch {
       setError("Failed to load orders");
     } finally {
       setIsLoading(false);
@@ -243,8 +242,7 @@ export default function AdminOrdersPage() {
         }
       }
       setIsDetailOpen(false);
-    } catch (err) {
-      console.error("Failed to update status:", err);
+    } catch {
       setError("Failed to update order status");
     } finally {
       setIsUpdating(false);

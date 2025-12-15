@@ -46,8 +46,7 @@ export default function CashierReportsPage() {
       setDailyReport(daily);
       setSummary(summaryData);
       setPopularItems(popular.items);
-    } catch (err) {
-      console.error("Failed to load reports:", err);
+    } catch {
       setError("Gagal memuat laporan");
     } finally {
       setLoading(false);

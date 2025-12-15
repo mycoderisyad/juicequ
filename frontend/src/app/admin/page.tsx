@@ -76,7 +76,7 @@ function QuickStatPill({
   color: string;
 }) {
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-stone-100 flex flex-col justify-center h-full hover:-translate-y-1 transition-transform duration-300">
+    <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-stone-100 flex flex-col justify-center h-full hover:shadow-md transition-shadow duration-300">
       <div className="flex items-center gap-3 sm:gap-4 mb-2 sm:mb-3">
         <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${color}`}>
           <Icon size={18} className="sm:hidden" />
@@ -140,8 +140,7 @@ export default function AdminDashboardPage() {
         setDashboard(dashboardData);
         setTopProducts(productsData.top_products || []);
         setDailySales(salesData.daily || []);
-      } catch (err) {
-        console.error("Failed to load dashboard:", err);
+      } catch {
         setError("Gagal memuat data dashboard");
       } finally {
         setLoading(false);
@@ -279,7 +278,7 @@ export default function AdminDashboardPage() {
             <div className="flex gap-2">
               <Link 
                 href="/admin/analytics"
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-stone-900 text-white flex items-center justify-center hover:bg-emerald-600 transition-colors"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 transition-colors"
               >
                 <ArrowUpRight size={14} className="sm:hidden" />
                 <ArrowUpRight size={16} className="hidden sm:block" />
@@ -332,22 +331,22 @@ export default function AdminDashboardPage() {
               </span>
             </div>
             
-            <div className="flex items-center justify-between p-3 sm:p-4 bg-blue-50 rounded-xl sm:rounded-2xl">
+            <div className="flex items-center justify-between p-3 sm:p-4 bg-stone-50 rounded-xl sm:rounded-2xl">
               <div className="flex items-center gap-2 sm:gap-3">
-                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-stone-600" />
                 <span className="text-stone-700 font-medium text-sm sm:text-base">Transaksi</span>
               </div>
-              <span className="font-bold text-blue-700 text-sm sm:text-base">
+              <span className="font-bold text-stone-700 text-sm sm:text-base">
                 {dashboard.revenue.transactions_today}
               </span>
             </div>
             
-            <div className="flex items-center justify-between p-3 sm:p-4 bg-orange-50 rounded-xl sm:rounded-2xl">
+            <div className="flex items-center justify-between p-3 sm:p-4 bg-emerald-50 rounded-xl sm:rounded-2xl border border-emerald-100">
               <div className="flex items-center gap-2 sm:gap-3">
-                <Package className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                <Package className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
                 <span className="text-stone-700 font-medium text-sm sm:text-base">Order Baru</span>
               </div>
-              <span className="font-bold text-orange-700 text-sm sm:text-base">
+              <span className="font-bold text-emerald-700 text-sm sm:text-base">
                 {dashboard.orders.today}
               </span>
             </div>
@@ -381,7 +380,7 @@ export default function AdminDashboardPage() {
             value={dashboard.users.active}
             label="User Aktif"
             subLabel={`dari ${dashboard.users.total} total user`}
-            color="bg-rose-100 text-rose-600"
+            color="bg-stone-100 text-stone-600"
           />
         </div>
 
@@ -396,7 +395,7 @@ export default function AdminDashboardPage() {
                   style={{ 
                     background: (() => {
                       const total = topProducts.slice(0, 3).reduce((acc, p) => acc + p.quantity_sold, 0) || 1;
-                      const colors = ["#10b981", "#f43f5e", "#8b5cf6"];
+                      const colors = ["#10b981", "#78716c", "#d6d3d1"];
                       let gradient = "conic-gradient(";
                       let currentPercent = 0;
                       topProducts.slice(0, 3).forEach((product, i) => {
@@ -452,7 +451,7 @@ export default function AdminDashboardPage() {
                   return (
                     <LegendItem 
                       key={product.id}
-                      color={["bg-emerald-500", "bg-rose-500", "bg-violet-500"][index]}
+                      color={["bg-emerald-500", "bg-stone-500", "bg-stone-300"][index]}
                       label={product.name}
                       value={`${percent}%`}
                       amount={`${product.quantity_sold} terjual`}
@@ -473,9 +472,9 @@ export default function AdminDashboardPage() {
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <Link
           href="/admin/products"
-          className="flex items-center gap-3 sm:gap-4 rounded-2xl sm:rounded-4xl border border-stone-200 bg-white p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-1 group"
+          className="flex items-center gap-3 sm:gap-4 rounded-2xl sm:rounded-4xl border border-stone-200 bg-white p-4 sm:p-5 transition-all hover:shadow-lg hover:border-stone-300 group"
         >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform shrink-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shrink-0">
             <Package size={20} className="sm:hidden" />
             <Package size={24} className="hidden sm:block" />
           </div>
@@ -487,9 +486,9 @@ export default function AdminDashboardPage() {
         
         <Link
           href="/admin/users"
-          className="flex items-center gap-3 sm:gap-4 rounded-2xl sm:rounded-4xl border border-stone-200 bg-white p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-1 group"
+          className="flex items-center gap-3 sm:gap-4 rounded-2xl sm:rounded-4xl border border-stone-200 bg-white p-4 sm:p-5 transition-all hover:shadow-lg hover:border-stone-300 group"
         >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform shrink-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-stone-100 flex items-center justify-center text-stone-600 group-hover:scale-110 transition-transform shrink-0">
             <Users size={20} className="sm:hidden" />
             <Users size={24} className="hidden sm:block" />
           </div>
@@ -501,7 +500,7 @@ export default function AdminDashboardPage() {
         
         <Link
           href="/admin/analytics"
-          className="flex items-center gap-3 sm:gap-4 rounded-2xl sm:rounded-4xl border border-stone-200 bg-white p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-1 group"
+          className="flex items-center gap-3 sm:gap-4 rounded-2xl sm:rounded-4xl border border-stone-200 bg-white p-4 sm:p-5 transition-all hover:shadow-lg hover:border-stone-300 group"
         >
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shrink-0">
             <TrendingUp size={20} className="sm:hidden" />
@@ -515,7 +514,7 @@ export default function AdminDashboardPage() {
         
         <Link
           href="/admin/settings"
-          className="flex items-center gap-3 sm:gap-4 rounded-2xl sm:rounded-4xl border border-stone-200 bg-white p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-1 group"
+          className="flex items-center gap-3 sm:gap-4 rounded-2xl sm:rounded-4xl border border-stone-200 bg-white p-4 sm:p-5 transition-all hover:shadow-lg hover:border-stone-300 group"
         >
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-stone-100 flex items-center justify-center text-stone-600 group-hover:scale-110 transition-transform shrink-0">
             <Package size={20} className="sm:hidden" />

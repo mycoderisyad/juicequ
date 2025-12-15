@@ -25,7 +25,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Animation utilities */
 @keyframes slide-in-from-right {
   from {
     transform: translateX(100%);
@@ -60,20 +59,16 @@ body {
   animation-duration: 300ms;
 }
 
-@keyframes flow-down {
-  0% {
-    transform: translateY(-4px);
-    opacity: 0;
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.6;
   }
   50% {
     opacity: 1;
   }
-  100% {
-    transform: translateY(4px);
-    opacity: 0;
-  }
 }
 
-.animate-flow-down {
-  animation: flow-down 1.5s ease-in-out infinite;
+.animate-pulse-glow {
+  animation: pulse-glow 1.5s ease-in-out infinite;
 }

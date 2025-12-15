@@ -82,8 +82,8 @@ export default function PromosPage() {
         name: p.name,
         base_price: p.base_price || p.price || 0,
       })));
-    } catch (err) {
-      console.error("Failed to fetch products:", err);
+    } catch {
+      // Silent fail
     }
   }, []);
 

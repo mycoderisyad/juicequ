@@ -183,7 +183,7 @@ function UserModal({
             <button 
               type="submit" 
               disabled={isLoading} 
-              className="px-5 py-2.5 rounded-full bg-stone-900 text-white font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-5 py-2.5 rounded-full bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -269,7 +269,7 @@ const roleIcons: Record<string, React.ReactNode> = {
 };
 
 const roleColors: Record<string, string> = {
-  admin: "bg-rose-100 text-rose-600",
+  admin: "bg-emerald-100 text-emerald-600",
   kasir: "bg-amber-100 text-amber-600",
   pembeli: "bg-stone-100 text-stone-600",
 };
@@ -295,8 +295,7 @@ export default function AdminUsersPage() {
         role: roleFilter || undefined,
       });
       setUsers(response.users || []);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
+    } catch {
       setError("Failed to load users");
     } finally {
       setIsLoading(false);
@@ -337,8 +336,7 @@ export default function AdminUsersPage() {
       }
       setIsUserModalOpen(false);
       fetchUsers();
-    } catch (err) {
-      console.error("Failed to save user:", err);
+    } catch {
       setError("Failed to save user");
     } finally {
       setIsSaving(false);
@@ -352,8 +350,7 @@ export default function AdminUsersPage() {
       await usersApi.delete(selectedUser.id);
       setIsDeleteModalOpen(false);
       fetchUsers();
-    } catch (err) {
-      console.error("Failed to delete user:", err);
+    } catch {
       setError("Failed to delete user");
     } finally {
       setIsSaving(false);
@@ -370,7 +367,7 @@ export default function AdminUsersPage() {
         </div>
         <button 
           onClick={handleCreateUser} 
-          className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
+          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-full hover:bg-emerald-700 transition-colors font-medium"
         >
           <Plus size={18} />
           Tambah User
@@ -426,7 +423,7 @@ export default function AdminUsersPage() {
             <p className="text-stone-500 mb-6">Mulai dengan menambahkan user pertama</p>
             <button 
               onClick={handleCreateUser} 
-              className="flex items-center gap-2 bg-stone-900 text-white px-5 py-3 rounded-full hover:bg-emerald-600 transition-colors font-medium"
+              className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-full hover:bg-emerald-700 transition-colors font-medium"
             >
               <Plus size={18} />
               Tambah User

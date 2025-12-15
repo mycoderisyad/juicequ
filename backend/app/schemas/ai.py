@@ -203,7 +203,8 @@ class FotoboothRequest(BaseModel):
 
 class FotoboothResponse(BaseModel):
     """Schema for AI Fotobooth generation response."""
-    image_url: str = Field(..., description="URL of generated fotobooth image")
+    image_url: Optional[str] = Field(None, description="URL of generated fotobooth image")
+    image_data: Optional[str] = Field(None, description="Base64 encoded generated image")
     product_name: str = Field(..., description="Name of featured product")
     generation_time_ms: int = Field(..., description="Time taken to generate image (ms)")
     message: str = Field(..., description="Success message")

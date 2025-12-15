@@ -5,9 +5,6 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
-  /**
-   * If true, uses a pulse animation. If false, uses shimmer.
-   */
   pulse?: boolean;
 }
 

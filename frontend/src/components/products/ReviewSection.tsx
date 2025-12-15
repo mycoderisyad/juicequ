@@ -61,8 +61,8 @@ export function ReviewSection({ productId, productName }: ReviewSectionProps) {
             } else {
                 setHasReviewed(false);
             }
-        } catch (err) {
-            console.error("Failed to fetch reviews:", err);
+        } catch {
+            // Silent fail for reviews fetch
         }
     }, [productId, currentUserId]);
 
@@ -104,8 +104,8 @@ export function ReviewSection({ productId, productName }: ReviewSectionProps) {
                     setPhotoboothRemaining(Math.max(0, AI_PHOTOBOOTH_LIMIT - used));
                     setCurrentUserId(profile?.id);
                 }
-            } catch (err) {
-                console.error("Failed to check review eligibility:", err);
+            } catch {
+                // Silent fail for eligibility check
             } finally {
                 setIsLoading(false);
             }
@@ -152,9 +152,9 @@ export function ReviewSection({ productId, productName }: ReviewSectionProps) {
             setEditingReview(null);
             setHasReviewed(true);
 
-        } catch (err: any) {
-            console.error(err);
-            const message = err?.response?.data?.detail || "Failed to submit review. Please try again.";
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { detail?: string } } };
+            const message = axiosErr?.response?.data?.detail || "Failed to submit review. Please try again.";
             alert(message);
         }
     };
@@ -172,9 +172,9 @@ export function ReviewSection({ productId, productName }: ReviewSectionProps) {
             await apiClient.delete(`/customer/products/${productId}/reviews/${review.id}`);
             await fetchReviews();
             setHasReviewed(false);
-        } catch (err: any) {
-            console.error(err);
-            const message = err?.response?.data?.detail || "Failed to delete review. Please try again.";
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { detail?: string } } };
+            const message = axiosErr?.response?.data?.detail || "Failed to delete review. Please try again.";
             alert(message);
         }
     };

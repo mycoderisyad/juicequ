@@ -87,8 +87,7 @@ export default function CashierPOSPage() {
       ]);
       setProducts(productsData.items);
       setCategories(categoriesData.categories);
-    } catch (err) {
-      console.error("Failed to load products:", err);
+    } catch {
       setError("Gagal memuat produk");
     } finally {
       setLoading(false);
@@ -196,8 +195,7 @@ export default function CashierPOSPage() {
       
       setShowReceipt(true);
       clearCart();
-    } catch (err) {
-      console.error("Failed to create order:", err);
+    } catch {
       alert("Gagal membuat order. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
@@ -561,7 +559,7 @@ export default function CashierPOSPage() {
           <button
             onClick={handleSubmitOrder}
             disabled={cart.length === 0 || isSubmitting}
-            className="w-full rounded-xl bg-stone-900 py-3.5 font-bold text-white hover:bg-emerald-600 disabled:opacity-50 disabled:hover:bg-stone-900 transition-colors shadow-lg shadow-stone-900/10 flex items-center justify-center gap-2"
+            className="w-full rounded-xl bg-emerald-600 py-3.5 font-bold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -663,7 +661,7 @@ export default function CashierPOSPage() {
               </button>
               <button
                 onClick={handlePrintReceipt}
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-stone-900 py-3 font-bold text-white hover:bg-emerald-600 transition-colors text-sm shadow-lg shadow-stone-900/10"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 font-bold text-white hover:bg-emerald-700 transition-colors text-sm shadow-lg shadow-emerald-600/20"
               >
                 <Printer className="h-4 w-4" />
                 Cetak Struk

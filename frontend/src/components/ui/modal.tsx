@@ -1,7 +1,3 @@
-/**
- * Modal component.
- * Accessible modal dialog.
- */
 "use client";
 
 import { Fragment, useEffect, type ReactNode } from "react";

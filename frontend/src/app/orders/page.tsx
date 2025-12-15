@@ -88,8 +88,7 @@ export default function OrdersPage() {
       setIsLoading(true);
       const response = await apiClient.get("/customer/orders");
       setOrders(response.data.orders || []);
-    } catch (err) {
-      console.error("Failed to fetch orders:", err);
+    } catch {
       setError("Failed to load orders");
     } finally {
       setIsLoading(false);

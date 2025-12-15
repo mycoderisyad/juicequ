@@ -96,8 +96,7 @@ export default function OrderDetailPage() {
       setIsLoading(true);
       const response = await apiClient.get(`/customer/orders/${orderId}`);
       setOrder(response.data);
-    } catch (err) {
-      console.error("Failed to fetch order:", err);
+    } catch {
       setError("Order not found or you don't have permission to view it");
     } finally {
       setIsLoading(false);
@@ -126,8 +125,7 @@ export default function OrderDetailPage() {
       setIsCancelling(true);
       await apiClient.post(`/customer/orders/${orderId}/cancel`);
       await fetchOrder();
-    } catch (err) {
-      console.error("Failed to cancel order:", err);
+    } catch {
       setError("Failed to cancel order");
     } finally {
       setIsCancelling(false);

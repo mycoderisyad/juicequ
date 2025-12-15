@@ -15,10 +15,6 @@ interface State {
   errorInfo: React.ErrorInfo | null;
 }
 
-/**
- * Error Boundary component for catching and handling React errors.
- * Prevents the entire app from crashing when an error occurs.
- */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);

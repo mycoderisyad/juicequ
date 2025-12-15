@@ -1,7 +1,3 @@
-/**
- * Select component.
- * Accessible select/dropdown.
- */
 "use client";
 
 import { forwardRef, useId, type SelectHTMLAttributes } from "react";
